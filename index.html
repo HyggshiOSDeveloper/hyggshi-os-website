@@ -1,36 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hyggshi OS</title>
-  <meta name="description" content="Hệ điều hành mô phỏng Roblox: Hyggshi OS">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Hyggshi OS là một hệ điều hành mô phỏng trong Roblox.">
+
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Hyggshi OS",
+    "operatingSystem": "Roblox",
+    "applicationCategory": "Operating System",
+    "softwareVersion": "2.1.6",
+    "creator": {
+      "@type": "Person",
+      "name": "hyggshiosdeveloper"
+    },
+    "description": "Hyggshi OS là một hệ điều hành mô phỏng được phát triển trong Roblox, lấy cảm hứng từ Linux và Windows.",
+    "url": "https://hyggshiosdeveloper.github.io/hyggshi-site/",
+    "image": "https://hyggshi-os.fandom.com/wiki/Special:FilePath/logo.png",
+    "screenshot": "https://hyggshi-os.fandom.com/wiki/Special:FilePath/desktop-preview.png",
+    "applicationSuite": "Hyggshi",
+    "releaseNotes": "Phiên bản 2.1.6 thêm giao diện OOBE, Zashi Messaging và sửa nhiều lỗi."
+  }
+  </script>
+
   <style>
     body {
-      background: #1e1e2f;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #1e1e2f;
       color: white;
-      font-family: sans-serif;
       padding: 40px;
+      margin: 0;
     }
-    .box {
+    .container {
       background: #2a2a40;
       padding: 20px;
       border-radius: 10px;
-      max-width: 600px;
+      max-width: 650px;
       margin: auto;
-      box-shadow: 0 0 10px black;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     }
     h1 {
-      color: #00ffe0;
+      color: #00ffc8;
+      margin-top: 0;
+    }
+    a {
+      color: #00ffc8;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .logo {
+      width: 100px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="box">
+  <div class="container">
+    <img src="https://hyggshi-os.fandom.com/wiki/Special:FilePath/logo.png" alt="Hyggshi Logo" class="logo">
     <h1>Hyggshi OS</h1>
-    <p>Chào mừng đến với hệ điều hành mô phỏng Roblox: <strong>Hyggshi OS</strong>!</p>
-    <p>Trang web chính thức đang được xây dựng.</p>
-    <p><a href="https://hyggshi-os.fandom.com" style="color: #00ffe0;">Xem wiki Hyggshi OS</a></p>
+    <p><strong>Phiên bản:</strong> 2.1.6</p>
+    <p>Hệ điều hành mô phỏng Roblox, lấy cảm hứng từ Linux và Windows.</p>
+    <p><a href="https://hyggshi-os.fandom.com" target="_blank">📖 Xem wiki chính thức</a></p>
   </div>
 </body>
 </html>
