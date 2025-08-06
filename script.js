@@ -26,7 +26,7 @@ function initApp() {
 
 function displayMessage() {
     // Create a modern toast notification instead of alert
-    showToast('🎉 Welcome to the future! Your journey starts here.', 'success');
+    showToast('🎉 Welcome to the Hyggshi-OS-project-center', 'success');
     
     // Add button animation
     const button = event.target;
