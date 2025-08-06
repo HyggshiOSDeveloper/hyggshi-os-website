@@ -1,64 +1,79 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hyggshi OS - Hệ điều hành mô phỏng trên Roblox</title>
-  <meta name="description" content="Hyggshi OS là một hệ điều hành mô phỏng được phát triển trên Roblox với trải nghiệm độc đáo và sáng tạo." />
-  <meta name="keywords" content="Hyggshi OS, Roblox OS, hệ điều hành Roblox, mô phỏng Roblox, Hyggshi" />
-  <meta name="author" content="Hyggshi OS Developer" />
-  <link rel="canonical" href="https://hyggshiosdeveloper.github.io/hyggshi-os-website/" />
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="Hyggshi OS - Hệ điều hành Roblox" />
-  <meta property="og:description" content="Hệ điều hành mô phỏng trên Roblox, mang lại trải nghiệm sáng tạo." />
-  <meta property="og:url" content="https://hyggshiosdeveloper.github.io/hyggshi-os-website/" />
-  <meta property="og:image" content="https://hyggshiosdeveloper.github.io/hyggshi-os-website/assets/og-image.png" />
-  <meta property="og:type" content="website" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Hyggshi OS - Roblox OS" />
-  <meta name="twitter:description" content="Khám phá hệ điều hành Hyggshi OS trên Roblox." />
-  <meta name="twitter:image" content="https://hyggshiosdeveloper.github.io/hyggshi-os-website/assets/og-image.png" />
-
-  <!-- Schema.org JSON-LD -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Hyggshi OS",
-    "operatingSystem": "Roblox",
-    "applicationCategory": "GameApplication",
-    "description": "Hệ điều hành mô phỏng trong Roblox.",
-    "url": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/",
-    "author": {
-      "@type": "Organization",
-      "name": "Hyggshi OS Developer"
-    },
-    "image": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/assets/og-image.png"
-  }
-  </script>
-
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f7f7f7; }
-    h1 { color: #333; }
-    p { font-size: 18px; color: #555; }
-    a.button {
-      display: inline-block;
-      padding: 10px 20px;
-      margin-top: 20px;
-      background: #0078d7;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 5px;
-    }
-    a.button:hover { background: #005ea6; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyggshi-OS-project-center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Chào mừng đến với Hyggshi OS</h1>
-  <p>Hệ điều hành mô phỏng trên Roblox với trải nghiệm độc đáo.</p>
-  <a href="https://www.roblox.com" class="button">Khám phá ngay trên Roblox</a>
+    <div class="container">
+        <header class="header">
+            <nav class="nav">
+                <div class="logo">
+                    <span class="logo-icon">✨</span>
+                    <span class="logo-text">Hyggshi-OS-project-center</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#home" class="nav-link active">Home</a></li>
+                    <li><a href="About.html" class="nav-link">About</a></li>
+                    <li><a href="#projects" class="nav-link">Projects</a></li>
+                    <li><a href="History.html" class="nav-link">History</a></li>
+                    <li><a href="#services" class="nav-link">Services</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main class="main">
+            <section class="hero">
+                <div class="hero-content">
+                    <h1 class="hero-title">Welcome to the Future</h1>
+                    <p class="hero-subtitle">Experience modern web design with cutting-edge technology and beautiful interfaces.</p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary" onclick="displayMessage()">Get Started</button>
+                        <button class="btn btn-secondary" onclick="showFeatures()">Learn More</button>
+                        <a class="btn btn-github" href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center" target="_blank" rel="noopener">Get GitHub Project</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="floating-card">
+                        <div class="card-icon">🚀</div>
+                        <h3>Fast & Responsive</h3>
+                        <p>Optimized for all devices</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features">
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎨</div>
+                        <h3>Modern Design</h3>
+                        <p>Beautiful and intuitive user interfaces</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Lightning Fast</h3>
+                        <p>Optimized performance and speed</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Mobile First</h3>
+                        <p>Perfect on every screen size</p>
+                    </div>
+                </div>
+            </section>
+
+
+        <footer class="footer">
+            <p>&copy; 2024 - 2025 Hyggshi OS Project Center. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
 </body>
-</html>
+</html> 
