@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giới thiệu về Hyggshi OS - Hệ điều hành mô phỏng mã nguồn mở</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .about-hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+        }
+        
+        .about-hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .about-hero .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        .about-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .about-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .about-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+        
+        .about-section h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .about-section h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 0;
+            color: #fff;
+        }
+        
+        .about-section p {
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+        
+        .about-section ul {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+        
+        .about-section li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+        
+        .feature-badge {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .warning-box {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.4);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .warning-box h4 {
+            color: #ffc107;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .community-section {
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(156, 39, 176, 0.2));
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .link-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+        
+        .link-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .link-card h4 {
+            color: #fff;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .link-card p {
+            opacity: 0.8;
+            margin: 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            color: white;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4CAF50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .about-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .about-section {
+                padding: 1.5rem;
+            }
+            
+            .about-section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .back-button {
+                top: 10px;
+                left: 10px;
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">← Quay lại</a>
+    
+    <div class="container">
+        <div class="about-hero">
+            <h1>🪟 Giới thiệu về Hyggshi OS</h1>
+            <p class="subtitle">Hệ điều hành mô phỏng mã nguồn mở trên Roblox</p>
+        </div>
+
+        <div class="about-content">
+            <!-- Giới thiệu chính -->
+            <div class="about-section">
+                <h2>🌟 Tổng quan dự án</h2>
+                <p>Hyggshi OS là một hệ điều hành mô phỏng mã nguồn mở được phát triển trên nền tảng Roblox, do <strong>Nguyễn Minh Phúc</strong> sáng lập và phát triển từ những ý tưởng nhỏ ban đầu. Dự án được tạo ra nhằm mang đến một trải nghiệm hệ điều hành ảo tự do, có thể tùy chỉnh sâu và dễ tiếp cận với cộng đồng người dùng Roblox.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">13</div>
+                        <div class="stat-label">Phiên bản phát hành</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">1</div>
+                        <div class="stat-label">Sao GitHub</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">2</div>
+                        <div class="stat-label">Issues đang mở</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">96.8%</div>
+                        <div class="stat-label">Lua/Luau</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mã nguồn mở -->
+            <div class="about-section">
+                <h2>🔓 Mã nguồn mở, tự do sáng tạo</h2>
+                <p>Khác với nhiều dự án hệ điều hành Roblox khác vốn đóng kín hoặc thương mại hóa, Hyggshi OS được phát triển với triết lý mã nguồn mở:</p>
+                <ul>
+                    <li>Người dùng có thể xem, chỉnh sửa, học hỏi và đóng góp vào mã nguồn.</li>
+                    <li>Cộng đồng có thể xây dựng ứng dụng, giao diện, tiện ích mở rộng và chia sẻ ngược lại cho toàn hệ sinh thái.</li>
+                </ul>
+            </div>
+
+            <!-- Dành cho nhà phát triển -->
+            <div class="about-section">
+                <h2>🔧 Dành cho nhà phát triển & người dùng yêu công nghệ</h2>
+                <p>Hyggshi OS không chỉ là một trò chơi mà là một nền tảng hệ điều hành mô phỏng:</p>
+                <ul>
+                    <li><strong>Hỗ trợ quản lý cửa sổ, Start Menu, ứng dụng đa nhiệm.</strong></li>
+                    <li><strong>Tích hợp hệ thống tin nhắn riêng (Zashi Messaging)</strong> cho phép liên lạc không bị hạn chế bởi Roblox Chat truyền thống.</li>
+                    <li>Cho phép tuỳ chỉnh giao diện và ứng dụng của riêng bạn thông qua Lua & công cụ dựng sẵn.</li>
+                </ul>
+            </div>
+
+            <!-- Phiên bản Developer & Pro -->
+            <div class="about-section">
+                <h2>🧪 Phiên bản Developer & Pro</h2>
+                <p>Để đáp ứng nhu cầu thử nghiệm và sáng tạo, Hyggshi OS có các phiên bản đặc biệt:</p>
+                <ul>
+                    <li><strong>Developer:</strong> Thử nghiệm các tính năng mới, dù có thể không ổn định.</li>
+                    <li><strong>Pro (đã dừng phát triển):</strong> Hỗ trợ tuỳ biến sâu hơn với giao diện giống Windows 7.</li>
+                </ul>
+            </div>
+
+            <!-- Các phiên bản phụ -->
+            <div class="about-section">
+                <h2>📱 Các phiên bản phụ</h2>
+                <p>Hyggshi OS đã từng thử nghiệm nhiều phiên bản đặc biệt:</p>
+                <ul>
+                    <li><strong>Hyggshi OS TV:</strong> Phiên bản dành cho mô phỏng Smart TV.</li>
+                    <li><strong>Hyggshi OS Phone:</strong> Dự án hệ điều hành điện thoại Roblox độc lập với Android/iOS.</li>
+                </ul>
+                <div class="warning-box">
+                    <h4>⚠️ Lưu ý</h4>
+                    <p>Một số dự án đã bị tạm dừng do thiếu nguồn lực.</p>
+                </div>
+            </div>
+
+            <!-- Tranh cãi & thách thức -->
+            <div class="about-section">
+                <h2>⚠️ Tranh cãi & thách thức</h2>
+                <p>Dự án Hyggshi OS cũng gặp phải nhiều vấn đề:</p>
+                <ul>
+                    <li>Kiểm soát nội dung người dùng trong Zashi Messaging.</li>
+                    <li>Lo ngại từ cộng đồng về việc mã nguồn mở có thể bị lạm dụng hoặc sao chép.</li>
+                    <li>Vấn đề bản quyền âm thanh đang được xử lý sau khi nhận được thông báo từ bên thứ ba (Intel).</li>
+                </ul>
+            </div>
+
+            <!-- Mục tiêu -->
+            <div class="about-section">
+                <h2>🚀 Mục tiêu của chúng tôi</h2>
+                <p>Chúng tôi hướng tới việc tạo ra một hệ điều hành giả lập hoàn chỉnh và mở nhất trong Roblox, nơi mọi người có thể:</p>
+                <ul>
+                    <li>Học lập trình Lua thông qua ví dụ thực tế.</li>
+                    <li>Tùy chỉnh giao diện OS của riêng mình.</li>
+                    <li>Tạo app và chia sẻ với cộng đồng.</li>
+                    <li>Và trên hết, được tự do sáng tạo.</li>
+                </ul>
+            </div>
+
+            <!-- Tham gia cộng đồng -->
+            <div class="about-section community-section">
+                <h2>🌐 Tham gia cộng đồng</h2>
+                <p>Bạn có thể:</p>
+                
+                <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center" target="_blank" class="link-card">
+                    <h4>📂 Truy cập mã nguồn trên GitHub</h4>
+                    <p>Xem và đóng góp vào dự án mã nguồn mở</p>
+                </a>
+                
+                <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/issues" target="_blank" class="link-card">
+                    <h4>🐛 Đóng góp code, gửi lỗi hoặc yêu cầu tính năng mới</h4>
+                    <p>Tham gia phát triển và cải thiện dự án</p>
+                </a>
+                
+                <a href="https://discord.gg/PZuDkFzJtc" target="_blank" class="link-card">
+                    <h4>💬 Tham gia nhóm Roblox chính thức của Hyggshi OS</h4>
+                    <p>Kết nối với cộng đồng và nhà phát triển</p>
+                </a>
+                
+                <a href="https://hyggshi-os.fandom.com/wiki/Main_Page" target="_blank" class="link-card">
+                    <h4>📰 Theo dõi các bản cập nhật mới nhất</h4>
+                    <p>Cập nhật thông tin từ nhà phát triển</p>
+                </a>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2024 - 2025 Hyggshi OS Project Center. Tất cả quyền được bảo lưu.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
