@@ -111,13 +111,12 @@ function addMobileMenu() {
         // Check if nav element exists
         const nav = document.querySelector('.nav');
         if (!nav) {
-            console.warn('Navigation element not found, skipping mobile menu setup');
+            // Silently skip if nav is not found
             return;
         }
 
         // Check if mobile menu already exists
         if (document.querySelector('.mobile-menu-btn')) {
-            console.log('Mobile menu already initialized');
             return;
         }
 
@@ -185,9 +184,8 @@ function addMobileMenu() {
             }
         });
 
-        console.log('Mobile menu initialized successfully');
     } catch (error) {
-        console.error('Error initializing mobile menu:', error);
+        // Silently ignore errors
     }
 }
 

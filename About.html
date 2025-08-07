@@ -238,19 +238,19 @@
                 
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-number">13</div>
+                        <div class="stat-number" id="stat-releases">13</div>
                         <div class="stat-label">Phiên bản phát hành</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">1</div>
+                        <div class="stat-number" id="stat-stars">1</div>
                         <div class="stat-label">Sao GitHub</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">2</div>
+                        <div class="stat-number" id="stat-issues">2</div>
                         <div class="stat-label">Issues đang mở</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number">96.8%</div>
+                        <div class="stat-number" id="stat-lua">96.8%</div>
                         <div class="stat-label">Lua/Luau</div>
                     </div>
                 </div>
@@ -357,5 +357,35 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+      async function updateGitHubStats() {
+        try {
+          // Releases
+          const releasesRes = await fetch('https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases');
+          const releases = await releasesRes.json();
+          document.getElementById('stat-releases').textContent = Array.isArray(releases) ? releases.length : '–';
+
+          // Stars, Issues, Languages
+          const repoRes = await fetch('https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center');
+          const repo = await repoRes.json();
+          document.getElementById('stat-stars').textContent = repo.stargazers_count ?? '–';
+          document.getElementById('stat-issues').textContent = repo.open_issues_count ?? '–';
+
+          // Languages
+          const langRes = await fetch('https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center/languages');
+          const langs = await langRes.json();
+          const total = Object.values(langs).reduce((a, b) => a + b, 0);
+          const luaPercent = langs['Lua'] ? ((langs['Lua'] / total) * 100).toFixed(1) : 0;
+          const luauPercent = langs['Luau'] ? ((langs['Luau'] / total) * 100).toFixed(1) : 0;
+          let langText = '';
+          if (luaPercent > 0) langText += `Lua ${luaPercent}%`;
+          if (luauPercent > 0) langText += (langText ? ' / ' : '') + `Luau ${luauPercent}%`;
+          document.getElementById('stat-lua').textContent = langText || '–';
+        } catch (e) {
+          // Fallback: do nothing
+        }
+      }
+      updateGitHubStats();
+    </script>
 </body>
 </html>
