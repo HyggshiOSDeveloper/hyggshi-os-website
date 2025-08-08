@@ -189,6 +189,7 @@
           <li><a href="projects.html" class="nav-link">Projects</a></li>
           <li><a href="History.html" class="nav-link">History</a></li>
           <li><a href="The-Cases.html" class="nav-link">The Cases</a></li>
+          <li><a href="download.html" class="nav-link">Download</a></li>
           <li>
             <a href="https://discord.gg/PZuDkFzJtc" class="nav-link" target="_blank" title="Join Discord" style="display: flex; align-items: center; gap: 0.3rem;">
               <svg height="22" viewBox="0 0 32 32" width="22" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;"><path d="M27.2 6.8A26.9 26.9 0 0 0 20.9 5a1 1 0 0 0-.5.1c-.2.1-.3.3-.3.5-.2.7-.4 1.5-.5 2.2-2.7-.4-5.4-.4-8.1 0-.1-.7-.3-1.5-.5-2.2a.7.7 0 0 0-.3-.5c-.2-.1-.4-.2-.5-.1A26.9 26.9 0 0 0 4.8 6.8a.7.7 0 0 0-.3.3C1.7 11.2.3 15.5.6 19.8a.7.7 0 0 0 .2.4c3.2 2.4 6.3 3.8 9.4 4.7a1 1 0 0 0 1.1-.4c.3-.4.6-.9.8-1.3-3.1-.9-6-2.2-8.7-4.1a.2.2 0 0 1-.1-.2c0-.1 0-.2.1-.2.2-.2.4-.3.6-.2 7.7 5.6 18.1 5.6 25.7 0 .2-.1.4 0 .6.2 0 .1 0 .2-.1.2-2.7 1.9-5.6 3.2-8.7 4.1.3.5.6.9.8 1.3a1 1 0 0 0 1.1.4c3.1-.9 6.2-2.3 9.4-4.7a.7.7 0 0 0 .2-.4c.4-4.3-1-8.6-3.9-12.7a.7.7 0 0 0-.3-.3zM11.7 18.6c-1.1 0-2-1-2-2.1 0-1.2.9-2.1 2-2.1s2 1 2 2.1c0 1.2-.9 2.1-2 2.1zm8.6 0c-1.1 0-2-1-2-2.1 0-1.2.9-2.1 2-2.1s2 1 2 2.1c0 1.2-.9 2.1-2 2.1z"/></svg>
@@ -297,6 +298,51 @@
         </div>
       </section>
 
+      <section id="intro" class="history-section">
+        <div class="container">
+          <h2 class="section-title">Giới thiệu</h2>
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-icon">🧭</div>
+              <h3>Hyggshi OS Project Center</h3>
+              <p>Trung tâm phát triển các dự án hệ điều hành mô phỏng trên Roblox. Hướng tới trải nghiệm mở, hiện đại, tối ưu trên mọi thiết bị và dễ dàng đóng góp.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🧑‍💻</div>
+              <h3>Mã nguồn mở</h3>
+              <p>Khuyến khích cộng đồng tham gia: tạo ứng dụng, giao diện, module và gửi đóng góp qua GitHub để hệ sinh thái ngày càng lớn mạnh.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🤝</div>
+              <h3>Cộng đồng</h3>
+              <p>Tham gia Discord để trao đổi ý tưởng, nhận hỗ trợ và theo dõi các bản cập nhật mới nhất của Hyggshi OS.</p>
+            </div>
+          </div>
+          <div class="hero-buttons" style="margin-top:1.5rem;">
+            <a class="btn btn-secondary" href="About.html">Tìm hiểu dự án</a>
+            <a class="btn btn-primary" href="projects.html">Xem các dự án</a>
+            <a class="btn btn-github" href="https://discord.gg/PZuDkFzJtc" target="_blank" rel="noopener">Tham gia Discord</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="news" class="history-section">
+        <div class="container">
+          <h2 class="section-title">Tin tức</h2>
+          <div id="news-items" class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-icon">📰</div>
+              <h3>Cập nhật đang tải…</h3>
+              <p>Đang lấy tin mới nhất từ GitHub…</p>
+            </div>
+          </div>
+          <div class="hero-buttons" style="margin-top:1.5rem;">
+            <a class="btn btn-github" href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases" target="_blank" rel="noopener">Xem tất cả phát hành</a>
+            <a class="btn btn-secondary" href="projects.html">Xem các dự án</a>
+          </div>
+        </div>
+      </section>
+
       <section class="features" id="learn">
                 <div class="feature-grid">
           <div class="feature-card">
@@ -372,6 +418,37 @@
 
     // Initialize
     showSlide(0);
+  </script>
+  <script>
+    // Populate News from GitHub Releases
+    (async function loadNews() {
+      const container = document.getElementById('news-items');
+      if (!container) return;
+      try {
+        const res = await fetch('https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases');
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) throw new Error('No releases');
+        const items = data.slice(0, 3).map(r => {
+          const date = new Date(r.published_at || r.created_at);
+          const dateStr = date.toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric' });
+          return `
+            <a class="feature-card" href="${r.html_url}" target="_blank" rel="noopener">
+              <div class="feature-icon">📰</div>
+              <h3>${r.name || r.tag_name}</h3>
+              <p>Phát hành: ${dateStr}</p>
+            </a>
+          `;
+        }).join('');
+        container.innerHTML = items;
+      } catch (e) {
+        container.innerHTML = `
+          <div class="feature-card">
+            <div class="feature-icon">ℹ️</div>
+            <h3>Chưa có tin mới</h3>
+            <p>Không thể tải dữ liệu tin tức lúc này. Vui lòng thử lại sau.</p>
+          </div>`;
+      }
+    })();
   </script>
 </body>
 </html> 
