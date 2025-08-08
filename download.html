@@ -20,6 +20,7 @@
           <li><a href="About.html" class="nav-link">About</a></li>
           <li><a href="projects.html" class="nav-link">Projects</a></li>
           <li><a href="History.html" class="nav-link">History</a></li>
+          <li><a href="The-Cases.html" class="nav-link">The Cases</a></li>
           <li><a href="download.html" class="nav-link">Download</a></li>
           <li>
             <a href="https://discord.gg/PZuDkFzJtc" class="nav-link" target="_blank" title="Join Discord" style="display:flex;align-items:center;gap:0.3rem;">
@@ -102,44 +103,80 @@
 
   <script src="script.js"></script>
   <script>
-    // Fetch and render latest GitHub release with assets
-    (async function loadLatestRelease() {
-      const wrap = document.getElementById('latest-release');
-      if (!wrap) return;
-      try {
-        const res = await fetch('https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases/latest');
-        const release = await res.json();
-        if (!release || !release.tag_name) throw new Error('No data');
-        const date = new Date(release.published_at || release.created_at);
-        const dateStr = date.toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric' });
-        const assets = Array.isArray(release.assets) && release.assets.length
-          ? release.assets.map(a => `
-              <a class="feature-card" href="${a.browser_download_url}" target="_blank" rel="noopener">
-                <div class="feature-icon">📥</div>
-                <h3>${a.name}</h3>
-                <p>Kích thước: ${(a.size/1024/1024).toFixed(2)} MB</p>
-              </a>
-            `).join('')
-          : `<div class="feature-card"><div class="feature-icon">ℹ️</div><h3>Chưa có asset đính kèm</h3><p>Vui lòng xem chi tiết trên trang phát hành.</p></div>`;
+    // Auto-refresh latest GitHub release with ETag + visibility refresh
+    (function () {
+      const API_URL = 'https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases/latest';
+      const container = document.getElementById('latest-release');
+      if (!container) return;
 
-        wrap.innerHTML = `
-          <div class="feature-card" style="grid-column: 1 / -1;">
-            <div class="feature-icon">🏷️</div>
-            <h3>${release.name || release.tag_name}</h3>
-            <p>Phát hành: ${dateStr}</p>
-            <p><a href="${release.html_url}" target="_blank" rel="noopener" class="btn btn-secondary" style="margin-top:0.5rem;">Xem trên GitHub</a></p>
-          </div>
-          ${assets}
-        `;
-      } catch (e) {
-        wrap.innerHTML = `
-          <div class="feature-card">
-            <div class="feature-icon">⚠️</div>
-            <h3>Không thể tải dữ liệu</h3>
-            <p>Vui lòng thử lại sau hoặc truy cập trang phát hành trên GitHub.</p>
-          </div>
-        `;
+      let lastEtag = null;
+      let lastReleaseId = null;
+      let refreshTimer = null;
+
+      async function fetchLatestRelease() {
+        try {
+          const res = await fetch(API_URL, {
+            headers: {
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'If-None-Match': lastEtag || ''
+            },
+            cache: 'no-store'
+          });
+
+          if (res.status === 304) return; // Not modified
+
+          lastEtag = res.headers.get('ETag') || lastEtag;
+          const release = await res.json();
+          if (!release || !release.tag_name) return;
+          if (lastReleaseId === release.id) return;
+          lastReleaseId = release.id;
+
+          const date = new Date(release.published_at || release.created_at);
+          const dateStr = date.toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric' });
+          const assets = Array.isArray(release.assets) && release.assets.length
+            ? release.assets.map(a => `
+                <a class="feature-card" href="${a.browser_download_url}" target="_blank" rel="noopener">
+                  <div class="feature-icon">📥</div>
+                  <h3>${a.name}</h3>
+                  <p>Kích thước: ${(a.size/1024/1024).toFixed(2)} MB</p>
+                </a>
+              `).join('')
+            : `<div class="feature-card"><div class="feature-icon">ℹ️</div><h3>Chưa có asset đính kèm</h3><p>Vui lòng xem chi tiết trên trang phát hành.</p></div>`;
+
+          container.innerHTML = `
+            <div class="feature-card" style="grid-column: 1 / -1;">
+              <div class="feature-icon">🏷️</div>
+              <h3>${release.name || release.tag_name}</h3>
+              <p>Phát hành: ${dateStr}</p>
+              <p><a href="${release.html_url}" target="_blank" rel="noopener" class="btn btn-secondary" style="margin-top:0.5rem;">Xem trên GitHub</a></p>
+            </div>
+            ${assets}
+          `;
+        } catch (e) {
+          if (!container.dataset.hadContent) {
+            container.innerHTML = `
+              <div class="feature-card">
+                <div class="feature-icon">⚠️</div>
+                <h3>Không thể tải dữ liệu</h3>
+                <p>Vui lòng thử lại sau hoặc truy cập trang phát hành trên GitHub.</p>
+              </div>
+            `;
+          }
+        }
       }
+
+      function scheduleRefresh() {
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(fetchLatestRelease, 300000); // 5 minutes
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) fetchLatestRelease();
+      });
+
+      fetchLatestRelease();
+      scheduleRefresh();
     })();
   </script>
 </body>
