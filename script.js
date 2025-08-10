@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add mobile menu functionality
     addMobileMenu();
+
+    // Enable Remake mode if requested
+    enableRemakeMode();
 });
 
 function initApp() {
@@ -329,3 +332,60 @@ document.addEventListener('keydown', function(e) {
         }
     }
 }); 
+
+function enableRemakeMode() {
+    try {
+        const url = new URL(window.location.href);
+        const queryWantsRemake = url.searchParams.get('remake') === '1';
+        const hashWantsRemake = (url.hash || '').toLowerCase().includes('remake');
+
+        if (!(queryWantsRemake || hashWantsRemake)) {
+            // Also respect persisted choice
+            const persisted = localStorage.getItem('hyggshi_remake') === '1';
+            if (!persisted) return;
+        }
+
+        document.body.classList.add('remake');
+        localStorage.setItem('hyggshi_remake', '1');
+
+        // Insert a subtle badge
+        if (!document.querySelector('.remake-badge')) {
+            const badge = document.createElement('div');
+            badge.className = 'remake-badge';
+            badge.textContent = 'Remake Preview ON';
+            document.body.appendChild(badge);
+        }
+
+        // Add toggle link to nav if missing
+        const navMenu = document.querySelector('.nav-menu');
+        if (navMenu && !navMenu.querySelector('.remake-toggle')) {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = '#';
+            a.className = 'nav-link remake-toggle';
+            a.textContent = 'Remake: ON';
+            a.title = 'Toggle Remake theme';
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isOn = document.body.classList.toggle('remake');
+                localStorage.setItem('hyggshi_remake', isOn ? '1' : '0');
+                a.textContent = isOn ? 'Remake: ON' : 'Remake: OFF';
+                const badge = document.querySelector('.remake-badge');
+                if (isOn) {
+                    if (!badge) {
+                        const b = document.createElement('div');
+                        b.className = 'remake-badge';
+                        b.textContent = 'Remake Preview ON';
+                        document.body.appendChild(b);
+                    }
+                } else if (badge) {
+                    badge.remove();
+                }
+            });
+            li.appendChild(a);
+            navMenu.appendChild(li);
+        }
+    } catch (e) {
+        // no-op
+    }
+}

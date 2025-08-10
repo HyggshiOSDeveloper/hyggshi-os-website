@@ -745,3 +745,70 @@ body {
 
 /* Position mobile toggle nicely inside header */
 .header .mobile-menu-btn { position: absolute; right: 16px; top: 14px; } 
+
+/* === Remake Theme (Preview) === */
+/* Scoped design overrides activated with body.remake */
+body.remake {
+  /* Updated color system */
+  --bg-gradient: linear-gradient(135deg, #0b1022 0%, #111936 50%, #0a0f24 100%);
+  --surface-1: rgba(255, 255, 255, 0.10);
+  --surface-2: rgba(255, 255, 255, 0.16);
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --text-primary: #f7f9ff;
+  --text-secondary: #d2d8e6;
+  --brand-1: #8aa2ff;
+  --brand-1-strong: #6b86ff;
+  --brand-2: #14deb3;
+  --warning: #ffc266;
+  --danger: #ff7a7a;
+}
+
+/* Subtle motion and elevation refinements */
+body.remake .header {
+  background: rgba(12, 16, 36, 0.6);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+body.remake .feature-card,
+body.remake .floating-card,
+body.remake .timeline-content {
+  background: var(--surface-1);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  transform-style: preserve-3d;
+}
+
+body.remake .feature-card:hover {
+  transform: translateY(-10px) scale(1.01);
+}
+
+body.remake .btn-primary {
+  background: linear-gradient(45deg, var(--brand-1), var(--brand-1-strong));
+  box-shadow: 0 14px 34px rgba(108, 140, 255, 0.42);
+}
+
+body.remake .btn-secondary {
+  background: var(--surface-1);
+  border: 1px solid var(--glass-border);
+}
+
+body.remake .nav-link:hover,
+body.remake .nav-link.active { background: var(--surface-2); }
+
+/* Remake badge */
+.remake-badge {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 10000;
+  background: linear-gradient(135deg, rgba(108, 140, 255, 0.18), rgba(20, 222, 179, 0.18));
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-2);
+  pointer-events: none;
+}
