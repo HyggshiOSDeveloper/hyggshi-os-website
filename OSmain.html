@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web OS</title>
+  <style>
+    /* --- Reset & Base --- */
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: #e6e6e6;
+      user-select: none;
+      background: #000;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* --- Desktop --- */
+    .desktop {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      background:
+        radial-gradient(1200px 800px at 20% 0%, rgba(80,120,255,0.18), rgba(0,0,0,0) 60%),
+        radial-gradient(1000px 700px at 80% 100%, rgba(255,120,200,0.12), rgba(0,0,0,0) 60%),
+        url('Resources/background.png') center/cover no-repeat fixed;
+      overflow: hidden;
+    }
+
+    /* --- Desktop icons --- */
+    .desktop-icons {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: grid;
+      grid-template-columns: repeat(1, 88px);
+      gap: 12px 16px;
+      padding-bottom: 64px; /* leave space above taskbar */
+    }
+    .icon {
+      width: 88px;
+      padding: 10px 8px;
+      text-align: center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 8px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
+      backdrop-filter: blur(6px) saturate(120%);
+      transition: transform 140ms ease, background 140ms ease, box-shadow 140ms ease;
+      cursor: default;
+    }
+    .icon:hover { background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06)); box-shadow: 0 8px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18); }
+    .icon:active { transform: scale(0.98); }
+    .icon img {
+      display: block;
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 8px;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4));
+    }
+    .icon .label {
+      font-size: 12px;
+      line-height: 1.2;
+      color: #f2f2f2;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      white-space: normal;
+    }
+
+    /* --- Windows --- */
+    .window {
+      position: absolute;
+      min-width: 360px;
+      min-height: 260px;
+      max-width: calc(100% - 24px);
+      max-height: calc(100% - 88px);
+      background: linear-gradient(180deg, rgba(30,30,36,0.88), rgba(18,18,24,0.82));
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.08) inset;
+      backdrop-filter: blur(10px) saturate(120%);
+    }
+    .window.hidden { display: none; }
+    .window.minimized { display: none; }
+    .window.active { outline: 2px solid rgba(112, 160, 255, 0.55); box-shadow: 0 24px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(112,160,255,0.25) inset; }
+
+    .titlebar {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+      cursor: move;
+      gap: 8px;
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.35);
+    }
+    .titlebar .traffic {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.45);
+      display: inline-block;
+      cursor: pointer;
+    }
+    .btn:hover { filter: brightness(1.05); box-shadow: 0 0 0 2px rgba(255,255,255,0.15) inset; }
+    .btn-close { background: #ff5f57; }
+    .btn-min   { background: #febc2e; }
+    .btn-max   { background: #28c840; }
+    .titlebar .title {
+      margin-left: 8px;
+      font-weight: 600;
+      color: #fff;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+    }
+    .titlebar .spacer { flex: 1; }
+
+    .content {
+      height: calc(100% - 38px);
+      background: linear-gradient(180deg, rgba(12,12,16,0.55), rgba(12,12,16,0.35));
+      padding: 10px;
+      overflow: auto;
+      user-select: text;
+    }
+
+    /* Notes app */
+    .notes-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+    .notes-toolbar input[type="text"] {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 6px;
+    }
+    .notes-toolbar button {
+      background: #2b76ff;
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .notes-textarea {
+      width: 100%;
+      height: calc(100% - 48px);
+      resize: none;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.16);
+      color: #f8f8f8;
+      padding: 10px;
+      border-radius: 8px;
+      outline: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    /* Browser app */
+    .browser-bar { display: flex; gap: 8px; margin-bottom: 8px; }
+    .browser-bar input[type="text"] {
+      flex: 1;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 6px;
+    }
+    .browser-bar button {
+      background: #2b76ff;
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .browser-frame {
+      width: 100%;
+      height: calc(100% - 48px);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 10px;
+      background: radial-gradient(600px 400px at 50% 0%, rgba(80,120,255,0.05), transparent), #0e0e12;
+    }
+
+    /* --- Taskbar --- */
+    .taskbar {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      background: linear-gradient(180deg, rgba(18,18,24,0.55), rgba(12,12,16,0.55));
+      border-top: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px) saturate(140%);
+      box-shadow: 0 -8px 20px rgba(0,0,0,0.45);
+    }
+    .taskbar .apps { display: flex; gap: 6px; align-items: center; flex: 1; }
+    .task-btn {
+      min-width: 120px;
+      padding: 8px 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 8px;
+      color: #f2f2f2;
+      cursor: pointer;
+      text-align: left;
+      transition: background 140ms ease, box-shadow 140ms ease;
+    }
+    .task-btn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06)); box-shadow: 0 6px 12px rgba(0,0,0,0.35); }
+    .task-btn.active { outline: 2px solid rgba(112,160,255,0.6); box-shadow: 0 0 0 1px rgba(112,160,255,0.35) inset; }
+    .clock { width: 120px; text-align: right; color: #fff; font-weight: 600; }
+    /* --- Start button & menu --- */
+    .start-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 32px;
+      padding: 0 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 140ms ease, transform 80ms ease;
+    }
+    .start-btn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08)); }
+    .start-btn:active { transform: translateY(1px); }
+    .start-menu {
+      position: absolute;
+      left: 8px;
+      bottom: 56px;
+      width: 280px;
+      background: linear-gradient(180deg, rgba(18,18,24,0.95), rgba(12,12,16,0.92));
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.6);
+      padding: 8px;
+      display: none;
+      backdrop-filter: blur(8px);
+    }
+    .start-menu.show { display: block; }
+    .start-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; color: #f0f0f0; transition: background 140ms ease; }
+    .start-item:hover { background: rgba(255,255,255,0.10); }
+    
+    /* --- Context menu --- */
+    .context-menu { position: absolute; min-width: 200px; background: linear-gradient(180deg, rgba(20,20,26,0.98), rgba(16,16,22,0.96)); border: 1px solid rgba(255,255,255,0.16); border-radius: 10px; padding: 6px; display: none; z-index: 20000; backdrop-filter: blur(10px) saturate(130%); box-shadow: 0 12px 28px rgba(0,0,0,0.55); }
+    .context-menu.show { display: block; }
+    .ctx-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; color: #eee; transition: background 140ms ease; }
+    .ctx-item:hover { background: rgba(255,255,255,0.12); }
+    /* --- Resize handles --- */
+    .resize { position: absolute; }
+    .resize.n { top: -3px; left: 0; right: 0; height: 6px; cursor: n-resize; }
+    .resize.s { bottom: -3px; left: 0; right: 0; height: 6px; cursor: s-resize; }
+    .resize.e { right: -3px; top: 0; bottom: 0; width: 6px; cursor: e-resize; }
+    .resize.w { left: -3px; top: 0; bottom: 0; width: 6px; cursor: w-resize; }
+    .resize.ne { right: -3px; top: -3px; width: 10px; height: 10px; cursor: ne-resize; }
+    .resize.nw { left: -3px; top: -3px; width: 10px; height: 10px; cursor: nw-resize; }
+    .resize.se { right: -3px; bottom: -3px; width: 10px; height: 10px; cursor: se-resize; }
+    .resize.sw { left: -3px; bottom: -3px; width: 10px; height: 10px; cursor: sw-resize; }
+
+    /* --- File Manager --- */
+    .fm-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .fm-toolbar button {
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 140ms ease, box-shadow 140ms ease;
+    }
+    .fm-toolbar button:hover { background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08)); box-shadow: 0 6px 12px rgba(0,0,0,0.35); }
+    .fm-breadcrumb { margin-left: auto; color: #ddd; font-size: 13px; }
+    .fm-breadcrumb span { cursor: pointer; color: #9ec5ff; }
+    .fm-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      user-select: none;
+    }
+    .fm-item {
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      cursor: default;
+      text-align: center;
+      transition: transform 120ms ease, background 140ms ease, box-shadow 140ms ease;
+    }
+    .fm-item:hover { background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06)); box-shadow: 0 8px 16px rgba(0,0,0,0.35); transform: translateY(-1px); }
+    .fm-item.selected { outline: 2px solid #70a0ff; box-shadow: 0 0 0 1px rgba(112,160,255,0.35) inset; }
+    .fm-item img { width: 36px; height: 36px; display: block; margin: 4px auto 8px; }
+    .fm-name { font-size: 12px; color: #f2f2f2; word-break: break-word; }
+
+    /* --- Activation watermark --- */
+    .watermark {
+      position: absolute;
+      right: 16px;
+      bottom: 64px;
+      color: rgba(255,255,255,0.6);
+      text-align: right;
+      font-size: 14px;
+      line-height: 1.5;
+      pointer-events: none;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+    .watermark.hidden { display: none; }
+    /* --- Power overlay --- */
+    .power-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: #fff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 50000;
+    }
+    .power-overlay.show { display: flex; }
+    .power-overlay .msg { opacity: 0.9; font-size: 18px; margin-top: 8px; }
+  </style>
+ </head>
+ <body>
+  <div class="desktop" id="desktop">
+    <div class="desktop-icons">
+      <div class="icon" data-launch="notes">
+        <img alt="Notes" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E"/>
+        <div class="label">Ghi chú</div>
+      </div>
+      <div class="icon" data-launch="browser">
+        <img alt="Browser" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2C6.477 2 2 6.477 2 12c0 5.522 4.477 10 10 10s10-4.478 10-10C22 6.477 17.523 2 12 2zm6.93 6H15.9a15.22 15.22 0 0 0-1.308-3.244A8.025 8.025 0 0 1 18.93 8zM12 4.06c.72.96 1.34 2.215 1.78 3.94H10.22C10.66 6.275 11.28 5.02 12 4.06zM4.07 8A8.025 8.025 0 0 1 9.408 4.756 15.22 15.22 0 0 0 8.1 8H4.07zM4.06 12c0-.68.05-1.34.146-1.98H8.06c-.04.645-.06 1.31-.06 1.98 0 .67.02 1.335.06 1.98H4.206A8.96 8.96 0 0 1 4.06 12zM5.07 16h3.03c.28 1.134.64 2.14 1.004 2.88A8.015 8.015 0 0 1 5.07 16zM10.22 16h3.56c-.44 1.725-1.06 2.98-1.78 3.94-.72-.96-1.34-2.215-1.78-3.94zM14.896 18.88c.364-.74.725-1.746 1.004-2.88h3.03a8.015 8.015 0 0 1-4.034 2.88zM19.794 13.98h-3.908c.04-.645.06-1.31.06-1.98 0-.67-.02-1.335-.06-1.98h3.908c.096.64.146 1.3.146 1.98 0 .68-.05 1.34-.146 1.98z'/%3E%3C/svg%3E"/>
+        <div class="label">Trình duyệt</div>
+      </div>
+      <div class="icon" data-launch="files">
+        <img alt="Files" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M10 4H4c-1.1 0-2 .9-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z'/%3E%3C/svg%3E"/>
+        <div class="label">Tập tin</div>
+      </div>
+      <div class="icon" data-launch="imageviewer">
+        <img alt="Image Viewer" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zm-2 0H5V5h14zm-7-3l2.03 2.71a1 1 0 0 0 1.58 0L19 13.5V17H5v-1.5l4.5-6z'/%3E%3C/svg%3E"/>
+        <div class="label">Xem ảnh</div>
+      </div>
+    </div>
+
+    <!-- Notes Window -->
+    <div class="window hidden" id="win-notes" style="left: 60px; top: 80px; width: 560px; height: 380px;" data-app="notes">
+      <div class="titlebar" data-drag-handle>
+        <div class="traffic">
+          <span class="btn btn-close" data-action="close"></span>
+          <span class="btn btn-min" data-action="minimize"></span>
+          <span class="btn btn-max" data-action="maximize"></span>
+        </div>
+        <div class="title">Ghi chú</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content">
+        <div class="notes-toolbar">
+          <input id="notes-title" type="text" placeholder="Tiêu đề ghi chú..."/>
+          <button id="notes-save">Lưu</button>
+          <span id="notes-file-indicator" style="margin-left:auto; color:#9ec5ff; display:none;"></span>
+          <button id="notes-save-file" style="display:none; background:#3bb06b;">Lưu vào tập tin</button>
+        </div>
+        <textarea id="notes-body" class="notes-textarea" placeholder="Viết ghi chú của bạn ở đây..."></textarea>
+      </div>
+    </div>
+
+    <!-- Browser Window -->
+    <div class="window hidden" id="win-browser" style="left: 200px; top: 140px; width: 720px; height: 480px;" data-app="browser">
+      <div class="titlebar" data-drag-handle>
+        <div class="traffic">
+          <span class="btn btn-close" data-action="close"></span>
+          <span class="btn btn-min" data-action="minimize"></span>
+          <span class="btn btn-max" data-action="maximize"></span>
+        </div>
+        <div class="title">Trình duyệt</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content">
+        <div class="browser-bar">
+          <input id="browser-url" type="text" placeholder="Nhập URL (vd: https://example.com)"/>
+          <button id="browser-go">Đi</button>
+        </div>
+        <iframe id="browser-frame" class="browser-frame" src="about:blank" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+
+    <!-- Image Viewer Window -->
+    <div class="window hidden" id="win-imageviewer" style="left: 180px; top: 100px; width: 520px; height: 400px;" data-app="imageviewer">
+      <div class="titlebar" data-drag-handle>
+        <div class="traffic">
+          <span class="btn btn-close" data-action="close"></span>
+          <span class="btn btn-min" data-action="minimize"></span>
+          <span class="btn btn-max" data-action="maximize"></span>
+        </div>
+        <div class="title">Xem ảnh</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:calc(100% - 38px);">
+        <input type="file" id="imgv-upload" accept="image/*" style="margin-bottom:12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:8px 10px; border-radius:6px;">
+        <img id="imgv-img" src="" alt="Chưa có ảnh" style="max-width:100%; max-height:300px; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.4); display:none;">
+        <div id="imgv-filename" style="margin-top:8px; color:#9ec5ff;"></div>
+      </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+      <button class="start-btn" id="start-btn">Start</button>
+      <div class="apps" id="taskbar-apps"></div>
+      <div class="clock" id="clock"></div>
+    </div>
+    <div class="start-menu" id="start-menu">
+      <div class="start-item" data-launch="notes">Ghi chú</div>
+      <div class="start-item" data-launch="browser">Trình duyệt</div>
+      <div class="start-item" data-launch="files">Trình quản lý tập tin</div>
+      <div class="start-item" data-launch="settings">Cài đặt</div>
+      <div class="start-item" data-launch="activate">Kích hoạt Hyggshi OS</div>
+      <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 2px;">
+      <div class="start-item" id="start-restart">Khởi động lại</div>
+      <div class="start-item" id="start-shutdown">Tắt máy</div>
+    </div>
+
+    <!-- Settings Window -->
+    <div class="window hidden" id="win-settings" style="left: 140px; top: 120px; width: 520px; height: 360px;" data-app="settings">
+      <div class="titlebar" data-drag-handle>
+        <div class="traffic">
+          <span class="btn btn-close" data-action="close"></span>
+          <span class="btn btn-min" data-action="minimize"></span>
+          <span class="btn btn-max" data-action="maximize"></span>
+        </div>
+        <div class="title">Cài đặt</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content">
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <label>Ảnh nền (URL):</label>
+          <div style="display:flex; gap:8px;">
+            <input id="bg-url" type="text" placeholder="https://..." style="flex:1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:8px 10px; border-radius:6px;">
+            <button id="bg-apply" style="background:#2b76ff; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Áp dụng</button>
+          </div>
+          <label>Định dạng đồng hồ:</label>
+          <select id="clock-format" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:8px 10px; border-radius:6px;">
+            <option value="24">24 giờ</option>
+            <option value="12">12 giờ</option>
+          </select>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button id="clear-notes" style="background:#b03b3b; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Xóa ghi chú</button>
+            <button id="arrange" style="background:#3bb06b; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Sắp xếp cửa sổ</button>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 10px 0;">
+          <label>Cập nhật hệ thống:</label>
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <div>Phiên bản hiện tại: <strong id="ver-current">1.0.0</strong></div>
+            <div>Phiên bản mới nhất: <strong id="ver-latest">1.0.0</strong></div>
+          </div>
+          <div id="up-msg" style="color:#ddd;"></div>
+          <div style="display:flex; gap:8px;">
+            <button id="up-check" style="background:#2b76ff; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Kiểm tra</button>
+            <button id="up-install" style="background:#3bb06b; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer; display:none;">Cài đặt</button>
+          </div>
+        </div>
+      </div>
+      <div class="resize n"></div><div class="resize s"></div><div class="resize e"></div><div class="resize w"></div>
+      <div class="resize ne"></div><div class="resize nw"></div><div class="resize se"></div><div class="resize sw"></div>
+    </div>
+
+    <!-- Activation Window -->
+    <div class="window hidden" id="win-activate" style="left: 220px; top: 140px; width: 480px; height: 260px;" data-app="activate">
+      <div class="titlebar" data-drag-handle>
+        <div class="traffic">
+          <span class="btn btn-close" data-action="close"></span>
+          <span class="btn btn-min" data-action="minimize"></span>
+          <span class="btn btn-max" data-action="maximize"></span>
+        </div>
+        <div class="title">Kích hoạt Hyggshi OS</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content">
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div>Nhập khóa sản phẩm (định dạng: 0000-XXXX-XXXX):</div>
+          <input id="act-key" type="text" placeholder="0000-ABCD-EFGH" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:10px; border-radius:6px;">
+          <button id="act-apply" style="background:#3bb06b; border:none; color:#fff; padding:10px 12px; border-radius:6px; cursor:pointer;">Kích hoạt</button>
+          <div id="act-msg" style="color:#ffb4b4;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File Manager Window -->
+    <div class="window hidden" id="win-files" style="left: 260px; top: 120px; width: 720px; height: 460px;" data-app="files">
+      <div class="titlebar" data-drag-handle>
+        <div class="traffic">
+          <span class="btn btn-close" data-action="close"></span>
+          <span class="btn btn-min" data-action="minimize"></span>
+          <span class="btn btn-max" data-action="maximize"></span>
+        </div>
+        <div class="title">Trình quản lý tập tin</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content" id="files-content">
+        <div class="fm-toolbar">
+          <button id="fm-up">Lên</button>
+          <button id="fm-new-folder">Thư mục mới</button>
+          <button id="fm-new-file">Tập tin mới</button>
+          <button id="fm-rename">Đổi tên</button>
+          <button id="fm-delete">Xóa</button>
+          <label style="margin-left:8px;">
+            <input type="file" id="fm-upload" multiple style="display:none;">
+            <span class="start-btn" id="fm-upload-btn">Tải lên</span>
+          </label>
+          <div class="fm-breadcrumb" id="fm-breadcrumb"></div>
+        </div>
+        <div class="fm-list" id="fm-list"></div>
+      </div>
+      <!-- File Manager Context Menu -->
+      <div class="context-menu" id="fm-ctx">
+        <div class="ctx-item" data-action="open">Mở</div>
+        <div class="ctx-item" data-action="rename">Đổi tên</div>
+        <div class="ctx-item" data-action="delete">Xóa</div>
+        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 4px 2px;">
+        <div class="ctx-item" data-action="new-folder">Thư mục mới</div>
+        <div class="ctx-item" data-action="new-file">Tập tin mới</div>
+        <div class="ctx-item" data-action="upload">Tải lên...</div>
+      </div>
+      <div class="resize n"></div><div class="resize s"></div><div class="resize e"></div><div class="resize w"></div>
+      <div class="resize ne"></div><div class="resize nw"></div><div class="resize se"></div><div class="resize sw"></div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="ctx">
+      <div class="ctx-item" id="ctx-new-note">Mở Ghi chú</div>
+      <div class="ctx-item" id="ctx-settings">Mở Cài đặt</div>
+      <div class="ctx-item" id="ctx-minimize-all">Thu nhỏ tất cả</div>
+    </div>
+    <div class="watermark" id="watermark">
+      <div>Activate Hyggshi OS</div>
+      <div>Go to Settings to activate Hyggshi OS</div>
+    </div>
+    <div class="power-overlay" id="power-overlay">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2v10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <path d="M6.22 6.22a7.5 7.5 0 1 0 10.61 0" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="msg" id="power-msg"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const desktop = document.getElementById('desktop');
+      const zStack = { current: 10 };
+      const settingsKey = 'webos.settings';
+      const clock = document.getElementById('clock');
+
+      const settings = loadSettings();
+      applySettings(settings);
+
+      // Splash removed
+
+      function bringToFront(win) {
+        zStack.current += 1;
+        win.style.zIndex = String(zStack.current);
+        document.querySelectorAll('.window').forEach(w => w.classList.remove('active'));
+        win.classList.add('active');
+      }
+
+      function showWindow(id) {
+        const win = document.getElementById(id);
+        if (!win) return;
+        win.classList.remove('hidden', 'minimized');
+        bringToFront(win);
+        updateTaskbarFor(win.dataset.app, { exists: true, active: true, minimized: false });
+      }
+
+      function hideWindow(id) {
+        const win = document.getElementById(id);
+        if (!win) return;
+        win.classList.add('hidden');
+        updateTaskbarFor(win.dataset.app, { exists: false });
+      }
+
+      function minimizeWindow(id) {
+        const win = document.getElementById(id);
+        if (!win) return;
+        win.classList.add('minimized');
+        updateTaskbarFor(win.dataset.app, { exists: true, minimized: true, active: false });
+      }
+
+      function toggleMinimize(app) {
+        const win = getWindowByApp(app);
+        if (!win) return;
+        if (win.classList.contains('minimized')) {
+          win.classList.remove('minimized');
+          bringToFront(win);
+          updateTaskbarFor(app, { exists: true, active: true, minimized: false });
+        } else {
+          win.classList.add('minimized');
+          updateTaskbarFor(app, { exists: true, minimized: true, active: false });
+        }
+      }
+
+      function getWindowByApp(app) {
+        if (app === 'notes') return document.getElementById('win-notes');
+        if (app === 'browser') return document.getElementById('win-browser');
+        if (app === 'settings') return document.getElementById('win-settings');
+        if (app === 'files') return document.getElementById('win-files');
+        if (app === 'activate') return document.getElementById('win-activate');
+        if (app === 'imageviewer') return document.getElementById('win-imageviewer'); // FIXED: add imageviewer
+        return null;
+      }
+
+      // Dragging
+      function makeDraggable(win) {
+        const handle = win.querySelector('[data-drag-handle]');
+        let startX = 0, startY = 0, origX = 0, origY = 0;
+        let dragging = false;
+        handle.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          dragging = true;
+          bringToFront(win);
+          startX = e.clientX;
+          startY = e.clientY;
+          const rect = win.getBoundingClientRect();
+          origX = rect.left;
+          origY = rect.top;
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp, { once: true });
+        });
+        function onMove(e) {
+          if (!dragging) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          let nextX = origX + dx;
+          let nextY = origY + dy;
+          const bounds = desktop.getBoundingClientRect();
+          const rect = win.getBoundingClientRect();
+          const maxX = bounds.width - Math.min(rect.width, bounds.width);
+          const maxY = bounds.height - 56; // keep above taskbar
+          nextX = Math.max(0, Math.min(nextX, maxX));
+          nextY = Math.max(0, Math.min(nextY, maxY));
+          win.style.left = nextX + 'px';
+          win.style.top = nextY + 'px';
+        }
+        function onUp() {
+          dragging = false;
+          document.removeEventListener('mousemove', onMove);
+          saveGeometry(win);
+        }
+      }
+
+      function makeResizable(win) {
+        const handles = ['n','s','e','w','ne','nw','se','sw'];
+        handles.forEach(dir => {
+          let el = win.querySelector('.resize.'+dir);
+          if (!el) {
+            el = document.createElement('div');
+            el.className = 'resize ' + dir;
+            win.appendChild(el);
+          }
+          let startX=0, startY=0, startW=0, startH=0, startL=0, startT=0;
+          function onDown(e){
+            e.preventDefault();
+            bringToFront(win);
+            const rect = win.getBoundingClientRect();
+            startX = e.clientX; startY = e.clientY;
+            startW = rect.width; startH = rect.height; startL = rect.left; startT = rect.top;
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp, { once: true });
+          }
+          function onMove(e){
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            let newW = startW, newH = startH, newL = startL, newT = startT;
+            if (dir.includes('e')) newW = Math.max(360, startW + dx);
+            if (dir.includes('s')) newH = Math.max(260, startH + dy);
+            if (dir.includes('w')) { newW = Math.max(360, startW - dx); newL = startL + dx; }
+            if (dir.includes('n')) { newH = Math.max(260, startH - dy); newT = startT + dy; }
+            const bounds = desktop.getBoundingClientRect();
+            newL = Math.max(0, Math.min(newL, bounds.width - newW));
+            newT = Math.max(0, Math.min(newT, bounds.height - 56 - newH));
+            Object.assign(win.style, { left: newL + 'px', top: newT + 'px', width: newW + 'px', height: newH + 'px' });
+          }
+          function onUp(){
+            document.removeEventListener('mousemove', onMove);
+            saveGeometry(win);
+          }
+          el.addEventListener('mousedown', onDown);
+        });
+      }
+
+      // Titlebar controls
+      function wireWindowControls(win) {
+        win.addEventListener('mousedown', () => bringToFront(win));
+        win.querySelector('[data-action="close"]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          hideWindow(win.id);
+        });
+        win.querySelector('[data-action="minimize"]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          minimizeWindow(win.id);
+        });
+        win.querySelector('[data-action="maximize"]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleMaximize(win);
+        });
+      }
+
+      function toggleMaximize(win) {
+        const maximized = win.dataset.maximized === 'true';
+        if (!maximized) {
+          // Save current rect
+          const rect = win.getBoundingClientRect();
+          win.dataset.prevLeft = win.style.left;
+          win.dataset.prevTop = win.style.top;
+          win.dataset.prevWidth = win.style.width;
+          win.dataset.prevHeight = win.style.height;
+          win.style.left = '8px';
+          win.style.top = '8px';
+          win.style.width = 'calc(100% - 16px)';
+          win.style.height = 'calc(100% - 64px)';
+          win.dataset.maximized = 'true';
+        } else {
+          win.style.left = win.dataset.prevLeft || '60px';
+          win.style.top = win.dataset.prevTop || '80px';
+          win.style.width = win.dataset.prevWidth || '';
+          win.style.height = win.dataset.prevHeight || '';
+          win.dataset.maximized = 'false';
+        }
+        bringToFront(win);
+        saveGeometry(win);
+      }
+
+      // Taskbar management
+      const taskbar = document.getElementById('taskbar-apps');
+      function updateTaskbarFor(app, state) {
+        let btn = taskbar.querySelector(`[data-app="${app}"]`);
+        if (!state.exists) {
+          if (btn) btn.remove();
+          return;
+        }
+        if (!btn) {
+          btn = document.createElement('button');
+          btn.className = 'task-btn';
+          btn.dataset.app = app;
+          // Add label for each app
+          btn.textContent =
+            app === 'notes' ? 'Ghi chú' :
+            app === 'browser' ? 'Trình duyệt' :
+            app === 'settings' ? 'Cài đặt' :
+            app === 'files' ? 'Tập tin' :
+            app === 'activate' ? 'Kích hoạt' :
+            app === 'imageviewer' ? 'Xem ảnh' : // FIXED: add label for imageviewer
+            app;
+          btn.addEventListener('click', () => toggleMinimize(app));
+          taskbar.appendChild(btn);
+        }
+        btn.classList.toggle('active', !!state.active);
+      }
+
+      // Desktop icons launcher
+      document.querySelectorAll('.icon').forEach(icon => {
+        icon.addEventListener('dblclick', () => {
+          const app = icon.getAttribute('data-launch');
+          launchApp(app);
+        });
+      });
+
+      const winImageViewer = document.getElementById('win-imageviewer');
+      if (winImageViewer) { makeDraggable(winImageViewer); makeResizable(winImageViewer); wireWindowControls(winImageViewer); restoreGeometry(winImageViewer); }
+
+      function launchApp(app){
+        if (app === 'notes') showWindow('win-notes');
+        if (app === 'browser') showWindow('win-browser');
+        if (app === 'settings') showWindow('win-settings');
+        if (app === 'files') showWindow('win-files');
+        if (app === 'activate') showWindow('win-activate');
+        if (app === 'imageviewer') showWindow('win-imageviewer');
+      }
+
+      // Image Viewer logic
+      const imgvUpload = document.getElementById('imgv-upload');
+      const imgvImg = document.getElementById('imgv-img');
+      const imgvFilename = document.getElementById('imgv-filename');
+      if (imgvUpload) {
+        imgvUpload.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            imgvImg.src = ev.target.result;
+            imgvImg.style.display = 'block';
+            imgvFilename.textContent = file.name;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Wire windows
+      const winNotes = document.getElementById('win-notes');
+      const winBrowser = document.getElementById('win-browser');
+      const winSettings = document.getElementById('win-settings');
+      const winFiles = document.getElementById('win-files');
+      const winActivate = document.getElementById('win-activate');
+      [winNotes, winBrowser, winSettings, winFiles, winActivate].forEach(w => { if(!w) return; makeDraggable(w); makeResizable(w); wireWindowControls(w); restoreGeometry(w); });
+
+      // Notes app logic
+      const NOTES_KEY = 'webos.notes';
+      const titleEl = document.getElementById('notes-title');
+      const bodyEl = document.getElementById('notes-body');
+      const saveBtn = document.getElementById('notes-save');
+      const notesSaveFileBtn = document.getElementById('notes-save-file');
+      const notesFileIndicator = document.getElementById('notes-file-indicator');
+      let currentNotePath = null; // when opened from File Manager
+
+      function updateNotesBindingUI(){
+        const bound = !!currentNotePath;
+        if (notesFileIndicator) {
+          notesFileIndicator.style.display = bound ? 'inline' : 'none';
+          notesFileIndicator.textContent = bound ? `Đang chỉnh sửa: ${currentNotePath}` : '';
+        }
+        if (notesSaveFileBtn) notesSaveFileBtn.style.display = bound ? 'inline-block' : 'none';
+      }
+      function loadNotes() {
+        try {
+          const raw = localStorage.getItem(NOTES_KEY);
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          if (typeof data.title === 'string') titleEl.value = data.title;
+          if (typeof data.body === 'string') bodyEl.value = data.body;
+        } catch {}
+      }
+      function saveNotes() {
+        const data = { title: titleEl.value || '', body: bodyEl.value || '' };
+        localStorage.setItem(NOTES_KEY, JSON.stringify(data));
+      }
+      function saveNotesToFile(){
+        if (!currentNotePath){ alert('Không có tập tin nào được mở từ Trình quản lý tập tin.'); return; }
+        const node = vfsFind(currentNotePath, vfs);
+        if (!node || node.type !== 'file') { alert('Tập tin không còn tồn tại.'); currentNotePath = null; updateNotesBindingUI(); return; }
+        node.content = bodyEl.value || '';
+        vfsSave(vfs);
+        // optionally sync title to filename? Keep as content-only
+      }
+      notesSaveFileBtn && notesSaveFileBtn.addEventListener('click', saveNotesToFile);
+      saveBtn.addEventListener('click', saveNotes);
+      bodyEl.addEventListener('input', () => {
+        // lightweight auto-save debounce
+        clearTimeout(bodyEl.__t);
+        bodyEl.__t = setTimeout(saveNotes, 500);
+      });
+      titleEl.addEventListener('input', () => {
+        clearTimeout(titleEl.__t);
+        titleEl.__t = setTimeout(saveNotes, 500);
+      });
+      loadNotes();
+
+      // Browser app logic
+      const goBtn = document.getElementById('browser-go');
+      const urlInput = document.getElementById('browser-url');
+      const frame = document.getElementById('browser-frame');
+      function normalizeUrl(u) {
+        try {
+          if (!u) return '';
+          const hasProto = /^https?:\/\//i.test(u);
+          return hasProto ? u : 'https://' + u;
+        } catch { return ''; }
+      }
+      function navigate() {
+        const u = normalizeUrl(urlInput.value.trim());
+        if (!u) return;
+        frame.src = u;
+      }
+      goBtn.addEventListener('click', navigate);
+      urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') navigate(); });
+
+      // Clock
+      function updateClock() {
+        const d = new Date();
+        const two = (n) => String(n).padStart(2, '0');
+        clock.textContent = `${two(d.getHours())}:${two(d.getMinutes())}`;
+      }
+      updateClock();
+      setInterval(updateClock, 15000);
+
+      // Start menu
+      const startBtn = document.getElementById('start-btn');
+      const startMenu = document.getElementById('start-menu');
+      startBtn.addEventListener('click', () => { startMenu.classList.toggle('show'); });
+      desktop.addEventListener('click', (e)=>{
+        if (!startMenu.contains(e.target) && e.target !== startBtn) startMenu.classList.remove('show');
+      });
+      startMenu.querySelectorAll('[data-launch]').forEach(it=>{
+        it.addEventListener('click', ()=>{ launchApp(it.getAttribute('data-launch')); startMenu.classList.remove('show'); });
+      });
+      const powerOverlay = document.getElementById('power-overlay');
+      const powerMsg = document.getElementById('power-msg');
+      const startRestart = document.getElementById('start-restart');
+      const startShutdown = document.getElementById('start-shutdown');
+      function showPower(msg){
+        if (powerMsg) powerMsg.textContent = msg || '';
+        powerOverlay.classList.add('show');
+      }
+      function hidePower(){ powerOverlay.classList.remove('show'); }
+      function performRestart(){
+        showPower('Đang khởi động lại...');
+        setTimeout(()=>{ location.reload(); }, 1000);
+      }
+      function performShutdown(){
+        showPower('Đang tắt...');
+        // Simulate shutdown: minimize all and lock input briefly
+        document.querySelectorAll('.window').forEach(w=>{ if(!w.classList.contains('hidden')) w.classList.add('minimized'); });
+        ['notes','browser','settings','files','activate','imageviewer'].forEach(app=> updateTaskbarFor(app, { exists: true, minimized: true, active: false })); // FIXED: add imageviewer
+        setTimeout(()=>{ hidePower(); startMenu.classList.remove('show'); }, 1200);
+      }
+      startRestart && startRestart.addEventListener('click', ()=>{ startMenu.classList.remove('show'); performRestart(); });
+      startShutdown && startShutdown.addEventListener('click', ()=>{ startMenu.classList.remove('show'); performShutdown(); });
+
+      // Activation logic
+      const actInput = document.getElementById('act-key');
+      const actApply = document.getElementById('act-apply');
+      const actMsg = document.getElementById('act-msg');
+      function validKey(k){
+        const key = (k||'').trim().toUpperCase();
+        // Old format: 0000-XXXX-XXXX
+        if (/^0000-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key)) return true;
+        // New format: HSI2-21SA-NMIC-OPOW or HSIO-JKSA-MZQE-UIAS
+        const allowed = [
+          'HSI2-21SA-NMIC-OPOW',
+          'HSIO-JKSA-MZQE-UIAS'
+        ];
+        if (allowed.includes(key)) return true;
+        return false;
+      }
+      actApply && actApply.addEventListener('click', ()=>{
+        const k = actInput.value.trim().toUpperCase();
+        if (!validKey(k)){
+          actMsg.textContent = 'Khóa không hợp lệ. Định dạng: 0000-XXXX-XXXX';
+          return;
+        }
+        setActivated(true);
+        updateWatermark();
+        actMsg.style.color = '#9dffb0';
+        actMsg.textContent = 'Kích hoạt thành công!';
+        setTimeout(()=>{ hideWindow('win-activate'); }, 700);
+      });
+
+      // Update Center in Settings (mock)
+      const VERSION_KEY = 'webos.version';
+      function getCurrentVersion(){ return localStorage.getItem(VERSION_KEY) || '1.0.0'; }
+      function setCurrentVersion(v){ localStorage.setItem(VERSION_KEY, v); }
+      function semverLt(a,b){ const pa=a.split('.').map(Number), pb=b.split('.').map(Number); for(let i=0;i<3;i++){ if((pa[i]||0)<(pb[i]||0)) return true; if((pa[i]||0)>(pb[i]||0)) return false; } return false; }
+
+      const verCurrentEl = document.getElementById('ver-current');
+      const verLatestEl = document.getElementById('ver-latest');
+      const upMsg = document.getElementById('up-msg');
+      const upCheck = document.getElementById('up-check');
+      const upInstall = document.getElementById('up-install');
+      function refreshVersionUI(latest){
+        const cur = getCurrentVersion();
+        if (verCurrentEl) verCurrentEl.textContent = cur;
+        if (verLatestEl) verLatestEl.textContent = latest || cur;
+        const hasUpdate = latest && semverLt(cur, latest);
+        if (upInstall) upInstall.style.display = hasUpdate ? 'inline-block' : 'none';
+        if (upMsg) upMsg.textContent = hasUpdate ? 'Có bản cập nhật mới sẵn sàng.' : 'Hệ thống đã cập nhật.';
+      }
+      let latestVersion = getCurrentVersion();
+      refreshVersionUI(latestVersion);
+      upCheck && upCheck.addEventListener('click', ()=>{
+        if (upMsg) upMsg.textContent = 'Đang kiểm tra...';
+        setTimeout(()=>{ latestVersion = '1.0.1'; refreshVersionUI(latestVersion); }, 600);
+      });
+      upInstall && upInstall.addEventListener('click', ()=>{
+        if (upMsg) upMsg.textContent = 'Đang cài đặt...';
+        setTimeout(()=>{
+          setCurrentVersion(latestVersion);
+          refreshVersionUI(latestVersion);
+          if (upMsg) upMsg.textContent = 'Cài đặt hoàn tất. Vui lòng khởi động lại (giả lập).';
+        }, 1200);
+      });
+
+      // Context menu on desktop
+      const ctx = document.getElementById('ctx');
+      desktop.addEventListener('contextmenu', (e)=>{
+        if (e.target.closest('.window') || e.target.closest('.taskbar')) return;
+        e.preventDefault();
+        const bounds = desktop.getBoundingClientRect();
+        const x = Math.min(e.clientX, bounds.width - 210);
+        const y = Math.min(e.clientY, bounds.height - 120);
+        ctx.style.left = x + 'px';
+        ctx.style.top = y + 'px';
+        ctx.classList.add('show');
+      });
+      desktop.addEventListener('click', ()=> ctx.classList.remove('show'));
+      document.getElementById('ctx-new-note').addEventListener('click', ()=>{ launchApp('notes'); ctx.classList.remove('show'); });
+      document.getElementById('ctx-settings').addEventListener('click', ()=>{ launchApp('settings'); ctx.classList.remove('show'); });
+      document.getElementById('ctx-minimize-all').addEventListener('click', ()=>{
+        document.querySelectorAll('.window').forEach(w=>{ if(!w.classList.contains('hidden')) w.classList.add('minimized'); });
+        ['notes','browser','settings','files','activate','imageviewer'].forEach(app=> updateTaskbarFor(app, { exists: true, minimized: true, active: false })); // FIXED: add imageviewer
+        ctx.classList.remove('show');
+      });
+
+      // Settings behaviors
+      const bgInput = document.getElementById('bg-url');
+      const bgApply = document.getElementById('bg-apply');
+      const clockFormat = document.getElementById('clock-format');
+      const clearNotesBtn = document.getElementById('clear-notes');
+      const arrangeBtn = document.getElementById('arrange');
+      if (bgInput) bgInput.value = settings.bgUrl || '';
+      if (clockFormat) clockFormat.value = settings.clock24h ? '24' : '12';
+      if (bgApply) bgApply.addEventListener('click', ()=>{
+        const s = loadSettings();
+        s.bgUrl = (bgInput.value||'').trim();
+        saveSettings(s);
+        applySettings(s);
+      });
+      if (clockFormat) clockFormat.addEventListener('change', ()=>{
+        const s = loadSettings();
+        s.clock24h = clockFormat.value === '24';
+        saveSettings(s);
+        applySettings(s);
+      });
+      if (clearNotesBtn) clearNotesBtn.addEventListener('click', ()=>{
+        localStorage.removeItem('webos.notes');
+        titleEl.value = '';
+        bodyEl.value = '';
+      });
+      if (arrangeBtn) arrangeBtn.addEventListener('click', ()=>{
+        const windows = Array.from(document.querySelectorAll('.window')).filter(w=>!w.classList.contains('hidden'));
+        const bounds = desktop.getBoundingClientRect();
+        let x = 12, y = 12;
+        windows.forEach((w, i)=>{
+          w.classList.remove('minimized');
+          w.style.left = x + 'px';
+          w.style.top = y + 'px';
+          bringToFront(w);
+          saveGeometry(w);
+          x += 32; y += 24;
+          if (x > bounds.width - 360) { x = 12; }
+          if (y > bounds.height - 260 - 56) { y = 12; }
+        });
+      });
+
+      // Settings helpers
+      function loadSettings(){
+        try { return JSON.parse(localStorage.getItem(settingsKey)) || { clock24h: true, bgUrl: '' }; } catch { return { clock24h: true, bgUrl: '' }; }
+      }
+      function saveSettings(s){ localStorage.setItem(settingsKey, JSON.stringify(s)); }
+      function applySettings(s){
+        if (s.bgUrl) desktop.style.background = `url('${s.bgUrl}') center/cover no-repeat fixed`;
+        updateClock();
+      }
+
+      // --- File Manager VFS ---
+      const ACTIVATE_KEY = 'webos.activation';
+      const watermarkEl = document.getElementById('watermark');
+      function isActivated(){ return localStorage.getItem(ACTIVATE_KEY) === '1'; }
+      function setActivated(v){ if (v) localStorage.setItem(ACTIVATE_KEY,'1'); else localStorage.removeItem(ACTIVATE_KEY); }
+      function updateWatermark(){ if (watermarkEl) watermarkEl.classList.toggle('hidden', isActivated()); }
+      updateWatermark();
+
+      const VFS_KEY = 'webos.vfs';
+      function vfsLoad(){
+        try { return JSON.parse(localStorage.getItem(VFS_KEY)) || { name:'/', type:'dir', children:[] }; } catch { return { name:'/', type:'dir', children:[] }; }
+      }
+      function vfsSave(tree){ localStorage.setItem(VFS_KEY, JSON.stringify(tree)); }
+      function vfsFind(path, tree){
+        if (!path || path === '/') return tree;
+        const parts = path.split('/').filter(Boolean);
+        let node = tree;
+        for (const p of parts){ if (!node.children) return null; node = node.children.find(ch=>ch.name===p); if (!node) return null; }
+        return node;
+      }
+      function vfsPathOf(parentPath, name){ return (parentPath==='/'? '/' : parentPath) + (parentPath.endsWith('/')? '' : '/') + name; }
+      function vfsEnsurePath(path, tree){
+        const parts = path.split('/').filter(Boolean);
+        let node = tree;
+        for (const p of parts){
+          let next = node.children.find(ch=>ch.name===p && ch.type==='dir');
+          if (!next){ next = { name:p, type:'dir', children:[] }; node.children.push(next); }
+          node = next;
+        }
+        return node;
+      }
+      function vfsList(path, tree){ const dir = vfsFind(path, tree); if (!dir || dir.type!=='dir') return []; return [...dir.children].sort((a,b)=> (a.type===b.type? a.name.localeCompare(b.name) : a.type==='dir' ? -1 : 1)); }
+      function vfsAdd(path, node, tree){ const dir = vfsFind(path, tree); if (!dir || dir.type!=='dir') return false; if (dir.children.find(ch=>ch.name===node.name)) return false; dir.children.push(node); return true; }
+      function vfsDelete(path, name, tree){ const dir = vfsFind(path, tree); if (!dir || dir.type!=='dir') return false; const i = dir.children.findIndex(ch=>ch.name===name); if (i>=0){ dir.children.splice(i,1); return true;} return false; }
+      function vfsRename(path, oldName, newName, tree){ const dir = vfsFind(path, tree); if (!dir || dir.type!=='dir') return false; if (dir.children.find(ch=>ch.name===newName)) return false; const n = dir.children.find(ch=>ch.name===oldName); if(!n) return false; n.name = newName; return true; }
+
+      // --- File Manager UI ---
+      const fmList = document.getElementById('fm-list');
+      const fmBreadcrumb = document.getElementById('fm-breadcrumb');
+      const fmUp = document.getElementById('fm-up');
+      const fmNewFolder = document.getElementById('fm-new-folder');
+      const fmNewFile = document.getElementById('fm-new-file');
+      const fmRename = document.getElementById('fm-rename');
+      const fmDelete = document.getElementById('fm-delete');
+      const fmUpload = document.getElementById('fm-upload');
+      const fmUploadBtn = document.getElementById('fm-upload-btn');
+      let vfs = vfsLoad();
+      let cwd = '/';
+      let selected = null;
+
+      function renderFM(){
+        // breadcrumb
+        const parts = [''].concat(cwd.split('/').filter(Boolean));
+        fmBreadcrumb.innerHTML = parts.map((p,i)=>{
+          const path = i===0 ? '/' : parts.slice(0,i+1).join('/') + '/';
+          const name = i===0 ? 'Root' : p;
+          return `<span data-path="${path}">${name}</span>${i<parts.length-1? ' / ' : ''}`;
+        }).join('');
+        fmBreadcrumb.querySelectorAll('span').forEach(el=> el.addEventListener('click', ()=>{ cwd = el.dataset.path; selected = null; renderFM(); }));
+
+        // list
+        const items = vfsList(cwd, vfs);
+        fmList.innerHTML = '';
+        items.forEach(item=>{
+          const div = document.createElement('div');
+          div.className = 'fm-item';
+          div.tabIndex = 0;
+          div.dataset.name = item.name;
+          div.dataset.type = item.type;
+          div.innerHTML = `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='${item.type==='dir' ? 'M10 4H4c-1.1 0-2 .9-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z' : 'M6 2h9l5 5v15a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm8 7H7v2h7V9z' }'/%3E%3C/svg%3E"/><div class='fm-name'></div>`;
+          div.querySelector('.fm-name').textContent = item.name;
+          div.addEventListener('dblclick', ()=>{
+            if (item.type==='dir'){ cwd = (cwd==='/'? '' : cwd) + item.name + '/'; selected = null; renderFM(); }
+            else {
+              launchApp('notes');
+              titleEl.value = item.name;
+              bodyEl.value = item.content || '';
+              currentNotePath = vfsPathOf(cwd, item.name);
+              updateNotesBindingUI();
+            }
+          });
+          div.addEventListener('click', ()=>{
+            fmList.querySelectorAll('.fm-item').forEach(d=>d.classList.remove('selected'));
+            div.classList.add('selected');
+            selected = item;
+          });
+          fmList.appendChild(div);
+        });
+      }
+
+      function ensureSelection(){ if (!selected){ alert('Chưa chọn mục nào.'); return false;} return true; }
+      fmUp && fmUp.addEventListener('click', ()=>{ if (cwd==='/' ) return; const parts = cwd.split('/').filter(Boolean); parts.pop(); cwd = '/' + (parts.length? parts.join('/') + '/' : ''); selected = null; renderFM(); });
+      fmNewFolder && fmNewFolder.addEventListener('click', ()=>{ const name = prompt('Tên thư mục mới:','Thư mục'); if (!name) return; if (vfsAdd(cwd, { name, type:'dir', children:[] }, vfs)) { vfsSave(vfs); renderFM(); } else alert('Tên đã tồn tại.'); });
+      fmNewFile && fmNewFile.addEventListener('click', ()=>{ const name = prompt('Tên tập tin mới:','GhiChu.txt'); if (!name) return; if (vfsAdd(cwd, { name, type:'file', content:'' }, vfs)) { vfsSave(vfs); renderFM(); } else alert('Tên đã tồn tại.'); });
+      fmRename && fmRename.addEventListener('click', ()=>{ if(!ensureSelection()) return; const nn = prompt('Đổi tên:', selected.name); if (!nn || nn===selected.name) return; if (vfsRename(cwd, selected.name, nn, vfs)) { vfsSave(vfs); selected = null; renderFM(); } else alert('Không thể đổi tên.'); });
+      fmDelete && fmDelete.addEventListener('click', ()=>{ if(!ensureSelection()) return; if (confirm('Xóa mục đã chọn?')){ if (vfsDelete(cwd, selected.name, vfs)) { if (currentNotePath === vfsPathOf(cwd, selected.name)) { currentNotePath = null; updateNotesBindingUI(); } vfsSave(vfs); selected = null; renderFM(); } } });
+      fmUploadBtn && fmUploadBtn.addEventListener('click', ()=> fmUpload && fmUpload.click());
+      fmUpload && fmUpload.addEventListener('change', async (e)=>{
+        const files = Array.from(e.target.files||[]);
+        for (const f of files){
+          const content = await f.text();
+          const safeName = f.name;
+          if (!vfsAdd(cwd, { name: safeName, type:'file', content }, vfs)){
+            alert(`Tồn tại: ${safeName}`);
+          }
+        }
+        vfsSave(vfs); renderFM(); e.target.value = '';
+      });
+      const filesContent = document.getElementById('files-content');
+      if (filesContent){
+        filesContent.addEventListener('dragover', (e)=>{ e.preventDefault(); filesContent.style.outline = '2px dashed #70a0ff'; });
+        filesContent.addEventListener('dragleave', ()=>{ filesContent.style.outline = ''; });
+        filesContent.addEventListener('drop', async (e)=>{
+          e.preventDefault(); filesContent.style.outline = '';
+          const items = Array.from(e.dataTransfer.files||[]);
+          for (const f of items){ const content = await f.text(); const name = f.name; vfsAdd(cwd, { name, type:'file', content }, vfs); }
+          vfsSave(vfs); renderFM();
+        });
+
+        // File Manager context menu
+        const fmCtx = document.getElementById('fm-ctx');
+        let ctxTarget = null; // currently right-clicked item
+        function showFmCtx(x, y){
+          const bounds = desktop.getBoundingClientRect();
+          fmCtx.style.left = Math.min(x, bounds.width - 220) + 'px';
+          fmCtx.style.top = Math.min(y, bounds.height - 160) + 'px';
+          fmCtx.classList.add('show');
+        }
+        function hideFmCtx(){ fmCtx.classList.remove('show'); }
+
+        filesContent.addEventListener('contextmenu', (e)=>{
+          const itemEl = e.target.closest('.fm-item');
+          e.preventDefault();
+          if (itemEl){
+            // select it
+            fmList.querySelectorAll('.fm-item').forEach(d=>d.classList.remove('selected'));
+            itemEl.classList.add('selected');
+            selected = { name: itemEl.dataset.name, type: itemEl.dataset.type };
+            ctxTarget = selected;
+          } else {
+            ctxTarget = null;
+            selected = null;
+            fmList.querySelectorAll('.fm-item').forEach(d=>d.classList.remove('selected'));
+          }
+          showFmCtx(e.clientX, e.clientY);
+        });
+        desktop.addEventListener('click', hideFmCtx);
+        fmCtx.addEventListener('click', (e)=>{
+          const act = e.target && e.target.getAttribute('data-action');
+          if (!act) return;
+          hideFmCtx();
+          switch (act){
+            case 'open':
+              if (!ctxTarget) return;
+              if (ctxTarget.type === 'dir'){
+                cwd = (cwd==='/'? '' : cwd) + ctxTarget.name + '/'; selected = null; renderFM();
+              } else {
+                launchApp('notes');
+                const node = vfsFind(vfsPathOf(cwd, ctxTarget.name), vfs);
+                titleEl.value = ctxTarget.name;
+                bodyEl.value = (node && node.content) || '';
+                currentNotePath = vfsPathOf(cwd, ctxTarget.name);
+                updateNotesBindingUI();
+              }
+              break;
+            case 'rename':
+              if (!ctxTarget) return; fmRename.click(); break;
+            case 'delete':
+              if (!ctxTarget) return; fmDelete.click(); break;
+            case 'new-folder':
+              fmNewFolder.click(); break;
+            case 'new-file':
+              fmNewFile.click(); break;
+            case 'upload':
+              fmUploadBtn.click(); break;
+          }
+        });
+      }
+
+      // render on open files window
+      const winFilesEl = document.getElementById('win-files');
+      if (winFilesEl){ winFilesEl.addEventListener('transitionend', ()=>{}); }
+      // When opening Files via showWindow, render if needed
+      const originalShowWindow = showWindow;
+      showWindow = function(id){ originalShowWindow(id); if (id==='win-files') renderFM(); }
+      // Geometry persistence
+      function saveGeometry(win){
+        const app = win.dataset.app; if (!app) return;
+        const key = `webos.geometry.${app}`;
+        const maximized = win.dataset.maximized === 'true';
+        const rect = win.getBoundingClientRect();
+        const data = { left: win.style.left, top: win.style.top, width: win.style.width, height: win.style.height, maximized, rect: { w: rect.width, h: rect.height } };
+        localStorage.setItem(key, JSON.stringify(data));
+      }
+      function restoreGeometry(win){
+        const app = win.dataset.app; if (!app) return;
+        const key = `webos.geometry.${app}`;
+        try {
+          const raw = localStorage.getItem(key); if (!raw) return;
+          const g = JSON.parse(raw);
+          if (g.left) win.style.left = g.left;
+          if (g.top) win.style.top = g.top;
+          if (g.width) win.style.width = g.width;
+          if (g.height) win.style.height = g.height;
+          if (g.maximized) toggleMaximize(win);
+        } catch {}
+      }
+    })();
+  </script>
+</body>
+</html>
+
+

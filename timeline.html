@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline – Hyggshi OS Project Center</title>
+  <link rel="icon" href="Resources/favicon.ico" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .timeline-hero {
+      text-align: center;
+      padding: 3rem 0 2rem 0;
+      color: white;
+    }
+    .timeline-hero h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(45deg, #fff, #f0f0f0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+    .timeline-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 3rem;
+      display: flex;
+      align-items: center;
+    }
+    .timeline-item:nth-child(odd) {
+      flex-direction: row;
+    }
+    .timeline-item:nth-child(even) {
+      flex-direction: row-reverse;
+    }
+    .timeline-date {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 25px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+      position: relative;
+      z-index: 2;
+      min-width: 120px;
+      text-align: center;
+    }
+    .timeline-content {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      padding: 2rem;
+      margin: 0 2rem;
+      color: white;
+      flex: 1;
+      max-width: 400px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    .timeline-content:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .timeline-content h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      color: #fff;
+    }
+    .timeline-content p {
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+    .timeline-line {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+    @media (max-width: 768px) {
+      .timeline-line {
+        left: 20px;
+      }
+      .timeline-item {
+        flex-direction: column !important;
+        align-items: flex-start;
+        margin-left: 40px;
+      }
+      .timeline-date {
+        margin-bottom: 1rem;
+        align-self: flex-start;
+      }
+      .timeline-content {
+        margin: 0;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <nav class="nav">
+        <div class="logo">
+          <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo" style="height: 40px; width: 40px; object-fit: contain; vertical-align: middle; margin-right: 0.5rem; border-radius: 10px; background: rgba(255,255,255,0.2);">
+          <span class="logo-text">Hyggshi OS</span>
+        </div>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="About.html" class="nav-link">About</a></li>
+          <li><a href="projects.html" class="nav-link">Projects</a></li>
+          <li><a href="History.html" class="nav-link">History</a></li>
+          <li><a href="The-Cases.html" class="nav-link">The Cases</a></li>
+          <li><a href="download.html" class="nav-link">Download</a></li>
+          <li><a href="license.html" class="nav-link">License</a></li>
+          <li><a href="erorrcode.html" class="nav-link">Error Codes</a></li>
+          <li><a href="timeline.html" class="nav-link active">Timeline</a></li>
+          <li><a href="OSmain.html" class="nav-link">OS Test</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="main">
+      <section class="timeline-hero">
+        <h1>📅 Timeline – Lịch sử phát triển</h1>
+        <p>Dòng thời gian chi tiết về quá trình phát triển Hyggshi OS</p>
+      </section>
+
+      <section class="timeline-container">
+        <div class="timeline-line"></div>
+        
+        <div class="timeline-item">
+          <div class="timeline-date">2024</div>
+          <div class="timeline-content">
+            <h3>🎯 Khởi đầu dự án</h3>
+            <p>Bắt đầu với ý tưởng tạo một hệ điều hành mô phỏng mã nguồn mở trên Roblox. Sau 50 lần bị từ chối mã nguồn từ các dự án khác, quyết định tự phát triển.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2024</div>
+          <div class="timeline-content">
+            <h3>🚀 Hyggshi OS 1.0</h3>
+            <p>Phiên bản đầu tiên ra mắt với các tính năng cơ bản: cửa sổ, giao diện, Start Menu đơn giản. Đánh dấu sự khởi đầu của một hệ điều hành mã nguồn mở.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2024</div>
+          <div class="timeline-content">
+            <h3>🔧 Hyggshi OS 1.1.6</h3>
+            <p>Cải tiến và bổ sung ứng dụng, chuẩn bị nền tảng cho các phiên bản nâng cao và thử nghiệm.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2024</div>
+          <div class="timeline-content">
+            <h3>🧪 Hyggshi OS Developer</h3>
+            <p>Phiên bản thử nghiệm với ứng dụng Zashi Messaging - cho phép nhắn tin không bị kiểm duyệt bởi Roblox chat mặc định.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2024</div>
+          <div class="timeline-content">
+            <h3>📀 Hyggshi OS 2.0</h3>
+            <p>Phiên bản chính thức thứ hai với giao diện chuyên nghiệp hơn, cải thiện quản lý cửa sổ và Start Menu. Tích hợp các yếu tố từ bản Developer.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2025</div>
+          <div class="timeline-content">
+            <h3>⚠️ Vấn đề bản quyền</h3>
+            <p>Intel yêu cầu thay đổi âm thanh khởi động do nghi ngờ vi phạm bản quyền. Đây là bài học về việc sử dụng tài sản âm thanh.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2025</div>
+          <div class="timeline-content">
+            <h3>🚧 Hyggshi OS 3.0</h3>
+            <p>Bắt đầu phát triển phiên bản mới nhất với định hướng ổn định, mã nguồn mở hoàn toàn và nâng cấp toàn diện.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2025</div>
+          <div class="timeline-content">
+            <h3>🧩 Hyggshi OS Flex</h3>
+            <p>Phiên bản nhẹ và linh hoạt, được thiết kế để dễ dàng chỉnh sửa, tùy biến và phát triển theo ý muốn.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-date">2025</div>
+          <div class="timeline-content">
+            <h3>🌐 Mở rộng cộng đồng</h3>
+            <p>Phát triển hệ thống Module, Zashi Messaging và thu hút sự chú ý của cộng đồng Roblox. Tạo ra một hệ sinh thái mở.</p>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© 2024 - 2025 Hyggshi OS Project Center. All rights reserved. | <a href="license.html" style="color:#7289da;text-decoration:underline;">License</a></p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
