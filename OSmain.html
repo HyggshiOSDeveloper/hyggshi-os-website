@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web OS</title>
+  <title>Hyggshi OS Web Edition</title>
   <style>
     /* --- Reset & Base --- */
     * { box-sizing: border-box; }
@@ -326,6 +326,34 @@
     }
     .power-overlay.show { display: flex; }
     .power-overlay .msg { opacity: 0.9; font-size: 18px; margin-top: 8px; }
+
+    /* --- Calculator Window specific styles --- */
+    #win-calculator .calc-op {
+      background: #1e2c4a;
+      color: #9ec5ff;
+      font-weight: bold;
+    }
+    #win-calculator .calc-func {
+      background: #2b2b2b;
+      color: #ffb4b4;
+      font-weight: bold;
+    }
+    #win-calculator button {
+      font-size: 1.2em;
+      padding: 14px 0;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #win-calculator button:hover {
+      background: rgba(80,120,255,0.18);
+    }
+    #win-calculator button:active {
+      background: rgba(80,120,255,0.28);
+    }
   </style>
  </head>
  <body>
@@ -346,6 +374,14 @@
       <div class="icon" data-launch="imageviewer">
         <img alt="Image Viewer" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zm-2 0H5V5h14zm-7-3l2.03 2.71a1 1 0 0 0 1.58 0L19 13.5V17H5v-1.5l4.5-6z'/%3E%3C/svg%3E"/>
         <div class="label">Xem ảnh</div>
+      </div>
+      <div class="icon" data-launch="calculator">
+        <img alt="Calculator" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Crect x='4' y='2' width='16' height='20' rx='3'/%3E%3Crect x='7' y='6' width='10' height='2' rx='1' fill='black'/%3E%3Ccircle cx='8.5' cy='11.5' r='1.5' fill='black'/%3E%3Ccircle cx='12' cy='11.5' r='1.5' fill='black'/%3E%3Ccircle cx='15.5' cy='11.5' r='1.5' fill='black'/%3E%3Ccircle cx='8.5' cy='15.5' r='1.5' fill='black'/%3E%3Ccircle cx='12' cy='15.5' r='1.5' fill='black'/%3E%3Ccircle cx='15.5' cy='15.5' r='1.5' fill='black'/%3E%3C/svg%3E"/>
+        <div class="label">Máy tính</div>
+      </div>
+      <div class="icon" data-launch="bin">
+        <img alt="Bin" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M3 6h18v2H3V6zm2 3h14l-1.5 12.5a2 2 0 01-2 1.5H8.5a2 2 0 01-2-1.5L5 9zm5 2v7h2v-7h-2zm4 0v7h2v-7h-2z'/%3E%3C/svg%3E"/>
+        <div class="label">Thùng rác</div>
       </div>
     </div>
 
@@ -372,7 +408,7 @@
     </div>
 
     <!-- Browser Window -->
-    <div class="window hidden" id="win-browser" style="left: 200px; top: 140px; width: 720px; height: 480px;" data-app="browser">
+    <div class="window hidden" id="win-browser" style="left: 200px; top: 140px; width: 900px; height: 600px;" data-app="browser">
       <div class="titlebar" data-drag-handle>
         <div class="traffic">
           <span class="btn btn-close" data-action="close"></span>
@@ -382,12 +418,20 @@
         <div class="title">Trình duyệt</div>
         <div class="spacer"></div>
       </div>
-      <div class="content">
-        <div class="browser-bar">
-          <input id="browser-url" type="text" placeholder="Nhập URL (vd: https://example.com)"/>
-          <button id="browser-go">Đi</button>
+      <div class="content" style="display:flex; flex-direction:column; height:calc(100% - 38px); padding:0;">
+        <div class="browser-bar" style="display:flex; gap:8px; padding:10px;">
+          <button id="browser-back" title="Quay lại" style="background:#222; color:#fff; border:none; border-radius:6px; padding:0 10px; font-size:1.2em;">←</button>
+          <button id="browser-forward" title="Tiến" style="background:#222; color:#fff; border:none; border-radius:6px; padding:0 10px; font-size:1.2em;">→</button>
+          <input id="browser-url" type="text" placeholder="Nhập URL hoặc tìm kiếm..." style="flex:1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:8px 10px; border-radius:6px;">
+          <button id="browser-go" style="background:#2b76ff; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Đi</button>
+          <button id="browser-refresh" title="Tải lại" style="background:#222; color:#fff; border:none; border-radius:6px; padding:0 10px; font-size:1.2em;">⟳</button>
         </div>
-        <iframe id="browser-frame" class="browser-frame" src="about:blank" referrerpolicy="no-referrer"></iframe>
+        <iframe id="browser-frame" class="browser-frame" src="about:blank" referrerpolicy="no-referrer" sandbox="allow-scripts" style="flex:1; border:0; border-radius:0 0 10px 10px; background:#0e0e12;"></iframe>
+        <div id="browser-error" style="display:none; flex:1; align-items:center; justify-content:center; color:#ffb4b4; font-size:1.2em; text-align:center; background:#18181c; border-radius:0 0 10px 10px; position:absolute; left:0; right:0; bottom:0; top:68px; z-index:10;">
+          Không thể tải trang này trong trình duyệt web OS.<br>
+          Nhiều trang web hiện đại chặn nhúng trong iframe.<br>
+          Hãy thử một trang web khác hoặc tìm kiếm với DuckDuckGo Lite.
+        </div>
       </div>
     </div>
 
@@ -406,6 +450,60 @@
         <input type="file" id="imgv-upload" accept="image/*" style="margin-bottom:12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:8px 10px; border-radius:6px;">
         <img id="imgv-img" src="" alt="Chưa có ảnh" style="max-width:100%; max-height:300px; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.4); display:none;">
         <div id="imgv-filename" style="margin-top:8px; color:#9ec5ff;"></div>
+      </div>
+    </div>
+
+    <!-- Calculator Window -->
+    <div class="window hidden" id="win-calculator" style="left: 320px; top: 160px; width: 340px; height: 480px;" data-app="calculator">
+      <div class="titlebar" data-drag-handle>
+        <div class="traffic">
+          <span class="btn btn-close" data-action="close"></span>
+          <span class="btn btn-min" data-action="minimize"></span>
+          <span class="btn btn-max" data-action="maximize"></span>
+        </div>
+        <div class="title">Máy tính</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content" style="display:flex; flex-direction:column; align-items:center; justify-content:flex-start; height:calc(100% - 38px); padding:18px 10px 10px 10px;">
+        <input id="calc-display" type="text" readonly style="width:100%; font-size:2.2em; text-align:right; margin-bottom:18px; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.18); color:#fff; padding:16px 12px; border-radius:10px;">
+        <div id="calc-buttons" style="width:100%; display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
+          <button data-calc="C" class="calc-func">C</button>
+          <button data-calc="(">(</button>
+          <button data-calc=")">)</button>
+          <button data-calc="/" class="calc-op">÷</button>
+          <button data-calc="7">7</button>
+          <button data-calc="8">8</button>
+          <button data-calc="9">9</button>
+          <button data-calc="*" class="calc-op">×</button>
+          <button data-calc="4">4</button>
+          <button data-calc="5">5</button>
+          <button data-calc="6">6</button>
+          <button data-calc="-" class="calc-op">−</button>
+          <button data-calc="1">1</button>
+          <button data-calc="2">2</button>
+          <button data-calc="3">3</button>
+          <button data-calc="+" class="calc-op">+</button>
+          <button data-calc="0" style="grid-column:span 2;">0</button>
+          <button data-calc=".">.</button>
+          <button data-calc="=" style="background:#2b76ff; color:#fff; font-weight:bold;">=</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bin Window -->
+    <div class="window hidden" id="win-bin" style="left: 180px; top: 120px; width: 420px; height: 340px;" data-app="bin">
+      <div class="titlebar" data-drag-handle>
+        <div class="traffic">
+          <span class="btn btn-close" data-action="close"></span>
+          <span class="btn btn-min" data-action="minimize"></span>
+          <span class="btn btn-max" data-action="maximize"></span>
+        </div>
+        <div class="title">Thùng rác</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="content" id="bin-content" style="padding:18px;">
+        <div id="bin-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px;"></div>
+        <button id="bin-empty" style="margin-top:18px; background:#b03b3b; border:none; color:#fff; padding:8px 16px; border-radius:6px; cursor:pointer;">Dọn sạch thùng rác</button>
       </div>
     </div>
 
@@ -611,7 +709,9 @@
         if (app === 'settings') return document.getElementById('win-settings');
         if (app === 'files') return document.getElementById('win-files');
         if (app === 'activate') return document.getElementById('win-activate');
-        if (app === 'imageviewer') return document.getElementById('win-imageviewer'); // FIXED: add imageviewer
+        if (app === 'imageviewer') return document.getElementById('win-imageviewer');
+        if (app === 'calculator') return document.getElementById('win-calculator');
+        if (app === 'bin') return document.getElementById('win-bin'); // Added
         return null;
       }
 
@@ -748,14 +848,15 @@
           btn = document.createElement('button');
           btn.className = 'task-btn';
           btn.dataset.app = app;
-          // Add label for each app
           btn.textContent =
             app === 'notes' ? 'Ghi chú' :
             app === 'browser' ? 'Trình duyệt' :
             app === 'settings' ? 'Cài đặt' :
             app === 'files' ? 'Tập tin' :
             app === 'activate' ? 'Kích hoạt' :
-            app === 'imageviewer' ? 'Xem ảnh' : // FIXED: add label for imageviewer
+            app === 'imageviewer' ? 'Xem ảnh' :
+            app === 'calculator' ? 'Máy tính' :
+            app === 'bin' ? 'Thùng rác' : // Added
             app;
           btn.addEventListener('click', () => toggleMinimize(app));
           taskbar.appendChild(btn);
@@ -781,6 +882,8 @@
         if (app === 'files') showWindow('win-files');
         if (app === 'activate') showWindow('win-activate');
         if (app === 'imageviewer') showWindow('win-imageviewer');
+        if (app === 'calculator') showWindow('win-calculator');
+        if (app === 'bin') showWindow('win-bin'); // Added
       }
 
       // Image Viewer logic
@@ -807,7 +910,9 @@
       const winSettings = document.getElementById('win-settings');
       const winFiles = document.getElementById('win-files');
       const winActivate = document.getElementById('win-activate');
-      [winNotes, winBrowser, winSettings, winFiles, winActivate].forEach(w => { if(!w) return; makeDraggable(w); makeResizable(w); wireWindowControls(w); restoreGeometry(w); });
+      const winCalculator = document.getElementById('win-calculator'); // <-- ADD THIS LINE
+      const winBin = document.getElementById('win-bin');
+      [winNotes, winBrowser, winSettings, winFiles, winActivate, winCalculator, winBin].forEach(w => { if(!w) return; makeDraggable(w); makeResizable(w); wireWindowControls(w); restoreGeometry(w); });
 
       // Notes app logic
       const NOTES_KEY = 'webos.notes';
@@ -864,20 +969,75 @@
       const goBtn = document.getElementById('browser-go');
       const urlInput = document.getElementById('browser-url');
       const frame = document.getElementById('browser-frame');
+      const browserError = document.getElementById('browser-error');
+      const backBtn = document.getElementById('browser-back');
+      const forwardBtn = document.getElementById('browser-forward');
+      const refreshBtn = document.getElementById('browser-refresh');
+      let browserHistory = [];
+      let browserIndex = -1;
+
+      function isLikelyUrl(str) {
+        return /^https?:\/\//i.test(str) || /^[\w-]+\.[\w-]+/.test(str);
+      }
       function normalizeUrl(u) {
+        if (!u) return '';
+        u = u.trim();
+        if (/^https?:\/\//i.test(u)) return u;
+        if (u.startsWith('www.')) return 'https://' + u;
+        if (isLikelyUrl(u)) return 'https://' + u;
+        // Use DuckDuckGo Lite for search (works in iframe)
+        return 'https://google.com' + encodeURIComponent(u);
+      }
+      function navigate(url, addToHistory = true) {
+        const navUrl = normalizeUrl(url);
+        frame.src = navUrl;
+        urlInput.value = url;
+        if (browserError) browserError.style.display = 'none';
+
+        // Show error if iframe fails to load
+        frame.addEventListener('error', () => {
+          browserError.style.display = 'flex';
+        });
+        if (addToHistory) {
+          if (browserIndex < browserHistory.length - 1) {
+            browserHistory = browserHistory.slice(0, browserIndex + 1);
+          }
+          browserHistory.push(url);
+          browserIndex = browserHistory.length - 1;
+        }
+        updateNavButtons();
+      }
+
+      // Show error if iframe fails to load (timeout fallback)
+      let browserTimeout;
+      frame.addEventListener('load', () => {
+        clearTimeout(browserTimeout);
+        browserError.style.display = 'none';
+        // Try to update address bar if possible
         try {
-          if (!u) return '';
-          const hasProto = /^https?:\/\//i.test(u);
-          return hasProto ? u : 'https://' + u;
-        } catch { return ''; }
+          urlInput.value = frame.contentWindow.location.href;
+        } catch {}
+      });
+      frame.addEventListener('error', () => {
+        if (browserError) browserError.style.display = 'flex';
+      });
+      function tryShowError() {
+        browserTimeout = setTimeout(() => {
+          browserError.style.display = 'flex';
+        }, 2000);
       }
-      function navigate() {
-        const u = normalizeUrl(urlInput.value.trim());
-        if (!u) return;
-        frame.src = u;
+      frame.addEventListener('loadstart', tryShowError);
+
+      // When opening browser, focus address bar
+      if (winBrowser) {
+        const origShowWindowBrowser = showWindow;
+        showWindow = function(id) {
+          origShowWindowBrowser(id);
+          if (id === 'win-browser') {
+            setTimeout(() => { urlInput.focus(); }, 100);
+          }
+        };
       }
-      goBtn.addEventListener('click', navigate);
-      urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') navigate(); });
 
       // Clock
       function updateClock() {
@@ -915,7 +1075,7 @@
         showPower('Đang tắt...');
         // Simulate shutdown: minimize all and lock input briefly
         document.querySelectorAll('.window').forEach(w=>{ if(!w.classList.contains('hidden')) w.classList.add('minimized'); });
-        ['notes','browser','settings','files','activate','imageviewer'].forEach(app=> updateTaskbarFor(app, { exists: true, minimized: true, active: false })); // FIXED: add imageviewer
+        ['notes','browser','settings','files','activate','imageviewer','calculator','bin'].forEach(app=> updateTaskbarFor(app, { exists: true, minimized: true, active: false })); // FIXED: add imageviewer
         setTimeout(()=>{ hidePower(); startMenu.classList.remove('show'); }, 1200);
       }
       startRestart && startRestart.addEventListener('click', ()=>{ startMenu.classList.remove('show'); performRestart(); });
@@ -1001,7 +1161,7 @@
       document.getElementById('ctx-settings').addEventListener('click', ()=>{ launchApp('settings'); ctx.classList.remove('show'); });
       document.getElementById('ctx-minimize-all').addEventListener('click', ()=>{
         document.querySelectorAll('.window').forEach(w=>{ if(!w.classList.contains('hidden')) w.classList.add('minimized'); });
-        ['notes','browser','settings','files','activate','imageviewer'].forEach(app=> updateTaskbarFor(app, { exists: true, minimized: true, active: false })); // FIXED: add imageviewer
+        ['notes','browser','settings','files','activate','imageviewer','calculator','bin'].forEach(app=> updateTaskbarFor(app, { exists: true, minimized: true, active: false })); // FIXED: add imageviewer
         ctx.classList.remove('show');
       });
 
@@ -1023,7 +1183,7 @@
         const s = loadSettings();
         s.clock24h = clockFormat.value === '24';
         saveSettings(s);
-        applySettings(s);
+               applySettings(s);
       });
       if (clearNotesBtn) clearNotesBtn.addEventListener('click', ()=>{
         localStorage.removeItem('webos.notes');
@@ -1125,7 +1285,7 @@
           div.tabIndex = 0;
           div.dataset.name = item.name;
           div.dataset.type = item.type;
-          div.innerHTML = `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='${item.type==='dir' ? 'M10 4H4c-1.1 0-2 .9-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z' : 'M6 2h9l5 5v15a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm8 7H7v2h7V9z' }'/%3E%3C/svg%3E"/><div class='fm-name'></div>`;
+          div.innerHTML = `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='${item.type==='dir' ? 'M10 4H4c-1.1 0-2 .9- 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z' : 'M6 2h9l5 5v15a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm8 7H7v2h7V9z' }'/%3E%3C/svg%3E"/><div class='fm-name'></div>`;
           div.querySelector('.fm-name').textContent = item.name;
           div.addEventListener('dblclick', ()=>{
             if (item.type==='dir'){ cwd = (cwd==='/'? '' : cwd) + item.name + '/'; selected = null; renderFM(); }
@@ -1263,6 +1423,78 @@
           if (g.maximized) toggleMaximize(win);
         } catch {}
       }
+
+      // Calculator logic
+      const calcDisplay = document.getElementById('calc-display');
+      const calcButtons = document.getElementById('calc-buttons');
+      let calcExpr = '';
+      function updateCalcDisplay() {
+        calcDisplay.value = calcExpr || '0';
+      }
+      function safeEval(expr) {
+        try {
+          // Only allow numbers, operators, parens, dot
+          if (!/^[\d+\-*/().\s]+$/.test(expr)) return 'Err';
+          // eslint-disable-next-line no-eval
+          let val = eval(expr);
+          if (typeof val === 'number' && isFinite(val)) return val;
+          return 'Err';
+        } catch { return 'Err'; }
+      }
+      function handleCalcInput(v) {
+        if (v === 'C') {
+          calcExpr = '';
+        } else if (v === '=') {
+          calcExpr = String(safeEval(calcExpr));
+        } else {
+          if (calcExpr === 'Err') calcExpr = '';
+          calcExpr += v;
+        }
+        updateCalcDisplay();
+      }
+      if (calcButtons) {
+        calcButtons.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-calc]');
+          if (!btn) return;
+          handleCalcInput(btn.getAttribute('data-calc'));
+        });
+      }
+      updateCalcDisplay();
+
+      // --- Keyboard input for calculator ---
+      if (winCalculator) {
+        winCalculator.addEventListener('keydown', (e) => {
+          if (winCalculator.classList.contains('hidden') || winCalculator.classList.contains('minimized')) return;
+          if (e.key >= '0' && e.key <= '9') {
+            handleCalcInput(e.key);
+            e.preventDefault();
+          } else if ("+-*/().".includes(e.key)) {
+            handleCalcInput(e.key);
+            e.preventDefault();
+          } else if (e.key === 'Enter' || e.key === '=') {
+            handleCalcInput('=');
+            e.preventDefault();
+          } else if (e.key === 'Backspace') {
+            if (calcExpr === 'Err') calcExpr = '';
+            calcExpr = calcExpr.slice(0, -1);
+            updateCalcDisplay();
+            e.preventDefault();
+          } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+            handleCalcInput('C');
+            e.preventDefault();
+          }
+        });
+        // Focus calculator window when shown
+        const origShowWindow = showWindow;
+        showWindow = function(id) {
+          origShowWindow(id);
+          if (id === 'win-calculator') {
+            setTimeout(() => { winCalculator.focus(); }, 50);
+          }
+        };
+        winCalculator.tabIndex = 0;
+      }
+
     })();
   </script>
 </body>
