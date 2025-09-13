@@ -10,12 +10,34 @@
     html, body {
       height: 100%;
       margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
       color: #e6e6e6;
       user-select: none;
       background: #000;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
+      /* Performance optimizations */
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      perspective: 1000px;
+    }
+
+    /* Modern scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.3);
     }
 
     /* --- Desktop --- */
@@ -26,8 +48,36 @@
       background:
         radial-gradient(1200px 800px at 20% 0%, rgba(80,120,255,0.18), rgba(0,0,0,0) 60%),
         radial-gradient(1000px 700px at 80% 100%, rgba(255,120,200,0.12), rgba(0,0,0,0) 60%),
+        radial-gradient(800px 600px at 50% 50%, rgba(120,80,255,0.08), rgba(0,0,0,0) 50%),
         url('Resources/background.png') center/cover no-repeat fixed;
       overflow: hidden;
+      backdrop-filter: blur(0.5px);
+      /* Performance optimizations */
+      transform: translateZ(0);
+      will-change: auto;
+    }
+
+    /* Optimized background particles - reduced for performance */
+    .desktop::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.08), transparent),
+        radial-gradient(2px 2px at 160px 80px, rgba(255,255,255,0.06), transparent);
+      background-repeat: repeat;
+      background-size: 300px 200px;
+      animation: float 30s ease-in-out infinite;
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
     }
 
     /* --- Desktop icons --- */
@@ -39,34 +89,61 @@
       grid-template-columns: repeat(1, 88px);
       gap: 12px 16px;
       padding-bottom: 64px;
+      z-index: 10;
     }
     .icon {
       width: 88px;
       padding: 10px 8px;
       text-align: center;
-      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 8px;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
       backdrop-filter: blur(6px) saturate(120%);
-      transition: transform 140ms ease, background 140ms ease, box-shadow 140ms ease;
+      transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+      will-change: transform, box-shadow;
       cursor: default;
+      position: relative;
+      overflow: hidden;
     }
-    .icon:hover { background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06)); box-shadow: 0 8px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18); }
-    .icon:active { transform: scale(0.98); }
+    .icon::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.3s ease-out;
+      will-change: left;
+    }
+    .icon:hover::before {
+      left: 100%;
+    }
+    .icon:hover { 
+      background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08)); 
+      box-shadow: 0 10px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    .icon:active { transform: scale(0.96) translateY(0px); }
     .icon img {
       display: block;
       width: 36px;
       height: 36px;
       margin: 0 auto 8px;
-      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4));
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      transition: transform 200ms ease;
+    }
+    .icon:hover img {
+      transform: scale(1.05);
     }
     .icon .label {
       font-size: 12px;
       line-height: 1.2;
       color: #f2f2f2;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
       white-space: normal;
+      font-weight: 500;
     }
 
     /* --- Windows --- */
@@ -76,26 +153,50 @@
       min-height: 260px;
       max-width: calc(100% - 24px);
       max-height: calc(100% - 88px);
-      background: linear-gradient(180deg, rgba(30,30,36,0.88), rgba(18,18,24,0.82));
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(32,32,40,0.92), rgba(20,20,28,0.88));
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.08) inset;
-      backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.1) inset;
+      backdrop-filter: blur(8px) saturate(120%);
+      transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+      will-change: transform, box-shadow;
     }
     .window.hidden { display: none; }
     .window.minimized { display: none; }
-    .window.active { outline: 2px solid rgba(112, 160, 255, 0.55); box-shadow: 0 24px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(112,160,255,0.25) inset; }
+    .window.active { 
+      outline: 2px solid rgba(112, 160, 255, 0.6); 
+      box-shadow: 0 24px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(112,160,255,0.3) inset;
+      transform: scale(1.001);
+    }
+    .window.dragging {
+      opacity: 0.95;
+      box-shadow: 0 30px 80px rgba(80,120,255,0.3), 0 0 0 2px #70a0ff inset;
+      transition: none;
+      /* Performance optimizations for dragging */
+      will-change: transform;
+      transform: translateZ(0);
+    }
 
     .titlebar {
-      height: 38px;
+      height: 42px;
       display: flex;
       align-items: center;
-      padding: 0 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+      padding: 0 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
       cursor: move;
-      gap: 8px;
-      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.35);
+      gap: 10px;
+      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.4);
+      position: relative;
+    }
+    .titlebar::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
     }
     .titlebar .traffic {
       display: flex;
@@ -103,31 +204,50 @@
       align-items: center;
     }
     .btn {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.45);
+      border: 1px solid rgba(255,255,255,0.5);
       display: inline-block;
       cursor: pointer;
+      transition: all 150ms ease;
+      position: relative;
     }
-    .btn:hover { filter: brightness(1.05); box-shadow: 0 0 0 2px rgba(255,255,255,0.15) inset; }
-    .btn-close { background: #ff5f57; }
-    .btn-min   { background: #febc2e; }
-    .btn-max   { background: #28c840; }
+    .btn:hover { 
+      filter: brightness(1.1); 
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.2) inset;
+      transform: scale(1.1);
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn-close { background: linear-gradient(135deg, #ff5f57, #ff4444); }
+    .btn-min   { background: linear-gradient(135deg, #febc2e, #ffb300); }
+    .btn-max   { background: linear-gradient(135deg, #28c840, #22a836); }
     .titlebar .title {
       margin-left: 8px;
       font-weight: 600;
       color: #fff;
-      text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+      font-size: 14px;
+      letter-spacing: 0.3px;
     }
     .titlebar .spacer { flex: 1; }
 
     .content {
-      height: calc(100% - 38px);
-      background: linear-gradient(180deg, rgba(12,12,16,0.55), rgba(12,12,16,0.35));
-      padding: 10px;
+      height: calc(100% - 42px);
+      background: linear-gradient(180deg, rgba(14,14,20,0.6), rgba(12,12,18,0.4));
+      padding: 12px;
       overflow: auto;
       user-select: text;
+      position: relative;
+    }
+    .content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
     }
 
     /* Notes app */
@@ -191,69 +311,283 @@
     .taskbar {
       position: absolute;
       left: 0; right: 0; bottom: 0;
-      height: 48px;
+      height: 40px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 0 10px;
-      background: linear-gradient(180deg, rgba(18,18,24,0.55), rgba(12,12,16,0.55));
-      border-top: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(10px) saturate(140%);
-      box-shadow: 0 -8px 20px rgba(0,0,0,0.45);
+      background: rgba(20,20,20,0.95);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 0 6px;
+      z-index: 1000;
     }
-    .taskbar .apps { display: flex; gap: 6px; align-items: center; flex: 1; }
+    .taskbar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    }
+    
+    /* Taskbar apps */
+    .apps {
+      display: flex;
+      gap: 4px;
+      flex: 1;
+    }
     .task-btn {
       min-width: 120px;
-      padding: 8px 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 8px;
+      padding: 10px 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
       color: #f2f2f2;
       cursor: pointer;
       text-align: left;
-      transition: background 140ms ease, box-shadow 140ms ease;
+      transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+      will-change: transform, box-shadow;
+      font-weight: 500;
+      position: relative;
+      overflow: hidden;
     }
-    .task-btn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06)); box-shadow: 0 6px 12px rgba(0,0,0,0.35); }
-    .task-btn.active { outline: 2px solid rgba(112,160,255,0.6); box-shadow: 0 0 0 1px rgba(112,160,255,0.35) inset; }
-    .clock { width: 120px; text-align: right; color: #fff; font-weight: 600; }
+    .task-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.4s;
+    }
+    .task-btn:hover::before {
+      left: 100%;
+    }
+    .task-btn:hover { 
+      background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08)); 
+      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+      transform: translateY(-1px);
+    }
+    .task-btn.active { 
+      outline: 2px solid rgba(112,160,255,0.7); 
+      box-shadow: 0 0 0 1px rgba(112,160,255,0.4) inset;
+      background: linear-gradient(180deg, rgba(112,160,255,0.15), rgba(112,160,255,0.08));
+    }
+    
+    /* Clock */
+    .clock {
+      width: 70px;
+      padding: 0 0 0 8px;
+      color: #fff;
+      font-size: 16px;
+      text-align: right;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      background: none;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      line-height: 1.1;
+    }
+    .taskbar .clock {
+      margin-left: auto;
+      padding-left: 0;
+      font-size: 16px;
+      color: #fff;
+      background: none;
+      position: relative;
+      z-index: 1;
+      width: 70px;
+      height: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+    }
     
     /* --- Start button & menu --- */
+    /* Start button */
     .start-btn {
-      display: inline-flex;
+      width: 40px;
+      height: 40px;
+      display: flex;
       align-items: center;
-      gap: 8px;
-      height: 32px;
-      padding: 0 12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 8px;
-      color: #fff;
+      justify-content: center;
+      background: transparent;
+      border: none;
       cursor: pointer;
-      transition: background 140ms ease, transform 80ms ease;
     }
-    .start-btn:hover { background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08)); }
-    .start-btn:active { transform: translateY(1px); }
+    .start-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: white;
+    }
+    .start-btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+    }
+
     .start-menu {
       position: absolute;
       left: 8px;
       bottom: 56px;
-      width: 280px;
-      background: linear-gradient(180deg, rgba(18,18,24,0.95), rgba(12,12,16,0.92));
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 12px;
-      box-shadow: 0 16px 36px rgba(0,0,0,0.6);
-      padding: 8px;
-      display: none;
-      backdrop-filter: blur(8px);
+      width: 320px;
+      background: linear-gradient(180deg, rgba(24,24,32,0.98), rgba(16,16,24,0.95));
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+      padding: 12px;
+      backdrop-filter: blur(12px) saturate(140%);
+      z-index: 10000;
+      transform: translateY(10px);
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms cubic-bezier(0.4, 0, 0.2, 1), visibility 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
     }
-    .start-menu.show { display: block; }
-    .start-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; color: #f0f0f0; transition: background 140ms ease; }
-    .start-item:hover { background: rgba(255,255,255,0.10); }
+    .start-menu.show { 
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .start-menu::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    }
+    .start-section {
+      margin-bottom: 8px;
+    }
+    .start-section-title {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      padding: 0 4px;
+      font-weight: 600;
+    }
+    .start-item { 
+      padding: 12px 16px; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      color: #f0f0f0; 
+      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .start-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.4s;
+    }
+    .start-item:hover::before {
+      left: 100%;
+    }
+    .start-item:hover { 
+      background: rgba(255,255,255,0.12);
+      transform: translateX(4px);
+    }
+    .start-item:active {
+      transform: translateX(2px) scale(0.98);
+    }
+    .start-item:focus {
+      outline: 2px solid rgba(112,160,255,0.6);
+      outline-offset: -2px;
+      background: rgba(255,255,255,0.15);
+    }
+    .start-item-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ec5ff;
+      flex-shrink: 0;
+    }
+    .start-item-text {
+      flex: 1;
+      font-weight: 500;
+    }
+    .start-item-shortcut {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    }
+    .start-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      margin: 8px 4px;
+    }
+    
+    .start-search {
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .start-search input {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      outline: none;
+      transition: all 200ms ease;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    .start-search input:focus {
+      border-color: rgba(112,160,255,0.6);
+      box-shadow: 0 0 0 2px rgba(112,160,255,0.2);
+      background: rgba(255,255,255,0.12);
+    }
+    .start-search input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+    
+    .start-item.hidden {
+      display: none;
+    }
     
     /* --- Context menu --- */
-    .context-menu { position: absolute; min-width: 200px; background: linear-gradient(180deg, rgba(20,20,26,0.98), rgba(16,16,22,0.96)); border: 1px solid rgba(255,255,255,0.16); border-radius: 10px; padding: 6px; display: none; z-index: 20000; backdrop-filter: blur(10px) saturate(130%); box-shadow: 0 12px 28px rgba(0,0,0,0.55); }
+    .context-menu { 
+      position: absolute; 
+      min-width: 200px; 
+      background: linear-gradient(180deg, rgba(20,20,26,0.98), rgba(16,16,22,0.96)); 
+      border: 1px solid rgba(255,255,255,0.16); 
+      border-radius: 10px; 
+      padding: 6px; 
+      display: none; 
+      z-index: 20000; 
+      backdrop-filter: blur(10px) saturate(130%); 
+      box-shadow: 0 12px 28px rgba(0,0,0,0.55); 
+    }
     .context-menu.show { display: block; }
-    .ctx-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; color: #eee; transition: background 140ms ease; }
+    .ctx-item { 
+      padding: 8px 10px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      color: #eee; 
+      transition: background 140ms ease; 
+    }
     .ctx-item:hover { background: rgba(255,255,255,0.12); }
     
     /* --- Resize handles --- */
@@ -312,9 +646,155 @@
       line-height: 1.5;
       pointer-events: none;
       text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
     }
     .watermark.hidden { display: none; }
+
+    /* --- Notification system --- */
+    #notification-container {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
     
+    .notification {
+      position: relative;
+      background: linear-gradient(180deg, rgba(32,32,40,0.95), rgba(20,20,28,0.92));
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 12px;
+      padding: 16px;
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      backdrop-filter: blur(12px);
+      transform: translateX(400px);
+      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 300px;
+      pointer-events: auto;
+    }
+    .notification.show {
+      transform: translateX(0);
+    }
+    .notification.success {
+      border-left: 4px solid #28c840;
+    }
+    .notification.error {
+      border-left: 4px solid #ff5f57;
+    }
+    .notification.info {
+      border-left: 4px solid #2b76ff;
+    }
+
+    /* --- Loading spinner --- */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* --- Modern input styles --- */
+    input[type="text"], input[type="url"], textarea, select {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      outline: none;
+      transition: all 200ms ease;
+      font-family: inherit;
+    }
+    input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus {
+      border-color: rgba(112,160,255,0.6);
+      box-shadow: 0 0 0 2px rgba(112,160,255,0.2);
+      background: rgba(255,255,255,0.12);
+    }
+
+    /* --- Modern button styles --- */
+    button {
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+      font-weight: 500;
+    }
+    button:hover {
+      background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    button:active {
+      transform: translateY(0px);
+    }
+    button.primary {
+      background: linear-gradient(180deg, #2b76ff, #1e5fd9);
+      border-color: #2b76ff;
+    }
+    button.primary:hover {
+      background: linear-gradient(180deg, #3b86ff, #2b76ff);
+      box-shadow: 0 4px 12px rgba(43,118,255,0.4);
+    }
+    button.success {
+      background: linear-gradient(180deg, #28c840, #1ea832);
+      border-color: #28c840;
+    }
+    button.danger {
+      background: linear-gradient(180deg, #ff5f57, #e54d45);
+      border-color: #ff5f57;
+    }
+
+    /* Override specific app button styles */
+    .notes-toolbar button,
+    .browser-bar button,
+    .fm-toolbar button {
+      background: linear-gradient(180deg, #2b76ff, #1e5fd9);
+      border-color: #2b76ff;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .notes-toolbar button:hover,
+    .browser-bar button:hover,
+    .fm-toolbar button:hover {
+      background: linear-gradient(180deg, #3b86ff, #2b76ff);
+      box-shadow: 0 4px 12px rgba(43,118,255,0.4);
+    }
+
+    /* Navigation buttons for browser */
+    .nav-btn {
+      background: rgba(255,255,255,0.08) !important;
+      border: 1px solid rgba(255,255,255,0.18) !important;
+      color: #fff !important;
+      padding: 0 10px !important;
+      font-size: 1.2em !important;
+      border-radius: 6px !important;
+      min-width: 36px !important;
+    }
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.12) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    }
+
     /* --- Power overlay --- */
     .power-overlay {
       position: fixed;
@@ -349,13 +829,17 @@
       background: rgba(255,255,255,0.08);
       color: #fff;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
     }
     #win-calculator button:hover {
       background: rgba(80,120,255,0.18);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     #win-calculator button:active {
       background: rgba(80,120,255,0.28);
+      transform: translateY(0px);
     }
 
     .window.dragging {
@@ -370,27 +854,27 @@
     <div class="desktop-icons">
       <div class="icon" data-launch="notes">
         <img alt="Notes" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E"/>
-        <div class="label">Ghi chú</div>
+        <div class="label">Notes</div>
       </div>
       <div class="icon" data-launch="browser">
         <img alt="Browser" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2C6.477 2 2 6.477 2 12c0 5.522 4.477 10 10 10s10-4.478 10-10C22 6.477 17.523 2 12 2zm6.93 6H15.9a15.22 15.22 0 0 0-1.308-3.244A8.025 8.025 0 0 1 18.93 8zM12 4.06c.72.96 1.34 2.215 1.78 3.94H10.22C10.66 6.275 11.28 5.02 12 4.06zM4.07 8A8.025 8.025 0 0 1 9.408 4.756 15.22 15.22 0 0 0 8.1 8H4.07zM4.06 12c0-.68.05-1.34.146-1.98H8.06c-.04.645-.06 1.31-.06 1.98 0 .67.02 1.335.06 1.98H4.206A8.96 8.96 0 0 1 4.06 12zM5.07 16h3.03c.28 1.134.64 2.14 1.004 2.88A8.015 8.015 0 0 1 5.07 16zM10.22 16h3.56c-.44 1.725-1.06 2.98-1.78 3.94-.72-.96-1.34-2.215-1.78-3.94zM14.896 18.88c.364-.74.725-1.746 1.004-2.88h3.03a8.015 8.015 0 0 1-4.034 2.88zM19.794 13.98h-3.908c.04-.645.06-1.31.06-1.98 0-.67-.02-1.335-.06-1.98h3.908c.096.64.146 1.3.146 1.98 0 .68-.05 1.34-.146 1.98z'/%3E%3C/svg%3E"/>
-        <div class="label">Trình duyệt</div>
+        <div class="label">Browser</div>
       </div>
       <div class="icon" data-launch="files">
         <img alt="Files" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M10 4H4c-1.1 0-2 .9-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z'/%3E%3C/svg%3E"/>
-        <div class="label">Tập tin</div>
+        <div class="label">Files</div>
       </div>
       <div class="icon" data-launch="imageviewer">
         <img alt="Image Viewer" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zm-2 0H5V5h14zm-7-3l2.03 2.71a1 1 0 0 0 1.58 0L19 13.5V17H5v-1.5l4.5-6z'/%3E%3C/svg%3E"/>
-        <div class="label">Xem ảnh</div>
+        <div class="label">Image Viewer</div>
       </div>
       <div class="icon" data-launch="calculator">
         <img alt="Calculator" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Crect x='4' y='2' width='16' height='20' rx='3'/%3E%3Crect x='7' y='6' width='10' height='2' rx='1' fill='black'/%3E%3Ccircle cx='8.5' cy='11.5' r='1.5' fill='black'/%3E%3Ccircle cx='12' cy='11.5' r='1.5' fill='black'/%3E%3Ccircle cx='15.5' cy='11.5' r='1.5' fill='black'/%3E%3Ccircle cx='8.5' cy='15.5' r='1.5' fill='black'/%3E%3Ccircle cx='12' cy='15.5' r='1.5' fill='black'/%3E%3Ccircle cx='15.5' cy='15.5' r='1.5' fill='black'/%3E%3C/svg%3E"/>
-        <div class="label">Máy tính</div>
+        <div class="label">Calculator</div>
       </div>
       <div class="icon" data-launch="bin">
         <img alt="Bin" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M3 6h18v2H3V6zm2 3h14l-1.5 12.5a2 2 0 01-2 1.5H8.5a2 2 0 01-2-1.5L5 9zm5 2v7h2v-7h-2zm4 0v7h2v-7h-2z'/%3E%3C/svg%3E"/>
-        <div class="label">Thùng rác</div>
+        <div class="label">Recycle Bin</div>
       </div>
       <div class="icon" data-launch="aichat">
         <img alt="AI Chat" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'/%3E%3Ccircle cx='8.5' cy='10.5' r='1.5'/%3E%3Ccircle cx='15.5' cy='10.5' r='1.5'/%3E%3Cpath d='M16 14c-1.1 1-2.5 1.5-4 1.5s-2.9-.5-4-1.5'/%3E%3C/svg%3E" style="background:#fff;border-radius:50%;padding:2px;"/>
@@ -406,17 +890,17 @@
           <span class="btn btn-min" data-action="minimize"></span>
           <span class="btn btn-max" data-action="maximize"></span>
         </div>
-        <div class="title">Ghi chú</div>
+        <div class="title">Notes</div>
         <div class="spacer"></div>
       </div>
       <div class="content">
         <div class="notes-toolbar">
-          <input id="notes-title" type="text" placeholder="Tiêu đề ghi chú..."/>
-          <button id="notes-save">Lưu</button>
+          <input id="notes-title" type="text" placeholder="Note title..."/>
+          <button id="notes-save" class="primary">Save</button>
           <span id="notes-file-indicator" style="margin-left:auto; color:#9ec5ff; display:none;"></span>
-          <button id="notes-save-file" style="display:none; background:#3bb06b;">Lưu vào tập tin</button>
+          <button id="notes-save-file" class="success" style="display:none;">Save to file</button>
         </div>
-        <textarea id="notes-body" class="notes-textarea" placeholder="Viết ghi chú của bạn ở đây..."></textarea>
+        <textarea id="notes-body" class="notes-textarea" placeholder="Write your note here..."></textarea>
       </div>
     </div>
 
@@ -428,17 +912,17 @@
           <span class="btn btn-min" data-action="minimize"></span>
           <span class="btn btn-max" data-action="maximize"></span>
         </div>
-        <div class="title">Trình duyệt</div>
+        <div class="title">Browser</div>
         <div class="spacer"></div>
       </div>
       <div class="content" style="display:flex; flex-direction:column; height:calc(100% - 38px); padding:0;">
         <div class="browser-bar" style="display:flex; gap:8px; padding:10px;">
-          <button id="browser-back" title="Quay lại" style="background:#222; color:#fff; border:none; border-radius:6px; padding:0 10px; font-size:1.2em;">←</button>
-          <button id="browser-forward" title="Tiến" style="background:#222; color:#fff; border:none; border-radius:6px; padding:0 10px; font-size:1.2em;">→</button>
-          <input id="browser-url" type="text" placeholder="Nhập URL hoặc tìm kiếm..." style="flex:1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:8px 10px; border-radius:6px;">
-          <button id="browser-go" style="background:#2b76ff; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Đi</button>
-          <button id="browser-refresh" title="Tải lại" style="background:#222; color:#fff; border:none; border-radius:6px; padding:0 10px; font-size:1.2em;">⟳</button>
-          <button id="browser-external" title="Mở trong tab mới" style="background:#222; color:#fff; border:none; border-radius:6px; padding:0 10px; font-size:1.2em;">↗</button>
+          <button id="browser-back" title="Quay lại" class="nav-btn">←</button>
+          <button id="browser-forward" title="Tiến" class="nav-btn">→</button>
+          <input id="browser-url" type="text" placeholder="Nhập URL hoặc tìm kiếm..." style="flex:1;">
+          <button id="browser-go" class="primary">Đi</button>
+          <button id="browser-refresh" title="Tải lại" class="nav-btn">⟳</button>
+          <button id="browser-external" title="Mở trong tab mới" class="nav-btn">↗</button>
         </div>
         <iframe id="browser-frame" class="browser-frame" src="about:blank" referrerpolicy="no-referrer" sandbox="allow-scripts" style="flex:1; border:0; border-radius:0 0 10px 10px; background:#0e0e12;"></iframe>
         <div id="browser-error" style="display:none; flex:1; align-items:center; justify-content:center; color:#ffb4b4; font-size:1.2em; text-align:center; background:#18181c; border-radius:0 0 10px 10px; position:absolute; left:0; right:0; bottom:0; top:68px; z-index:10;">
@@ -457,11 +941,11 @@
           <span class="btn btn-min" data-action="minimize"></span>
           <span class="btn btn-max" data-action="maximize"></span>
         </div>
-        <div class="title">Xem ảnh</div>
+        <div class="title">Image Viewer</div>
         <div class="spacer"></div>
       </div>
       <div class="content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:calc(100% - 38px);">
-        <input type="file" id="imgv-upload" accept="image/*" style="margin-bottom:12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:8px 10px; border-radius:6px;">
+        <input type="file" id="imgv-upload" accept="image/*" style="margin-bottom:12px;">
         <img id="imgv-img" src="" alt="Chưa có ảnh" style="max-width:100%; max-height:300px; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.4); display:none;">
         <div id="imgv-filename" style="margin-top:8px; color:#9ec5ff;"></div>
       </div>
@@ -475,11 +959,11 @@
           <span class="btn btn-min" data-action="minimize"></span>
           <span class="btn btn-max" data-action="maximize"></span>
         </div>
-        <div class="title">Máy tính</div>
+        <div class="title">Calculator</div>
         <div class="spacer"></div>
       </div>
       <div class="content" style="display:flex; flex-direction:column; align-items:center; justify-content:flex-start; height:calc(100% - 38px); padding:18px 10px 10px 10px;">
-        <input id="calc-display" type="text" readonly style="width:100%; font-size:2.2em; text-align:right; margin-bottom:18px; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.18); color:#fff; padding:16px 12px; border-radius:10px;">
+        <input id="calc-display" type="text" readonly style="width:100%; font-size:2.2em; text-align:right; margin-bottom:18px; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.18); color:#fff; padding:16px 12px; border-radius:10px; font-family: inherit;">
         <div id="calc-buttons" style="width:100%; display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
           <button data-calc="C" class="calc-func">C</button>
           <button data-calc="(">(</button>
@@ -517,7 +1001,7 @@
       </div>
       <div class="content" id="bin-content" style="padding:18px;">
         <div id="bin-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px;"></div>
-        <button id="bin-empty" style="margin-top:18px; background:#b03b3b; border:none; color:#fff; padding:8px 16px; border-radius:6px; cursor:pointer;">Dọn sạch thùng rác</button>
+        <button id="bin-empty" class="danger" style="margin-top:18px;">Dọn sạch thùng rác</button>
       </div>
     </div>
 
@@ -539,8 +1023,8 @@
           </div>
         </div>
         <form id="aichat-form" style="display:flex; gap:8px;">
-          <input id="aichat-input" type="text" placeholder="Nhập câu hỏi..." autocomplete="off" style="flex:1; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:#fff; padding:10px; border-radius:6px;">
-          <button style="background:#2b76ff; border:none; color:#fff; padding:10px 16px; border-radius:6px; cursor:pointer;">Gửi</button>
+          <input id="aichat-input" type="text" placeholder="Nhập câu hỏi..." autocomplete="off" style="flex:1;">
+          <button class="primary">Gửi</button>
         </form>
       </div>
     </div>
@@ -558,14 +1042,14 @@
       </div>
       <div class="content" id="files-content">
         <div class="fm-toolbar">
-          <button id="fm-up">Lên</button>
-          <button id="fm-new-folder">Thư mục mới</button>
-          <button id="fm-new-file">Tập tin mới</button>
-          <button id="fm-rename">Đổi tên</button>
-          <button id="fm-delete">Xóa</button>
+          <button id="fm-up" class="primary">Lên</button>
+          <button id="fm-new-folder" class="success">Thư mục mới</button>
+          <button id="fm-new-file" class="primary">Tập tin mới</button>
+          <button id="fm-rename" class="primary">Đổi tên</button>
+          <button id="fm-delete" class="danger">Xóa</button>
           <label style="margin-left:8px;">
             <input type="file" id="fm-upload" multiple style="display:none;">
-            <button class="start-btn" id="fm-upload-btn" style="border:none;">Tải lên</button>
+            <button id="fm-upload-btn" class="primary">Tải lên</button>
           </label>
           <div class="fm-breadcrumb" id="fm-breadcrumb"></div>
         </div>
@@ -600,17 +1084,27 @@
         <div style="display:flex; flex-direction:column; gap:10px;">
           <label>Ảnh nền (URL):</label>
           <div style="display:flex; gap:8px;">
-            <input id="bg-url" type="text" placeholder="https://..." style="flex:1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:8px 10px; border-radius:6px;">
-            <button id="bg-apply" style="background:#2b76ff; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Áp dụng</button>
+            <input id="bg-url" type="text" placeholder="https://..." style="flex:1;">
+            <button id="bg-apply" class="primary">Áp dụng</button>
           </div>
           <label>Định dạng đồng hồ:</label>
-          <select id="clock-format" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:8px 10px; border-radius:6px;">
+          <select id="clock-format">
             <option value="24">24 giờ</option>
             <option value="12">12 giờ</option>
           </select>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <button id="clear-notes" style="background:#b03b3b; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Xóa ghi chú</button>
-            <button id="arrange" style="background:#3bb06b; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Sắp xếp cửa sổ</button>
+            <button id="clear-notes" class="danger">Xóa ghi chú</button>
+            <button id="arrange" class="success">Sắp xếp cửa sổ</button>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 10px 0;">
+          <label>Google AI Studio API Key:</label>
+          <div style="display:flex; gap:8px;">
+            <input id="api-key" type="password" placeholder="Enter your API key..." style="flex:1;">
+            <button id="api-save" class="primary">Lưu</button>
+          </div>
+          <div style="font-size:12px; color:#9ec5ff; margin-top:4px;">
+            Get your API key from <a href="https://aistudio.google.com/" target="_blank" style="color:#70a0ff;">Google AI Studio</a>
           </div>
 
           <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 10px 0;">
@@ -621,8 +1115,8 @@
           </div>
           <div id="up-msg" style="color:#ddd;"></div>
           <div style="display:flex; gap:8px;">
-            <button id="up-check" style="background:#2b76ff; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer;">Kiểm tra</button>
-            <button id="up-install" style="background:#3bb06b; border:none; color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer; display:none;">Cài đặt</button>
+            <button id="up-check" class="primary">Kiểm tra</button>
+            <button id="up-install" class="success" style="display:none;">Cài đặt</button>
           </div>
         </div>
       </div>
@@ -644,8 +1138,8 @@
       <div class="content">
         <div style="display:flex; flex-direction:column; gap:10px;">
           <div>Nhập khóa sản phẩm (định dạng: 0000-XXXX-XXXX):</div>
-          <input id="act-key" type="text" placeholder="0000-ABCD-EFGH" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color:#fff; padding:10px; border-radius:6px;">
-          <button id="act-apply" style="background:#3bb06b; border:none; color:#fff; padding:10px 12px; border-radius:6px; cursor:pointer;">Kích hoạt</button>
+                      <input id="act-key" type="text" placeholder="0000-ABCD-EFGH">
+          <button id="act-apply" class="success">Kích hoạt</button>
           <div id="act-msg" style="color:#ffb4b4;"></div>
         </div>
       </div>
@@ -653,27 +1147,81 @@
 
     <!-- Taskbar -->
     <div class="taskbar">
-      <button class="start-btn" id="start-btn">Start</button>
+      <button class="start-btn" id="start-btn">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>
+        </svg>
+      </button>
       <div class="apps" id="taskbar-apps"></div>
       <div class="clock" id="clock"></div>
     </div>
     
+    <!-- Start Menu (moved after taskbar for correct stacking) -->
     <div class="start-menu" id="start-menu">
-      <div class="start-item" data-launch="notes">Ghi chú</div>
-      <div class="start-item" data-launch="browser">Trình duyệt</div>
-      <div class="start-item" data-launch="files">Trình quản lý tập tin</div>
-      <div class="start-item" data-launch="settings">Cài đặt</div>
-      <div class="start-item" data-launch="activate">Kích hoạt Hyggshi OS</div>
-      <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 6px 2px;">
-      <div class="start-item" id="start-restart">Khởi động lại</div>
-      <div class="start-item" id="start-shutdown">Tắt máy</div>
+      <div class="start-search">
+        <input type="text" id="start-search" placeholder="Search applications..." autocomplete="off">
+      </div>
+      <div class="start-section" id="start-apps-section">
+        <div class="start-section-title">Applications</div>
+        <div class="start-item" data-launch="notes">
+          <div class="start-item-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+            </svg>
+          </div>
+          <div class="start-item-text">Notes</div>
+          <div class="start-item-shortcut">Ctrl+N</div>
+        </div>
+        <div class="start-item" data-launch="browser">
+          <div class="start-item-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.477 2 2 6.477 2 12c0 5.522 4.477 10 10 10s10-4.478 10-10C22 6.477 17.523 2 12 2zm6.93 6H15.9a15.22 15.22 0 0 0-1.308-3.244A8.025 8.025 0 0 1 18.93 8zM12 4.06c.72.96 1.34 2.215 1.78 3.94H10.22C10.66 6.275 11.28 5.02 12 4.06zM4.07 8A8.025 8.025 0 0 1 9.408 4.756 15.22 15.22 0 0 0 8.1 8H4.07zM4.06 12c0-.68.05-1.34.146-1.98H8.06c-.04.645-.06 1.31-.06 1.98 0 .67.02 1.335.06 1.98H4.206A8.96 8.96 0 0 1 4.06 12zM5.07 16h3.03c.28 1.134.64 2.14 1.004 2.88A8.015 8.015 0 0 1 5.07 16zM10.22 16h3.56c-.44 1.725-1.06 2.98-1.78 3.94-.72-.96-1.34-2.215-1.78-3.94zM14.896 18.88c.364-.74.725-1.746 1.004-2.88h3.03a8.015 8.015 0 0 1-4.034 2.88zM19.794 13.98h-3.908c.04-.645.06-1.31.06-1.98 0-.67-.02-1.335-.06-1.98h3.908c.096.64.146 1.3.146 1.98 0 .68-.05 1.34-.146 1.98z"/>
+            </svg>
+          </div>
+          <div class="start-item-text">Browser</div>
+          <div class="start-item-shortcut">Ctrl+B</div>
+        </div>
+        <div class="start-item" data-launch="files">
+          <div class="start-item-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10 4H4c-1.1 0-2 .9-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z"/>
+            </svg>
+          </div>
+          <div class="start-item-text">File Manager</div>
+          <div class="start-item-shortcut">Ctrl+F</div>
+        </div>
+        <div class="start-item" data-launch="calculator">
+          <div class="start-item-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="4" y="2" width="16" height="20" rx="3"/>
+              <rect x="7" y="6" width="10" height="2" rx="1" fill="black"/>
+              <circle cx="8.5" cy="11.5" r="1.5" fill="black"/>
+              <circle cx="12" cy="11.5" r="1.5" fill="black"/>
+              <circle cx="15.5" cy="11.5" r="1.5" fill="black"/>
+              <circle cx="8.5" cy="15.5" r="1.5" fill="black"/>
+              <circle cx="12" cy="15.5" r="1.5" fill="black"/>
+              <circle cx="15.5" cy="15.5" r="1.5" fill="black"/>
+            </svg>
+          </div>
+          <div class="start-item-text">Calculator</div>
+          <div class="start-item-shortcut">Ctrl+C</div>
+        </div>
+        <div class="start-item" data-launch="imageviewer">
+          <div class="start-item-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zm-2 0H5V5h14zm-7-3l2.03 2.71a1 1 0 0 0 1.58 0L19 13.5V17H5v-1.5l4.5-6z"/>
+            </svg>
+          </div>
+          <div class="start-item-text">Image Viewer</div>
+        </div>
+      </div>
     </div>
 
     <!-- Context Menu -->
     <div class="context-menu" id="ctx">
-      <div class="ctx-item" id="ctx-new-note">Mở Ghi chú</div>
-      <div class="ctx-item" id="ctx-settings">Mở Cài đặt</div>
-      <div class="ctx-item" id="ctx-minimize-all">Thu nhỏ tất cả</div>
+      <div class="ctx-item" id="ctx-new-note">Open Notes</div>
+      <div class="ctx-item" id="ctx-settings">Open Settings</div>
+      <div class="ctx-item" id="ctx-minimize-all">Minimize All</div>
     </div>
     
     <div class="watermark" id="watermark">
@@ -686,8 +1234,15 @@
         <path d="M12 2v10" stroke="white" stroke-width="2" stroke-linecap="round"/>
         <path d="M6.22 6.22a7.5 7.5 0 1 0 10.61 0" stroke="white" stroke-width="2" stroke-linecap="round"/>
       </svg>
-      <div class="msg" id="power-msg"></div>
+                                                                                   <div class="msg" id="power-msg"></div>
+                                                                                 </div>
     </div>
+
+    <!-- Notification container -->
+    <div id="notification-container"></div>
+
+    <!-- System tray -->
+    
   </div>
 
   <script>
@@ -697,8 +1252,90 @@
       const settingsKey = 'webos.settings';
       const clock = document.getElementById('clock');
 
+      // Optimized Notification system with pooling
+      const notificationPool = [];
+      const maxNotifications = 3;
+      
+      function showNotification(message, type = 'info', duration = 4000) {
+        const container = document.getElementById('notification-container');
+        
+        // Remove oldest notification if we have too many
+        if (notificationPool.length >= maxNotifications) {
+          const oldest = notificationPool.shift();
+          if (oldest && oldest.parentNode) {
+            oldest.classList.remove('show');
+            setTimeout(() => oldest.remove(), 300);
+          }
+        }
+        
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #fff; cursor: pointer; padding: 0; margin-left: auto;">×</button>
+          </div>
+        `;
+        
+        container.appendChild(notification);
+        notificationPool.push(notification);
+        
+        // Use requestAnimationFrame for better performance
+        requestAnimationFrame(() => {
+          notification.classList.add('show');
+        });
+        
+        setTimeout(() => {
+          notification.classList.remove('show');
+          setTimeout(() => {
+            notification.remove();
+            const index = notificationPool.indexOf(notification);
+            if (index > -1) notificationPool.splice(index, 1);
+          }, 300);
+        }, duration);
+      }
+
+      // System tray functionality
+      const trayItems = document.querySelectorAll('.tray-item');
+      trayItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const id = item.id;
+          switch(id) {
+            case 'tray-wifi':
+              showNotification('WiFi settings opened', 'info');
+              break;
+            case 'tray-battery':
+              showNotification('Battery: 85%', 'info');
+              break;
+            case 'tray-volume':
+              showNotification('Volume: 75%', 'info');
+              break;
+          }
+        });
+      });
+
+      // Debounced localStorage operations for better performance
+      const debouncedSave = (function() {
+        let timeout;
+        return function(key, value) {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            try {
+              localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {
+              console.warn('Failed to save to localStorage:', e);
+            }
+          }, 100);
+        };
+      })();
+
       const settings = loadSettings();
       applySettings(settings);
+
+      // Welcome notification
+      setTimeout(() => {
+        showNotification('Welcome to Hyggshi OS! Press Ctrl+N for Notes, Ctrl+B for Browser', 'info', 6000);
+      }, 1000);
 
       function bringToFront(win) {
         zStack.current += 1;
@@ -757,16 +1394,19 @@
         return document.getElementById(windowMap[app]);
       }
 
-      // Dragging
+      // Optimized Dragging with throttling
       function makeDraggable(win) {
         const handle = win.querySelector('.titlebar');
         let startX = 0, startY = 0, origX = 0, origY = 0;
         let dragging = false;
+        let lastMoveTime = 0;
+        const throttleDelay = 16; // ~60fps
 
         handle.addEventListener('mousedown', (e) => {
           if (e.button !== 0 || e.target.closest('.btn')) return;
           
           dragging = true;
+          win.classList.add('dragging');
           bringToFront(win);
           startX = e.clientX;
           startY = e.clientY;
@@ -774,12 +1414,17 @@
           origX = rect.left;
           origY = rect.top;
           document.body.style.userSelect = 'none';
-          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mousemove', onMove, { passive: true });
           document.addEventListener('mouseup', onUp, { once: true });
         });
 
         function onMove(e) {
           if (!dragging) return;
+          
+          const now = Date.now();
+          if (now - lastMoveTime < throttleDelay) return;
+          lastMoveTime = now;
+          
           const dx = e.clientX - startX;
           const dy = e.clientY - startY;
           let nextX = origX + dx;
@@ -790,12 +1435,26 @@
           const maxY = bounds.height - 56;
           nextX = Math.max(0, Math.min(nextX, maxX));
           nextY = Math.max(0, Math.min(nextY, maxY));
-          win.style.left = nextX + 'px';
-          win.style.top = nextY + 'px';
+          
+          // Use transform for better performance
+          win.style.transform = `translate(${nextX - origX}px, ${nextY - origY}px)`;
         }
 
         function onUp() {
+          if (!dragging) return;
+          
+          const transform = win.style.transform;
+          const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+          if (match) {
+            const dx = parseFloat(match[1]);
+            const dy = parseFloat(match[2]);
+            win.style.left = (origX + dx) + 'px';
+            win.style.top = (origY + dy) + 'px';
+          }
+          
+          win.style.transform = '';
           dragging = false;
+          win.classList.remove('dragging');
           document.body.style.userSelect = '';
           document.removeEventListener('mousemove', onMove);
           saveGeometry(win);
@@ -818,8 +1477,14 @@
             const rect = win.getBoundingClientRect();
             const startX = e.clientX, startY = e.clientY;
             const startW = rect.width, startH = rect.height, startL = rect.left, startT = rect.top;
+            let lastMoveTime = 0;
+            const throttleDelay = 16; // ~60fps
             
             function onMove(e) {
+              const now = Date.now();
+              if (now - lastMoveTime < throttleDelay) return;
+              lastMoveTime = now;
+              
               const dx = e.clientX - startX;
               const dy = e.clientY - startY;
               let newW = startW, newH = startH, newL = startL, newT = startT;
@@ -833,20 +1498,27 @@
               newL = Math.max(0, Math.min(newL, bounds.width - newW));
               newT = Math.max(0, Math.min(newT, bounds.height - 56 - newH));
               
-              Object.assign(win.style, { 
-                left: newL + 'px', 
-                top: newT + 'px', 
-                width: newW + 'px', 
-                height: newH + 'px' 
-              });
+              // Use transform for better performance during resize
+              win.style.transform = `translate(${newL - startL}px, ${newT - startT}px)`;
+              win.style.width = newW + 'px';
+              win.style.height = newH + 'px';
             }
             
             function onUp() {
+              const transform = win.style.transform;
+              const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+              if (match) {
+                const dx = parseFloat(match[1]);
+                const dy = parseFloat(match[2]);
+                win.style.left = (startL + dx) + 'px';
+                win.style.top = (startT + dy) + 'px';
+              }
+              win.style.transform = '';
               document.removeEventListener('mousemove', onMove);
               saveGeometry(win);
             }
             
-            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mousemove', onMove, { passive: true });
             document.addEventListener('mouseup', onUp, { once: true });
           });
         });
@@ -948,6 +1620,7 @@
         const windowId = windowMap[app];
         if (windowId) {
           showWindow(windowId);
+          showNotification(`${app.charAt(0).toUpperCase() + app.slice(1)} app launched`, 'success', 2000);
         }
       }
 
@@ -969,15 +1642,7 @@
       const aichatMessages = document.getElementById('aichat-messages');
       
       // Google AI Studio configuration
-      let GEMINI_API_KEY = 'AIzaSyAt35zV-re6BdmIifXhaN7JZfOjqFL2AF8'; // Will be loaded from settings
       const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-      
-      // Initialize API key from settings
-      const savedSettings = loadSettings();
-      if (savedSettings.apiKey) {
-        GEMINI_API_KEY = savedSettings.apiKey;
-      }
-      window.GEMINI_API_KEY = GEMINI_API_KEY;
 
       function appendAIMessage(role, text) {
         const div = document.createElement('div');
@@ -1073,10 +1738,10 @@
           try {
             // Get current API key from settings
             const currentSettings = loadSettings();
-            const currentApiKey = currentSettings.apiKey || GEMINI_API_KEY;
+            const currentApiKey = currentSettings.apiKey;
             
             // Check if API key is set
-            if (!currentApiKey || currentApiKey === 'YOUR_GOOGLE_AI_STUDIO_API_KEY') {
+            if (!currentApiKey || currentApiKey.trim() === '') {
               // Fallback to mock responses if API key not configured
               const responses = [
                 'Xin chào! Để sử dụng AI thật, vui lòng cấu hình Google AI Studio API key trong Cài đặt.',
@@ -1281,37 +1946,156 @@
       }
       updateCalcDisplay();
 
-      // Clock
+      // Optimized Clock - update every 30 seconds instead of every second
       function updateClock() {
         const d = new Date();
         const two = (n) => String(n).padStart(2, '0');
-        if (clock) clock.textContent = `${two(d.getHours())}:${two(d.getMinutes())}`;
+        const settings = loadSettings();
+        
+        if (clock) {
+          if (settings.clock24h) {
+            clock.textContent = `${two(d.getHours())}:${two(d.getMinutes())}`;
+          } else {
+            const hours = d.getHours();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            clock.textContent = `${displayHours}:${two(d.getMinutes())} ${ampm}`;
+          }
+        }
       }
       updateClock();
-      setInterval(updateClock, 15000);
+      setInterval(updateClock, 30000); // Update every 30 seconds instead of every second
 
-      // Start menu
+      // Enhanced Start menu
       const startBtn = document.getElementById('start-btn');
       const startMenu = document.getElementById('start-menu');
+      let startMenuOpen = false;
       
-      if (startBtn) {
-        startBtn.addEventListener('click', () => { 
-          startMenu.classList.toggle('show'); 
-        });
+      if (!startMenu) {
+        console.error('Start menu element not found!');
       }
       
-      desktop.addEventListener('click', (e) => {
-        if (!startMenu.contains(e.target) && e.target !== startBtn) {
+      if (startBtn) {
+        startBtn.addEventListener('click', (e) => { 
+          e.stopPropagation();
+          console.log('Start button clicked');
+          toggleStartMenu();
+        });
+      } else {
+        console.error('Start button not found!');
+      }
+      
+      function toggleStartMenu() {
+        console.log('toggleStartMenu called, current state:', startMenuOpen);
+        startMenuOpen = !startMenuOpen;
+        if (startMenuOpen) {
+          console.log('Opening start menu');
+          startMenu.classList.add('show');
+          startBtn.classList.add('active');
+          // Focus search input when menu opens
+          setTimeout(() => {
+            const searchInput = document.getElementById('start-search');
+            if (searchInput) {
+              searchInput.focus();
+              searchInput.select();
+            }
+          }, 100);
+        } else {
+          console.log('Closing start menu');
           startMenu.classList.remove('show');
+          startBtn.classList.remove('active');
+          // Clear search when menu closes
+          const searchInput = document.getElementById('start-search');
+          if (searchInput) {
+            searchInput.value = '';
+            // Trigger input event to reset visibility
+            searchInput.dispatchEvent(new Event('input'));
+          }
+        }
+      }
+      
+      function closeStartMenu() {
+        startMenuOpen = false;
+        startMenu.classList.remove('show');
+        startBtn.classList.remove('active');
+      }
+      
+      // Close menu when clicking outside
+      desktop.addEventListener('click', (e) => {
+        if (startMenuOpen && !startMenu.contains(e.target) && e.target !== startBtn) {
+          closeStartMenu();
         }
       });
       
-      startMenu.querySelectorAll('[data-launch]').forEach(item => {
-        item.addEventListener('click', () => { 
-          launchApp(item.getAttribute('data-launch')); 
-          startMenu.classList.remove('show'); 
-        });
+      // Close menu on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && startMenuOpen) {
+          closeStartMenu();
+        }
       });
+      
+      // Enhanced click handlers with animations
+      startMenu.querySelectorAll('[data-launch]').forEach(item => {
+        item.addEventListener('click', (e) => { 
+          e.preventDefault();
+          const app = item.getAttribute('data-launch');
+          
+          // Add click animation
+          item.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            item.style.transform = '';
+            launchApp(app);
+            closeStartMenu();
+            showNotification(`${app.charAt(0).toUpperCase() + app.slice(1)} launched from Start menu`, 'success', 2000);
+          }, 150);
+        });
+        
+        // Keyboard navigation
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            item.click();
+          }
+        });
+        
+        // Make items focusable
+        item.setAttribute('tabindex', '0');
+      });
+      
+      // Start menu search functionality
+      const startSearch = document.getElementById('start-search');
+      if (startSearch) {
+        startSearch.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          const items = startMenu.querySelectorAll('.start-item[data-launch]');
+          
+          items.forEach(item => {
+            const text = item.querySelector('.start-item-text').textContent.toLowerCase();
+            if (query === '' || text.includes(query)) {
+              item.classList.remove('hidden');
+            } else {
+              item.classList.add('hidden');
+            }
+          });
+          
+          // Show/hide section titles based on visible items
+          const sections = startMenu.querySelectorAll('.start-section');
+          sections.forEach(section => {
+            const visibleItems = section.querySelectorAll('.start-item:not(.hidden)');
+            const title = section.querySelector('.start-section-title');
+            if (title) {
+              title.style.display = visibleItems.length > 0 ? 'block' : 'none';
+            }
+          });
+        });
+        
+        // Focus search when menu opens
+        startMenu.addEventListener('show', () => {
+          setTimeout(() => {
+            startSearch.focus();
+          }, 100);
+        });
+      }
 
       const powerOverlay = document.getElementById('power-overlay');
       const powerMsg = document.getElementById('power-msg');
@@ -1340,8 +2124,31 @@
         setTimeout(() => { hidePower(); startMenu.classList.remove('show'); }, 1200);
       }
 
-      if (startRestart) startRestart.addEventListener('click', () => { startMenu.classList.remove('show'); performRestart(); });
-      if (startShutdown) startShutdown.addEventListener('click', () => { startMenu.classList.remove('show'); performShutdown(); });
+      if (startRestart) {
+        startRestart.addEventListener('click', (e) => { 
+          e.preventDefault();
+          startRestart.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            startRestart.style.transform = '';
+            closeStartMenu();
+            performRestart();
+          }, 150);
+        });
+        startRestart.setAttribute('tabindex', '0');
+      }
+      
+      if (startShutdown) {
+        startShutdown.addEventListener('click', (e) => { 
+          e.preventDefault();
+          startShutdown.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            startShutdown.style.transform = '';
+            closeStartMenu();
+            performShutdown();
+          }, 150);
+        });
+        startShutdown.setAttribute('tabindex', '0');
+      }
 
       // Activation logic
       const ACTIVATE_KEY = 'webos.activation';
@@ -1392,6 +2199,40 @@
 
       updateWatermark();
 
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          switch(e.key) {
+            case 'n':
+              e.preventDefault();
+              launchApp('notes');
+              break;
+            case 'b':
+              e.preventDefault();
+              launchApp('browser');
+              break;
+            case 'f':
+              e.preventDefault();
+              launchApp('files');
+              break;
+            case 'c':
+              e.preventDefault();
+              launchApp('calculator');
+              break;
+            case 's':
+              e.preventDefault();
+              launchApp('settings');
+              break;
+            case 'Escape':
+              e.preventDefault();
+              document.querySelectorAll('.window').forEach(w => {
+                if (!w.classList.contains('hidden')) w.classList.add('minimized');
+              });
+              break;
+          }
+        }
+      });
+
       // Context menu on desktop
       const ctx = document.getElementById('ctx');
       desktop.addEventListener('contextmenu', (e) => {
@@ -1430,9 +2271,12 @@
       const clockFormat = document.getElementById('clock-format');
       const clearNotesBtn = document.getElementById('clear-notes');
       const arrangeBtn = document.getElementById('arrange');
+      const apiKeyInput = document.getElementById('api-key');
+      const apiSaveBtn = document.getElementById('api-save');
 
       if (bgInput) bgInput.value = settings.bgUrl || '';
       if (clockFormat) clockFormat.value = settings.clock24h ? '24' : '12';
+      if (apiKeyInput) apiKeyInput.value = settings.apiKey || '';
 
       if (bgApply) {
         bgApply.addEventListener('click', () => {
@@ -1440,6 +2284,7 @@
           s.bgUrl = (bgInput.value || '').trim();
           saveSettings(s);
           applySettings(s);
+          showNotification('Background applied successfully', 'success');
         });
       }
 
@@ -1457,6 +2302,7 @@
           localStorage.removeItem('webos.notes');
           if (titleEl) titleEl.value = '';
           if (bodyEl) bodyEl.value = '';
+          showNotification('Notes cleared successfully', 'success');
         });
       }
 
@@ -1475,15 +2321,28 @@
             if (x > bounds.width - 360) { x = 12; }
             if (y > bounds.height - 260 - 56) { y = 12; }
           });
+          showNotification('Windows arranged successfully', 'success');
+        });
+      }
+
+      if (apiSaveBtn) {
+        apiSaveBtn.addEventListener('click', () => {
+          const s = loadSettings();
+          s.apiKey = apiKeyInput.value.trim();
+          saveSettings(s);
+          showNotification('API key saved successfully', 'success');
+          if (apiKeyInput.value.trim()) {
+            showNotification('AI Chat is now ready to use!', 'info', 3000);
+          }
         });
       }
 
       // Settings helpers
       function loadSettings() {
         try { 
-          return JSON.parse(localStorage.getItem(settingsKey)) || { clock24h: true, bgUrl: '' }; 
+          return JSON.parse(localStorage.getItem(settingsKey)) || { clock24h: true, bgUrl: '', apiKey: '' }; 
         } catch { 
-          return { clock24h: true, bgUrl: '' }; 
+          return { clock24h: true, bgUrl: '', apiKey: '' }; 
         }
       }
       
@@ -1513,7 +2372,7 @@
           maximized, 
           rect: { w: rect.width, h: rect.height } 
         };
-        localStorage.setItem(key, JSON.stringify(data));
+        debouncedSave(key, data);
       }
 
       function restoreGeometry(win) {
@@ -1532,160 +2391,190 @@
         } catch {}
       }
 
-      // File System Mock (simplified)
-      const VFS_KEY = 'webos.vfs';
-      
-      function vfsLoad() {
-        try { 
-          return JSON.parse(localStorage.getItem(VFS_KEY)) || { name:'/', type:'dir', children:[] }; 
-        } catch { 
-          return { name:'/', type:'dir', children:[] }; 
+      // --- File Explorer Logic ---
+      (function() {
+        // File system mock structure
+        const VFS_KEY = 'webos.vfs';
+        function vfsLoad() {
+          try { 
+            return JSON.parse(localStorage.getItem(VFS_KEY)) || { name:'/', type:'dir', children:[] }; 
+          } catch { 
+            return { name:'/', type:'dir', children:[] }; 
+          }
         }
-      }
-      
-      function vfsSave(tree) { 
-        localStorage.setItem(VFS_KEY, JSON.stringify(tree)); 
-      }
-
-      let vfs = vfsLoad();
-      let cwd = '/';
-      let selected = null;
-
-      // File Manager UI (simplified)
-      const fmList = document.getElementById('fm-list');
-      const fmBreadcrumb = document.getElementById('fm-breadcrumb');
-
-      function renderFM() {
-        if (fmBreadcrumb) {
-          fmBreadcrumb.innerHTML = '<span data-path="/">Root</span>';
+        function vfsSave(tree) { 
+          localStorage.setItem(VFS_KEY, JSON.stringify(tree)); 
         }
-        if (fmList) {
-          fmList.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color:#9ec5ff; padding:20px;">File Manager is simplified in this version</div>';
+
+        let vfs = vfsLoad();
+        let cwd = '/';
+        let selected = null;
+
+        // Find directory by path
+        function vfsFind(path, tree) {
+          if (path === '/' || !path) return tree;
+          const parts = path.split('/').filter(Boolean);
+          let node = tree;
+          for (const part of parts) {
+            if (!node.children) return null;
+            node = node.children.find(ch => ch.name === part);
+            if (!node) return null;
+          }
+          return node;
         }
-      }
 
-      // Update center mock
-      const verCurrentEl = document.getElementById('ver-current');
-      const verLatestEl = document.getElementById('ver-latest');
-      const upMsg = document.getElementById('up-msg');
-      const upCheck = document.getElementById('up-check');
-      const upInstall = document.getElementById('up-install');
-
-      function refreshVersionUI(latest) {
-        const cur = '1.0.0';
-        if (verCurrentEl) verCurrentEl.textContent = cur;
-        if (verLatestEl) verLatestEl.textContent = latest || cur;
-        const hasUpdate = latest && latest !== cur;
-        if (upInstall) upInstall.style.display = hasUpdate ? 'inline-block' : 'none';
-        if (upMsg) upMsg.textContent = hasUpdate ? 'Có bản cập nhật mới sẵn sàng.' : 'Hệ thống đã cập nhật.';
-      }
-
-      let latestVersion = '1.0.0';
-      refreshVersionUI(latestVersion);
-
-      if (upCheck) {
-        upCheck.addEventListener('click', () => {
-          if (upMsg) upMsg.textContent = 'Đang kiểm tra...';
-          setTimeout(() => { 
-            latestVersion = '1.0.1'; 
-            refreshVersionUI(latestVersion); 
-          }, 600);
-        });
-      }
-
-      if (upInstall) {
-        upInstall.addEventListener('click', () => {
-          if (upMsg) upMsg.textContent = 'Đang cài đặt...';
-          setTimeout(() => {
-            refreshVersionUI('1.0.0');
-            if (upMsg) upMsg.textContent = 'Cài đặt hoàn tất. Vui lòng khởi động lại (giả lập).';
-          }, 1200);
-        });
-      }
-
-      // Enhanced showWindow for specific apps
-      const originalShowWindow = showWindow;
-      showWindow = function(id) {
-        originalShowWindow(id);
-        if (id === 'win-browser' && urlInput) {
-          setTimeout(() => { urlInput.focus(); }, 100);
+        // Get full path for a file/folder
+        function vfsPathOf(path, name) {
+          return path === '/' ? `/${name}` : `${path}/${name}`;
         }
-        if (id === 'win-files') {
+
+        // Render file list
+        function renderFM() {
+          const fmList = document.getElementById('fm-list');
+          const fmBreadcrumb = document.getElementById('fm-breadcrumb');
+          const dir = vfsFind(cwd, vfs);
+          if (!dir || dir.type !== 'dir') return;
+
+          // Breadcrumb
+          if (fmBreadcrumb) {
+            const parts = cwd.split('/').filter(Boolean);
+            let html = `<span data-path="/">Root</span>`;
+            let cur = '';
+            parts.forEach(part => {
+              cur += '/' + part;
+              html += ` / <span data-path="${cur}">${part}</span>`;
+            });
+            fmBreadcrumb.innerHTML = html;
+            fmBreadcrumb.querySelectorAll('span[data-path]').forEach(span => {
+              span.style.cursor = 'pointer';
+              span.addEventListener('click', () => {
+                cwd = span.getAttribute('data-path');
+                renderFM();
+              });
+            });
+          }
+
+          // File/folder list
+          if (fmList) {
+            fmList.innerHTML = '';
+            if (!dir.children || !dir.children.length) {
+              fmList.innerHTML = '<div style="grid-column:1/-1; color:#aaa; text-align:center;">Thư mục trống.</div>';
+              return;
+            }
+            dir.children.forEach(item => {
+              const div = document.createElement('div');
+              div.className = 'fm-item';
+              div.innerHTML = `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='${item.type==='dir'?'M10 4H4c-1.1 0-2 .9-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z':'M6 2h9l5 5v15a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm8 7H7v2h7V9z'}'/%3E%3C/svg%3E"/><div class='fm-name'></div>`;
+              div.querySelector('.fm-name').textContent = item.name;
+              div.title = item.name;
+              div.addEventListener('dblclick', () => {
+                if (item.type === 'dir') {
+                  cwd = vfsPathOf(cwd, item.name);
+                  renderFM();
+                } else {
+                  showNotification(`Mở tập tin: ${item.name}`, 'info');
+                }
+              });
+              div.addEventListener('click', () => {
+                fmList.querySelectorAll('.fm-item').forEach(d => d.classList.remove('selected'));
+                div.classList.add('selected');
+                selected = item.name;
+              });
+              fmList.appendChild(div);
+            });
+          }
+        }
+
+        // Toolbar actions
+        document.getElementById('fm-up').addEventListener('click', () => {
+          if (cwd === '/' || cwd === '') return;
+          const parts = cwd.split('/').filter(Boolean);
+          parts.pop();
+          cwd = '/' + parts.join('/');
           renderFM();
-        }
-      };
-    })();
-
-    // Desktop Icon Free Movement
-    (function() {
-      const iconKey = 'webos.iconPositions';
-      const icons = Array.from(document.querySelectorAll('.desktop-icons .icon'));
-      const desktop = document.querySelector('.desktop');
-      let iconPositions = {};
-      
-      try { 
-        iconPositions = JSON.parse(localStorage.getItem(iconKey)) || {}; 
-      } catch { 
-        iconPositions = {}; 
-      }
-
-      // Restore positions
-      icons.forEach(icon => {
-        const id = icon.dataset.launch;
-        if (iconPositions[id]) {
-          icon.style.position = 'absolute';
-          icon.style.left = iconPositions[id].left;
-          icon.style.top = iconPositions[id].top;
-        }
-      });
-
-      icons.forEach(icon => {
-        icon.style.cursor = 'grab';
-        let isDragging = false;
-        let dragStartX = 0, dragStartY = 0, origLeft = 0, origTop = 0;
-
-        icon.addEventListener('mousedown', function(e) {
-          if (e.button !== 0) return;
-          isDragging = false;
-          dragStartX = e.clientX;
-          dragStartY = e.clientY;
-          origLeft = parseInt(icon.style.left || 0, 10);
-          origTop = parseInt(icon.style.top || 0, 10);
-
-          function onMouseMove(ev) {
-            const dx = ev.clientX - dragStartX;
-            const dy = ev.clientY - dragStartY;
-            if (!isDragging && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) isDragging = true;
-            if (isDragging) {
-              icon.style.position = 'absolute';
-              const rect = desktop.getBoundingClientRect();
-              let x = Math.max(0, Math.min(origLeft + dx, rect.width - icon.offsetWidth));
-              let y = Math.max(0, Math.min(origTop + dy, rect.height - icon.offsetHeight - 56));
-              icon.style.left = x + 'px';
-              icon.style.top = y + 'px';
-            }
-          }
-
-          function onMouseUp() {
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            if (isDragging) {
-              iconPositions[icon.dataset.launch] = { left: icon.style.left, top: icon.style.top };
-              localStorage.setItem(iconKey, JSON.stringify(iconPositions));
-            }
-          }
-
-          document.addEventListener('mousemove', onMouseMove);
-          document.addEventListener('mouseup', onMouseUp);
         });
 
-        icon.ondragstart = () => false;
-        icon.addEventListener('dblclick', function() {
-          const app = icon.getAttribute('data-launch');
-          if (typeof launchApp === 'function') launchApp(app);
+        document.getElementById('fm-new-folder').addEventListener('click', () => {
+          const dir = vfsFind(cwd, vfs);
+          if (!dir || dir.type !== 'dir') return;
+          let name = prompt('Tên thư mục mới:');
+          if (!name) return;
+          if (dir.children.find(ch => ch.name === name)) {
+            showNotification('Tên đã tồn tại.', 'error');
+            return;
+          }
+          dir.children.push({ name, type: 'dir', children: [] });
+          vfsSave(vfs);
+          renderFM();
         });
-      });
-    })();
-  </script>
-</body>
+
+        document.getElementById('fm-new-file').addEventListener('click', () => {
+          const dir = vfsFind(cwd, vfs);
+          if (!dir || dir.type !== 'dir') return;
+          let name = prompt('Tên tập tin mới:');
+          if (!name) return;
+          if (dir.children.find(ch => ch.name === name)) {
+            showNotification('Tên đã tồn tại.', 'error');
+            return;
+          }
+          dir.children.push({ name, type: 'file', content: '' });
+          vfsSave(vfs);
+          renderFM();
+        });
+
+        document.getElementById('fm-rename').addEventListener('click', () => {
+          if (!selected) return showNotification('Chọn một mục để đổi tên.', 'error');
+          const dir = vfsFind(cwd, vfs);
+          const item = dir.children.find(ch => ch.name === selected);
+          let newName = prompt('Tên mới:', item.name);
+          if (!newName || newName === item.name) return;
+          if (dir.children.find(ch => ch.name === newName)) {
+            showNotification('Tên đã tồn tại.', 'error');
+            return;
+          }
+          item.name = newName;
+          vfsSave(vfs);
+          renderFM();
+        });
+
+        document.getElementById('fm-delete').addEventListener('click', () => {
+          if (!selected) return showNotification('Chọn một mục để xóa.', 'error');
+          const dir = vfsFind(cwd, vfs);
+          const idx = dir.children.findIndex(ch => ch.name === selected);
+          if (idx < 0) return;
+          if (!confirm(`Xóa "${selected}"?`)) return;
+          dir.children.splice(idx, 1);
+          vfsSave(vfs);
+          selected = null;
+          renderFM();
+        });
+
+        // Upload files
+        document.getElementById('fm-upload-btn').addEventListener('click', () => {
+          document.getElementById('fm-upload').click();
+        });
+        document.getElementById('fm-upload').addEventListener('change', (e) => {
+          const dir = vfsFind(cwd, vfs);
+          if (!dir || dir.type !== 'dir') return;
+          Array.from(e.target.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+              dir.children.push({ name: file.name, type: 'file', content: ev.target.result });
+              vfsSave(vfs);
+              renderFM();
+            };
+            reader.readAsDataURL(file);
+          });
+          e.target.value = '';
+        });
+
+        // Initial render
+        renderFM();
+
+        // Expose for debugging
+        window.vfs = vfs;
+      })();
+    })(); // Add this closing brace to properly close the IIFE
+    </script>
+  </body>
 </html>
