@@ -812,3 +812,15 @@ body.remake .nav-link.active { background: var(--surface-2); }
   box-shadow: var(--shadow-2);
   pointer-events: none;
 }
+
+/* === Minimal Flat NavBar === */
+.header { padding: 0.10rem 0 0.10rem 0; border-radius: 0 0 12px 12px; background: var(--surface-1); border-bottom: 1.3px solid var(--glass-border); min-height: initial; box-shadow: none; }
+.nav { display: flex; justify-content: center; align-items: center; min-height: 36px; gap: 0.2rem; margin-top: 1px; }
+.logo { font-weight: 800; font-size: 1.11rem; color: var(--brand-1-strong,#7ca9fd); letter-spacing: .1px; display: flex; align-items: center; gap: 0.5rem; margin-right: 12px; }
+.nav-menu { display: flex; align-items: center; gap: 0.82rem; min-height: 36px; background: var(--surface-1); border-radius: 12px; border: 1.3px solid var(--glass-border); box-shadow: none; padding: 5px 13px; }
+.nav-link { font-size: 1rem; font-weight: 600; color: var(--text-primary); padding: 7px 13px; height: 36px; border-radius: 7px; background: none; margin: 0; display: flex; align-items: center; transition: background .14s, color .15s; }
+.nav-link .icon, .nav-link svg { margin-right: 0.17em; vertical-align: middle; }
+.nav-link:hover, .nav-link.active { background: rgba(120,170,255,0.11); color: var(--brand-1-strong); transform: none; box-shadow: none; }
+.nav-link:active { background: var(--brand-2,#11eec2); color: #fff; }
+.nav-menu li:last-child { margin-left: auto; }
+@media(max-width:800px){ .header{border-radius:0;} .nav-menu{border-radius:0 0 10px 10px; width:96vw; padding:7px 0;} .nav-link{padding:12px 0;font-size:.975rem;width:99vw;max-width:99vw;justify-content:flex-start;} }
