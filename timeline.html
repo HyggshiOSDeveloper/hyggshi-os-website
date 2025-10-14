@@ -9,103 +9,145 @@
   <style>
     .timeline-hero {
       text-align: center;
-      padding: 3rem 0 2rem 0;
+      padding: 3.2rem 0 2.6rem 0;
       color: white;
     }
     .timeline-hero h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      background: linear-gradient(45deg, #fff, #f0f0f0);
+      font-size: 3.2rem;
+      font-weight: 900;
+      margin-bottom: 0.7rem;
+      letter-spacing: 1.7px;
+      line-height: 1.07;
+      background: linear-gradient(80deg, var(--brand-1), var(--brand-2) 90%, #fff 120%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 1rem;
+    }
+    .timeline-hero p {
+      font-size: 1.15rem;
+      opacity: 0.9;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-top: 0.3em;
     }
     .timeline-container {
-      max-width: 1000px;
+      max-width: 922px;
       margin: 0 auto;
-      padding: 0 20px;
-    }
-    .timeline-item {
+      padding: 0 12px 40px 12px;
       position: relative;
-      margin-bottom: 3rem;
-      display: flex;
-      align-items: center;
     }
-    .timeline-item:nth-child(odd) {
-      flex-direction: row;
-    }
-    .timeline-item:nth-child(even) {
-      flex-direction: row-reverse;
-    }
-    .timeline-date {
-      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-      color: white;
-      padding: 0.8rem 1.5rem;
-      border-radius: 25px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    .timeline-list {
       position: relative;
-      z-index: 2;
-      min-width: 120px;
-      text-align: center;
-    }
-    .timeline-content {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 15px;
-      padding: 2rem;
-      margin: 0 2rem;
-      color: white;
-      flex: 1;
-      max-width: 400px;
-      position: relative;
-      transition: all 0.3s ease;
-    }
-    .timeline-content:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      background: rgba(255, 255, 255, 0.15);
-    }
-    .timeline-content h3 {
-      font-size: 1.3rem;
-      font-weight: 600;
-      margin-bottom: 0.8rem;
-      color: #fff;
-    }
-    .timeline-content p {
-      opacity: 0.9;
-      line-height: 1.6;
     }
     .timeline-line {
       position: absolute;
       left: 50%;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.3), transparent);
-      transform: translateX(-50%);
+      top: 0; bottom: 0;
+      width: 7px;
+      margin-left: -3.5px;
+      background: linear-gradient(180deg,
+        transparent 3%, var(--brand-1) 30%, var(--brand-2) 70%, transparent 98%);
+      border-radius: 6px;
       z-index: 1;
+      opacity: 0.33;
+      filter: blur(0.5px);
     }
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 3.1rem;
+      position: relative;
+      z-index: 2;
+      min-height: 100px;
+      opacity: 0;
+      transform: translateY(45px);
+      transition: opacity .85s cubic-bezier(.6,.4,0,1), transform .9s cubic-bezier(.45,.15,0,1);
+    }
+    .timeline-item.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .bubble-date {
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--brand-1), var(--brand-2) 65%);
+      color: #fff;
+      font-size: 1.45rem;
+      font-weight: bold;
+      min-width: 84px;
+      min-height: 84px;
+      border-radius: 50%;
+      box-shadow: 0 6px 28px rgba(76,140,255,.13), 0 1.5px 10px rgba(52,222,197,.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 32px;
+      border: 3.3px solid rgba(255,255,255,.14);
+      outline: 2px solid var(--glass-border);
+      z-index: 2;
+      transition: box-shadow .25s, border-color .22s;
+      position: relative;
+    }
+    .timeline-item:nth-child(even) { flex-direction: row-reverse; }
+    .timeline-item:nth-child(even) .bubble-date { margin-right: 0; margin-left: 32px; }
+    /* Timeline ICON */
+    .bubble-date::after {
+      content: ""; display: block;
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      background: var(--surface-1);
+      border: 2px solid var(--brand-2);
+      box-shadow: 0 0 4px var(--brand-2);
+      position: absolute;
+      right: 16px; bottom: 12px;
+      opacity: .22;
+    }
+    .timeline-card {
+      flex: 1 1 auto;
+      background: var(--surface-1);
+      border-radius: 24px;
+      backdrop-filter: blur(32px);
+      box-shadow: 0 15px 54px rgba(60,80,150,0.18), 0 2px 20px rgba(30,30,56,0.11);
+      border: 2.2px solid var(--glass-border);
+      padding: 2.2rem 2.1rem 2.15rem 2.1rem;
+      margin-top: 0;
+      position: relative;
+      color: var(--text-primary);
+      transition: box-shadow .2s, border-color .13s, transform .17s;
+      will-change: transform, box-shadow;
+      cursor: default;
+      overflow: hidden;
+    }
+    .timeline-card:hover {
+      box-shadow: 0 16px 72px 0 rgba(52,180,255,0.25), 0 2px 20px rgba(30,30,56,0.14);
+      border-color: var(--brand-1);
+      transform: translateY(-4px) scale(1.018);
+    }
+    .timeline-card h3 {
+      font-size: 1.27rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      letter-spacing: .14px;
+      color: var(--brand-1-strong, #8aa2ff);
+    }
+    .timeline-card p {
+      font-size: 1.04rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+    @media (max-width: 950px) { .timeline-container { max-width: 99vw; } }
     @media (max-width: 768px) {
-      .timeline-line {
-        left: 20px;
+      .timeline-item, .timeline-item:nth-child(even) {
+        flex-direction: column !important; align-items: stretch;
       }
-      .timeline-item {
-        flex-direction: column !important;
-        align-items: flex-start;
-        margin-left: 40px;
-      }
-      .timeline-date {
-        margin-bottom: 1rem;
-        align-self: flex-start;
-      }
-      .timeline-content {
-        margin: 0;
-        max-width: 100%;
-      }
+      .bubble-date, .timeline-item:nth-child(even) .bubble-date {
+        margin: 0 auto 18px auto; }
+      .timeline-card { padding: 1.29rem 1.1rem 1.23rem 1.16rem; border-radius: 15px; }
+      .timeline-hero h1 { font-size: 2.05rem; }
+    }
+    @media (max-width: 440px) {
+      .timeline-container { padding-left: 4px; padding-right: 4px; }
+      .timeline-card { padding: 0.8rem .6rem; border-radius: 9px; }
+      .bubble-date { min-width: 60px; min-height: 60px; font-size: 1.01rem; }
     }
   </style>
 </head>
@@ -137,90 +179,100 @@
         <h1>📅 Timeline – Lịch sử phát triển</h1>
         <p>Dòng thời gian chi tiết về quá trình phát triển Hyggshi OS</p>
       </section>
-
       <section class="timeline-container">
         <div class="timeline-line"></div>
-        
-        <div class="timeline-item">
-          <div class="timeline-date">2024</div>
-          <div class="timeline-content">
-            <h3>🎯 Khởi đầu dự án</h3>
-            <p>Bắt đầu với ý tưởng tạo một hệ điều hành mô phỏng mã nguồn mở trên Roblox. Sau 50 lần bị từ chối mã nguồn từ các dự án khác, quyết định tự phát triển.</p>
+        <div class="timeline-list">
+          <div class="timeline-item">
+            <div class="bubble-date">2024</div>
+            <div class="timeline-card">
+              <h3>🎯 Khởi đầu dự án</h3>
+              <p>Bắt đầu với ý tưởng tạo một hệ điều hành mô phỏng mã nguồn mở trên Roblox. Sau 50 lần bị từ chối mã nguồn từ các dự án khác, quyết định tự phát triển.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="bubble-date">2024</div>
+            <div class="timeline-card">
+              <h3>🚀 Hyggshi OS 1.0</h3>
+              <p>Phiên bản đầu tiên ra mắt với các tính năng cơ bản: cửa sổ, giao diện, Start Menu đơn giản. Đánh dấu sự khởi đầu của một hệ điều hành mã nguồn mở.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="bubble-date">2024</div>
+            <div class="timeline-card">
+              <h3>🔧 Hyggshi OS 1.1.6</h3>
+              <p>Cải tiến và bổ sung ứng dụng, chuẩn bị nền tảng cho các phiên bản nâng cao và thử nghiệm.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="bubble-date">2024</div>
+            <div class="timeline-card">
+              <h3>🧪 Hyggshi OS Developer</h3>
+              <p>Phiên bản thử nghiệm với ứng dụng Zashi Messaging - cho phép nhắn tin không bị kiểm duyệt bởi Roblox chat mặc định.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="bubble-date">2024</div>
+            <div class="timeline-card">
+              <h3>📀 Hyggshi OS 2.0</h3>
+              <p>Phiên bản chính thức thứ hai với giao diện chuyên nghiệp hơn, cải thiện quản lý cửa sổ và Start Menu. Tích hợp các yếu tố từ bản Developer.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="bubble-date">2025</div>
+            <div class="timeline-card">
+              <h3>⚠️ Vấn đề bản quyền</h3>
+              <p>Intel yêu cầu thay đổi âm thanh khởi động do nghi ngờ vi phạm bản quyền. Đây là bài học về việc sử dụng tài sản âm thanh.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="bubble-date">2025</div>
+            <div class="timeline-card">
+              <h3>🚧 Hyggshi OS 3.0</h3>
+              <p>Bắt đầu phát triển phiên bản mới nhất với định hướng ổn định, mã nguồn mở hoàn toàn và nâng cấp toàn diện.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="bubble-date">2025</div>
+            <div class="timeline-card">
+              <h3>🧩 Hyggshi OS Flex</h3>
+              <p>Phiên bản nhẹ và linh hoạt, được thiết kế để dễ dàng chỉnh sửa, tùy biến và phát triển theo ý muốn.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="bubble-date">2025</div>
+            <div class="timeline-card">
+              <h3>🌐 Mở rộng cộng đồng</h3>
+              <p>Phát triển hệ thống Module, Zashi Messaging và thu hút sự chú ý của cộng đồng Roblox. Tạo ra một hệ sinh thái mở.</p>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="bubble-date">2025</div>
+            <div class="timeline-card">
+              <h3>🛠️ Ra mắt Engine riêng</h3>
+              <p>Ngày <b>05/10/2025</b>, nhà phát triển đã tạo ra bộ engine riêng <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-Engine" target="_blank" rel="noopener" style="color:var(--brand-2)"><b>Hyggshi OS Engine</b></a>, mở mã nguồn cho cộng đồng phát triển các hệ điều hành và giao diện mạnh mẽ hơn trên Roblox.</p>
+            </div>
           </div>
         </div>
-
-        <div class="timeline-item">
-          <div class="timeline-date">2024</div>
-          <div class="timeline-content">
-            <h3>🚀 Hyggshi OS 1.0</h3>
-            <p>Phiên bản đầu tiên ra mắt với các tính năng cơ bản: cửa sổ, giao diện, Start Menu đơn giản. Đánh dấu sự khởi đầu của một hệ điều hành mã nguồn mở.</p>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-date">2024</div>
-          <div class="timeline-content">
-            <h3>🔧 Hyggshi OS 1.1.6</h3>
-            <p>Cải tiến và bổ sung ứng dụng, chuẩn bị nền tảng cho các phiên bản nâng cao và thử nghiệm.</p>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-date">2024</div>
-          <div class="timeline-content">
-            <h3>🧪 Hyggshi OS Developer</h3>
-            <p>Phiên bản thử nghiệm với ứng dụng Zashi Messaging - cho phép nhắn tin không bị kiểm duyệt bởi Roblox chat mặc định.</p>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-date">2024</div>
-          <div class="timeline-content">
-            <h3>📀 Hyggshi OS 2.0</h3>
-            <p>Phiên bản chính thức thứ hai với giao diện chuyên nghiệp hơn, cải thiện quản lý cửa sổ và Start Menu. Tích hợp các yếu tố từ bản Developer.</p>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-date">2025</div>
-          <div class="timeline-content">
-            <h3>⚠️ Vấn đề bản quyền</h3>
-            <p>Intel yêu cầu thay đổi âm thanh khởi động do nghi ngờ vi phạm bản quyền. Đây là bài học về việc sử dụng tài sản âm thanh.</p>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-date">2025</div>
-          <div class="timeline-content">
-            <h3>🚧 Hyggshi OS 3.0</h3>
-            <p>Bắt đầu phát triển phiên bản mới nhất với định hướng ổn định, mã nguồn mở hoàn toàn và nâng cấp toàn diện.</p>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-date">2025</div>
-          <div class="timeline-content">
-            <h3>🧩 Hyggshi OS Flex</h3>
-            <p>Phiên bản nhẹ và linh hoạt, được thiết kế để dễ dàng chỉnh sửa, tùy biến và phát triển theo ý muốn.</p>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-date">2025</div>
-          <div class="timeline-content">
-            <h3>🌐 Mở rộng cộng đồng</h3>
-            <p>Phát triển hệ thống Module, Zashi Messaging và thu hút sự chú ý của cộng đồng Roblox. Tạo ra một hệ sinh thái mở.</p>
-          </div>
-        </div>
-
       </section>
     </main>
-
     <footer class="footer">
       <p>© 2024 - 2025 Hyggshi OS Project Center. All rights reserved. | <a href="license.html" style="color:#7289da;text-decoration:underline;">License</a></p>
     </footer>
   </div>
-
   <script src="script.js"></script>
+  <script>
+    // Fade in timeline items on scroll
+    (function(){
+      function onScroll() {
+        document.querySelectorAll('.timeline-item').forEach(item => {
+          var rect = item.getBoundingClientRect();
+          if(rect.top < window.innerHeight - 80) item.classList.add('visible');
+        });
+      }
+      window.addEventListener('scroll', onScroll, {passive: true});
+      onScroll();
+      setTimeout(onScroll, 440); // ensure first load
+    })();
+  </script>
 </body>
 </html>
