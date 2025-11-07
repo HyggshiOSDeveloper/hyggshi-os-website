@@ -10,56 +10,23 @@
     
     .cases-hero {
       text-align: center;
-      padding: 3.5rem 0 2rem 0;
+      padding: 4rem 0 2rem 0;
       color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
     }
     .cases-hero h1 {
-      font-size: 2.2rem;
-      font-weight: 700;
-      background: linear-gradient(45deg, #fff, #f0f0f0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 1.2rem;
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-      justify-content: center;
-    }
+      font-size: 2.65rem; font-weight:900; background:linear-gradient(88deg,var(--brand-1,#6c8cff),var(--brand-2,#14deb3)90%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;padding-bottom:1rem; }
     .case-list {
-      max-width: 900px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 2.2rem;
+      max-width: 950px; margin: 0 auto; display: flex; flex-direction: column; gap: 2.2rem;
     }
     .case-card {
-      background: rgba(255,255,255,0.13);
-      backdrop-filter: blur(24px);
-      border-radius: 20px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
-      padding: 2rem 2.2rem;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      gap: 0.7rem;
-      position: relative;
-    }
+      background: var(--surface-1,#18344ca1); border-radius:28px; padding:2.3rem 2.1rem; color:white;
+      box-shadow: 0 10px 42px rgba(0,128,255,.13); transition: box-shadow .22s,transform .17s,background .17s;position:relative;opacity:0;transform:translateY(45px);}
+    .case-card.show{opacity:1;transform:translateY(0);}
+    .case-card:hover {background:rgba(40,170,255,.09);box-shadow:0 18px 88px rgba(28,150,255,.13);transform:translateY(-8px) scale(1.012);}
     .case-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.2rem;
-    }
-    .case-title .icon {
-      font-size: 1.5rem;
-    }
+      font-size: 1.22rem; font-weight: 800; margin-bottom: 0.25rem; color: var(--brand-1-strong,#77a9fd);display:flex;align-items:center;gap:7px; }
+    .code-badge { font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; padding: 0.28rem 0.7rem; border-radius: 10px; background: linear-gradient(100deg, var(--brand-1,#7ca9fd), var(--brand-2,#12eec2)85%); color: #fff; font-size: 1rem; font-weight:600; margin-right:7px; margin-left:2px; box-shadow:0 3px 12px rgba(80,150,255,.08);} 
+    .label-muted {color: var(--text-secondary);font-size: 0.98rem;}
     .case-desc {
       font-size: 1.05rem;
       opacity: 0.93;
@@ -111,7 +78,8 @@
         font-size: 1.2rem;
       }
       .case-card {
-        padding: 1.2rem 0.7rem;
+        padding: 1.18rem .59rem;
+        border-radius: 12px;
       }
       .back-button {
         top: 10px;
@@ -120,6 +88,7 @@
         font-size: 0.9rem;
       }
     }
+    @media(max-width:790px){.cases-hero h1{font-size:1.66rem;}.case-card{padding:1.18rem .59rem;border-radius:12px;}}
   </style>
 </head>
 <body>
@@ -255,5 +224,6 @@
     </footer>
   </div>
   <script src="script.js"></script>
+  <script> (function(){function fade(){document.querySelectorAll('.case-card').forEach(e=>{var r=e.getBoundingClientRect();if(r.top<window.innerHeight-40)e.classList.add('show');});}window.addEventListener('scroll',fade,{passive:true});fade();setTimeout(fade,350);})(); </script>
 </body>
 </html>

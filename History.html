@@ -11,70 +11,17 @@
     <link rel="icon" href="Resources/favicon.ico" />
 
     <style>
-        .history-hero {
-            text-align: center;
-            padding: 4rem 0;
-            color: white;
-        }
-        
-        .history-hero h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #fff, #f0f0f0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .history-hero .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-bottom: 2rem;
-        }
-        
-        .author-info {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 3rem;
-            display: inline-block;
-        }
-        
-        .history-content {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        .history-section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 2.5rem;
-            margin-bottom: 2rem;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .history-section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-        }
-        
-        .history-section h2 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
+        .history-hero { text-align: center; padding: 4.2rem 0 2.42rem 0; color: white; }
+        .history-hero h1 { font-size: 3rem; font-weight: 900; background: linear-gradient(88deg, var(--brand-1), var(--brand-2) 88%, #fff 150%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+        .subtitle{font-size:1.14rem;opacity:.92;color:var(--text-secondary);background:rgba(120,150,250,.08);padding:.34rem 1.17rem;border-radius:14px;display:inline-block;box-shadow:0 6px 24px rgba(80,100,180,.09);}
+        .author-info{background:var(--surface-1,#17213815);border-radius:13px;padding:1.18rem 1rem 1.05rem 1.13rem;box-shadow:0 2px 14px rgba(130,148,211,.12);color:var(--brand-2,#1eb5b9);font-size:1.02rem;margin-bottom:2.1rem;max-width:515px;margin-left:auto;margin-right:auto;}
+        .history-content{max-width:980px;margin:0 auto;padding:0 9px 26px 9px;}
+        .history-section{background:var(--surface-1,#26281b1b);border-radius:25px;box-shadow:0 13px 56px rgba(90,140,255,0.15);padding:2.15rem 2rem 2.08rem 2rem;transition:box-shadow .25s,transform .15s;border:1.5px solid var(--glass-border);margin-bottom:2.07rem;opacity:0;transform:translateY(40px);}
+        .history-section.show{opacity:1;transform:translateY(0);}
+        .history-section:hover{box-shadow:0 19px 68px 0 rgba(90,168,255,0.11);transform:translateY(-4px) scale(1.008);}
+        h2{font-size:2rem;font-weight:800;background:linear-gradient(88deg,var(--brand-1,#7ca9fd),var(--brand-2,#16cdb5) 95%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.09rem;margin-bottom:.87rem;}
+        .version-badge{background:linear-gradient(88deg,var(--brand-1,#6c8cff),var(--brand-2,#14deb3) 70%);color:#fff;padding:0.22rem 0.82rem;font-size:.95rem;font-weight:700;margin-left:.5em;border-radius:22px;}
+        .warning-box{background:linear-gradient(100deg,#ffe98329,#fcb70025);border:1.5px solid #ffd8547e;color:#ffbe36;}
         .history-section h3 {
             font-size: 1.4rem;
             font-weight: 600;
@@ -97,16 +44,6 @@
             margin-bottom: 0.5rem;
             line-height: 1.6;
             opacity: 0.9;
-        }
-        
-        .version-badge {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-left: 0.5rem;
         }
         
         .warning-box {
@@ -169,6 +106,7 @@
                 font-size: 0.9rem;
             }
         }
+        @media(max-width:790px){.history-hero h1{font-size:2.13rem;}.history-section{padding:1.07rem .47rem 1.17rem .57rem;border-radius:16px;}}
     </style>
 </head>
 <body>
@@ -316,5 +254,6 @@
     </div>
 
     <script src="script.js"></script>
+    <script> (function(){function fade(){document.querySelectorAll('.history-section').forEach(e=>{var r=e.getBoundingClientRect();if(r.top<window.innerHeight-40)e.classList.add('show');});}window.addEventListener('scroll',fade,{passive:true});fade();setTimeout(fade,350);})(); </script>
 </body>
 </html>

@@ -6,6 +6,13 @@
   <title>HOSL-1.0 – Hyggshi OS License v1.0</title>
   <link rel="icon" href="Resources/favicon.ico" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .section-title{font-size:2.35rem;font-weight:900;letter-spacing:.09rem;background:linear-gradient(88deg,var(--brand-1,#8aa2ff),var(--brand-2,#14deb3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.7em;}
+    .feature-card{background:var(--surface-1,rgba(255,255,255,0.11));border-radius:23px;box-shadow:0 8px 32px rgba(68,110,255,0.13);padding:2.05rem 1.7rem 2.1rem 1.75rem;color:var(--text-primary,#fff);font-size:1.09rem;line-height:1.79;opacity:0;transform:translateY(47px);transition:box-shadow .22s,transform .21s,opacity .33s;}
+    .feature-card.show{opacity:1;transform:translateY(0);}
+    .feature-card:hover{background:rgba(80,200,255,0.13);box-shadow:0 14px 75px 0 rgba(45,188,255,0.13);transform:translateY(-7px) scale(1.015);}
+    @media(max-width:720px){.section-title{font-size:1.3rem;}.feature-card{padding:.82rem .56rem 1rem .65rem;border-radius:12px;}}
+  </style>
 </head>
 <body>
   <div class="container">
@@ -69,6 +76,7 @@
   </div>
 
   <script src="script.js"></script>
+  <script>(function(){function fade(){document.querySelectorAll('.feature-card').forEach(e=>{var r=e.getBoundingClientRect();if(r.top<window.innerHeight-50)e.classList.add('show');});}window.addEventListener('scroll',fade,{passive:true});fade();setTimeout(fade,350);})();</script>
 </body>
 </html>
 

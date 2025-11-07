@@ -21,48 +21,48 @@
   <meta name="twitter:image" content="https://hyggshiosdeveloper.github.io/hyggshi-os-website/og-image.png" />
 
   <!-- JSON-LD Schema -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "Hyggshi OS",
-  "alternateName": "Hyggshi Operating System",
-  "image": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/Resources/hyggshi-logo.png",
-  "url": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/",
-  "description": "Hyggshi OS là hệ điều hành mô phỏng hiện đại lấy cảm hứng từ Windows, được thiết kế trong Roblox để tạo trải nghiệm lập trình và tương tác sáng tạo.",
-  "sku": "HOS-001",
-  "brand": {
-    "@type": "Brand",
-    "name": "Hyggshi OS Project Center"
-  },
-  "creator": {
-    "@type": "Person",
-    "name": "Nguyễn Minh Phúc"
-  },
-  "publisher": {
-    "@type": "Organization",
-    "name": "Hyggshi OS Team",
-    "url": "https://hyggshiosdeveloper.github.io/"
-  },
-  "inLanguage": "vi",
-  "releaseDate": "2025-01-01",
-  "softwareVersion": "2.1.7",
-  "operatingSystem": "Roblox Engine",
-  "applicationCategory": "EducationalApplication",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "VND",
-    "availability": "https://schema.org/InStock",
-    "url": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5",
-    "ratingCount": "32"
-  }
-}
-</script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "Hyggshi OS",
+      "alternateName": "Hyggshi Operating System",
+      "image": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/Resources/hyggshi-logo.png",
+      "url": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/",
+      "description": "Hyggshi OS là hệ điều hành mô phỏng hiện đại lấy cảm hứng từ Windows, được thiết kế trong Roblox để tạo trải nghiệm lập trình và tương tác sáng tạo.",
+      "sku": "HOS-001",
+      "brand": {
+        "@type": "Brand",
+        "name": "Hyggshi OS Project Center"
+      },
+      "creator": {
+        "@type": "Person",
+        "name": "Nguyễn Minh Phúc"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Hyggshi OS Team",
+        "url": "https://hyggshiosdeveloper.github.io/"
+      },
+      "inLanguage": "vi",
+      "releaseDate": "2025-01-01",
+      "softwareVersion": "2.1.7",
+      "operatingSystem": "Roblox Engine",
+      "applicationCategory": "EducationalApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "VND",
+        "availability": "https://schema.org/InStock",
+        "url": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "ratingCount": "32"
+      }
+    }
+    </script>
 
   <link rel="icon" href="Resources/favicon.ico" />
     <link rel="stylesheet" href="style.css">
@@ -202,6 +202,17 @@
         font-size: 1.2rem;
       }
     }
+    :root {
+      --hero-grad: linear-gradient(88deg, var(--brand-1,#8aa2ff), var(--brand-2,#14deb3) 85%, #fff 130%);
+    }
+    .hero-title { font-size: 3.4rem; font-weight: 900; background: var(--hero-grad); letter-spacing:.7px; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-subtitle{font-size:1.3rem; opacity:.93; background:rgba(100,180,215,.12); color:var(--text-secondary);padding:.38rem 1.2rem; border-radius:13px;display:inline-block; box-shadow:0 5px 28px rgba(30,100,180,.10);}
+    .gallery-section,.history-section,.features{background:var(--surface-1);border-radius:28px;box-shadow:0 9px 39px rgba(66,120,255,0.11); margin-bottom:1.3em;}
+    .gallery-slide,.feature-card{border-radius:22px;box-shadow:0 8px 24px rgba(68,120,255,0.12);}
+    .feature-card:hover,.gallery-slide:hover{background:rgba(66,180,255,0.11);transform:translateY(-3px) scale(1.013);}
+    .section-title{font-weight:900;font-size:2.4rem;letter-spacing:.12rem;background:var(--hero-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    @media(max-width:815px){ .hero-title{font-size:2.1rem;} .gallery-section,.history-section,.features{border-radius:14px;} }
+    @media(max-width:540px){ .feature-card, .gallery-slide{padding:.62rem .2rem;} }
   </style>
 </head>
 <body>
@@ -420,6 +431,16 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+      // Fade-in effect
+      (function(){
+        function fade(){
+          document.querySelectorAll('.gallery-section,.history-section,.features,.feature-card,.gallery-slide,.hero-content').forEach(e=>{
+            var r=e.getBoundingClientRect(); if(r.top<window.innerHeight-55) e.classList.add('show'); });
+        }
+        window.addEventListener('scroll',fade,{passive:true}); fade();setTimeout(fade,370);
+      })();
+    </script>
   <script>
     let currentSlide = 0;
     const slides = document.querySelectorAll('.gallery-slide');
@@ -486,6 +507,4 @@
     })();
   </script>
 </body>
-
 </html> 
-

@@ -6,6 +6,16 @@
   <title>Tải xuống – Hyggshi OS Project Center</title>
   <link rel="icon" href="Resources/favicon.ico" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .hero-title { font-size:2.7rem; font-weight:900; letter-spacing:.7px; background:linear-gradient(88deg,var(--brand-1,#7ca9fd),var(--brand-2) 88%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+    .hero-subtitle { font-size:1.09rem; background:rgba(40,160,255,0.08); color:var(--text-secondary);padding:0.41em 1.12em;border-radius:13px;display:inline-block;box-shadow:0 5px 13px rgba(78,150,220,.12);margin-bottom:.55em;}
+    .history-section {background:var(--surface-1);border-radius:25px;box-shadow:0 13px 44px rgba(70,110,255,0.11);margin-bottom:1.2em;padding:3.3rem 1.5vw;transition:box-shadow .18s,transform .14s,opacity .22s;opacity:0;transform:translateY(37px);}
+    .history-section.show{opacity:1;transform:translateY(0);}
+    .feature-card{background:var(--surface-1,rgba(255,255,255,0.11));border-radius:18px;box-shadow:0 7px 38px rgba(70,170,255,.09);transition:box-shadow .17s,transform .13s;}
+    .feature-card:hover{background:rgba(34,180,255,0.13);transform:translateY(-3px);}
+    .section-title {font-size:2.19rem;font-weight:900;background:linear-gradient(88deg,var(--brand-1),var(--brand-2)72%,#fff 110%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    @media(max-width:715px){.hero-title{font-size:1.57rem;}.history-section{border-radius:13px;padding:1.25rem .5rem;}}
+  </style>
 </head>
 <body>
   <div class="container">
@@ -183,6 +193,9 @@
       fetchLatestRelease();
       scheduleRefresh();
     })();
+
+    // Fade-in effect
+    (function(){ function fade(){ document.querySelectorAll('.history-section,.feature-card').forEach(e=>{ var r=e.getBoundingClientRect(); if(r.top<window.innerHeight-60) e.classList.add('show');}); } window.addEventListener('scroll',fade,{passive:true}); fade(); setTimeout(fade,350); })();
   </script>
 </body>
 </html>

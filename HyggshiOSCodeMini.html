@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hyggshi OS Code – Mini</title>
+  <meta name="description" content="Hyggshi OS Code - Code Mini với IntelliSense, debugging, và Git integration.">
+  <link rel="icon" href="Resources/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --vscode-dark: #1e1e1e;
+      --vscode-darker: #181818;
+      --vscode-sidebar: #252526;
+      --vscode-border: #3e3e42;
+      --vscode-text: #cccccc;
+      --vscode-text-secondary: #858585;
+      --vscode-blue: #007acc;
+      --vscode-blue-hover: #005a9e;
+      --vscode-green: #00d1b2;
+      --vscode-purple: #9b59b6;
+      --vscode-orange: #ff9800;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--vscode-dark);
+      color: var(--vscode-text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Navigation */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(30, 30, 30, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--vscode-border);
+      z-index: 1000;
+      padding: 0.75rem 0;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--vscode-text);
+      text-decoration: none;
+    }
+
+    .logo img {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--vscode-text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--vscode-text);
+    }
+
+    .nav-links .btn-download {
+      background: var(--vscode-blue);
+      color: white;
+      padding: 0.5rem 1.25rem;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .nav-links .btn-download:hover {
+      background: var(--vscode-blue-hover);
+      color: white;
+    }
+
+    /* Hero Section */
+    .hero {
+      margin-top: 70px;
+      padding: 6rem 2rem;
+      text-align: center;
+      background: linear-gradient(180deg, var(--vscode-dark) 0%, var(--vscode-darker) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(0, 122, 204, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      color: var(--vscode-text-secondary);
+      margin-bottom: 2.5rem;
+      font-weight: 400;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--vscode-blue);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 4px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      background: var(--vscode-blue-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--vscode-text);
+      padding: 1rem 2rem;
+      border: 1px solid var(--vscode-border);
+      border-radius: 4px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--vscode-text-secondary);
+    }
+
+    /* Code Editor Mockup */
+    .code-mockup {
+      max-width: 1000px;
+      margin: 4rem auto 0;
+      background: var(--vscode-sidebar);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--vscode-border);
+    }
+
+    .code-header {
+      background: var(--vscode-darker);
+      padding: 0.75rem 1rem;
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--vscode-border);
+    }
+
+    .code-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .code-dot:nth-child(1) { background: #ff5f56; }
+    .code-dot:nth-child(2) { background: #ffbd2e; }
+    .code-dot:nth-child(3) { background: #27c93f; }
+
+    .code-body {
+      padding: 2rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--vscode-text);
+    }
+
+    .code-line {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .code-number {
+      color: var(--vscode-text-secondary);
+      min-width: 2rem;
+      text-align: right;
+    }
+
+    .code-content {
+      flex: 1;
+    }
+
+    .code-keyword { color: #569cd6; }
+    .code-string { color: #ce9178; }
+    .code-comment { color: #6a9955; }
+    .code-function { color: #dcdcaa; }
+    .code-variable { color: #9cdcfe; }
+
+    /* Features Section */
+    .features {
+      padding: 6rem 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--vscode-text);
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: var(--vscode-text-secondary);
+      font-size: 1.2rem;
+      margin-bottom: 4rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .feature-card {
+      background: var(--vscode-sidebar);
+      border: 1px solid var(--vscode-border);
+      border-radius: 8px;
+      padding: 2rem;
+      transition: all 0.3s;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .feature-card.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .feature-card:hover {
+      border-color: var(--vscode-blue);
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--vscode-text);
+    }
+
+    .feature-card p {
+      color: var(--vscode-text-secondary);
+      line-height: 1.7;
+    }
+
+    /* Languages Section */
+    .languages {
+      padding: 6rem 2rem;
+      background: var(--vscode-darker);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .languages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .language-item {
+      background: var(--vscode-sidebar);
+      border: 1px solid var(--vscode-border);
+      border-radius: 8px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: all 0.3s;
+      opacity: 0;
+      transform: translateY(20px);
+      cursor: default;
+    }
+
+    .language-item.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .language-item:hover {
+      border-color: var(--vscode-blue);
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .language-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    .language-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--vscode-text);
+      margin: 0;
+    }
+
+    /* Download Section */
+    .download {
+      padding: 6rem 2rem;
+      background: var(--vscode-darker);
+      text-align: center;
+    }
+
+    .download-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .download h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .download p {
+      font-size: 1.2rem;
+      color: var(--vscode-text-secondary);
+      margin-bottom: 2.5rem;
+    }
+
+    .platforms {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .platform-btn {
+      background: var(--vscode-sidebar);
+      border: 1px solid var(--vscode-border);
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      text-decoration: none;
+      color: var(--vscode-text);
+      transition: all 0.2s;
+      min-width: 200px;
+    }
+
+    .platform-btn:hover {
+      border-color: var(--vscode-blue);
+      background: rgba(0, 122, 204, 0.1);
+      transform: translateY(-3px);
+    }
+
+    .platform-btn strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .platform-btn span {
+      color: var(--vscode-text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--vscode-border);
+      text-align: center;
+      color: var(--vscode-text-secondary);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--vscode-text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--vscode-text);
+    }
+
+    /* Mobile Menu */
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--vscode-text);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .hero {
+        padding: 4rem 1rem;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .languages-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+      }
+
+      .code-body {
+        padding: 1rem;
+        font-size: 0.85rem;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeInUp 0.6s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS">
+        <span>Hyggshi OS Code</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Tính năng</a></li>
+        <li><a href="#languages">Ngôn ngữ</a></li>
+        <li><a href="#download">Tải xuống</a></li>
+        <li><a href="index.html">Trang chủ</a></li>
+        <li><a href="#download" id="nav-download-btn" class="btn-download">Tải miễn phí</a></li>
+      </ul>
+      <button class="mobile-menu-btn">☰</button>
+    </div>
+      </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Hyggshi OS Code Mini</h1>
+      <p class="hero-subtitle">Code editor hiện đại cho Hyggshi OS với IntelliSense, debugging, và Git integration.</p>
+      <div class="hero-buttons">
+        <a href="#download" class="btn-primary">
+          <span>⬇</span>
+          Tải xuống miễn phí
+        </a>
+        <a href="#features" class="btn-secondary">Tìm hiểu thêm</a>
+      </div>
+    </div>
+
+    <!-- Code Editor Mockup -->
+    <div class="code-mockup fade-in">
+      <div class="code-header">
+        <div class="code-dot"></div>
+        <div class="code-dot"></div>
+        <div class="code-dot"></div>
+      </div>
+      <div class="code-body">
+        <div class="code-line">
+          <span class="code-number">1</span>
+          <span class="code-content">
+            <span class="code-keyword">function</span> <span class="code-function">createHyggshiOS</span>() {
+          </span>
+        </div>
+        <div class="code-line">
+          <span class="code-number">2</span>
+          <span class="code-content">  <span class="code-keyword">const</span> <span class="code-variable">os</span> = <span class="code-keyword">new</span> <span class="code-function">OperatingSystem</span>({</span>
+        </div>
+        <div class="code-line">
+          <span class="code-number">3</span>
+          <span class="code-content">    name: <span class="code-string">"Hyggshi OS"</span>,</span>
+        </div>
+        <div class="code-line">
+          <span class="code-number">4</span>
+          <span class="code-content">    version: <span class="code-string">"2.1.7"</span>,</span>
+        </div>
+        <div class="code-line">
+          <span class="code-number">5</span>
+          <span class="code-content">    platform: <span class="code-string">"Hyggshi OS"</span></span>
+        </div>
+        <div class="code-line">
+          <span class="code-number">6</span>
+          <span class="code-content">  });</span>
+        </div>
+        <div class="code-line">
+          <span class="code-number">7</span>
+          <span class="code-content">  <span class="code-keyword">return</span> <span class="code-variable">os</span>;</span>
+        </div>
+        <div class="code-line">
+          <span class="code-number">8</span>
+          <span class="code-content">}</span>
+        </div>
+        <div class="code-line">
+          <span class="code-number">9</span>
+          <span class="code-content"> </span>
+        </div>
+        <div class="code-line">
+          <span class="code-number">10</span>
+          <span class="code-content"><span class="code-comment">// Hyggshi OS - Tương lai của Hyggshi OS</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <h2 class="section-title">Tại sao chọn Hyggshi OS Code Mini?</h2>
+    <p class="section-subtitle">Tất cả những gì bạn cần để phát triển trên Hyggshi OS</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>IntelliSense</h3>
+        <p>Gợi ý code thông minh với autocomplete và syntax highlighting nâng cao cho Lua và API.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🐛</div>
+        <h3>Debugging</h3>
+        <p>Debug code trực tiếp trong editor với breakpoints, watch variables và call stack visualization.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔀</div>
+        <h3>Git Integration</h3>
+        <p>Tích hợp Git hoàn chỉnh để quản lý version control và collaboration với team.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <h3>Customizable</h3>
+        <p>Tùy chỉnh giao diện, themes, và shortcuts theo sở thích của bạn.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Hiệu suất cao</h3>
+        <p>Xử lý các dự án lớn một cách mượt mà với hiệu suất tối ưu.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <h3>Extensions</h3>
+        <p>Mở rộng chức năng với hàng nghìn extensions từ cộng đồng.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Languages Section -->
+  <section class="languages" id="languages">
+    <h2 class="section-title">Ngôn ngữ được hỗ trợ</h2>
+    <p class="section-subtitle">Hỗ trợ hơn 50+ ngôn ngữ lập trình với syntax highlighting và IntelliSense</p>
+
+    <div class="languages-grid">
+      <div class="language-item">
+        <span class="language-icon">🐍</span>
+        <p class="language-name">Python</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">⚡</span>
+        <p class="language-name">JavaScript</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🔧</span>
+        <p class="language-name">C++</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🌐</span>
+        <p class="language-name">HTML</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🧱</span>
+        <p class="language-name">CSS</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">☕</span>
+        <p class="language-name">Java</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📄</span>
+        <p class="language-name">Markdown</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🔷</span>
+        <p class="language-name">C#</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">💎</span>
+        <p class="language-name">Ruby</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🐹</span>
+        <p class="language-name">Go</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🦀</span>
+        <p class="language-name">Rust</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🍎</span>
+        <p class="language-name">Swift</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📱</span>
+        <p class="language-name">Kotlin</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🎯</span>
+        <p class="language-name">Dart</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🗄️</span>
+        <p class="language-name">SQL</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📜</span>
+        <p class="language-name">YAML</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📂</span>
+        <p class="language-name">XML</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🐘</span>
+        <p class="language-name">PHP</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🐚</span>
+        <p class="language-name">Bash</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📑</span>
+        <p class="language-name">Batch</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">⚡</span>
+        <p class="language-name">PowerShell</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🌀</span>
+        <p class="language-name">TypeScript</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🔮</span>
+        <p class="language-name">Scala</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🧬</span>
+        <p class="language-name">Perl</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🔗</span>
+        <p class="language-name">Haskell</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🌿</span>
+        <p class="language-name">Clojure</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📡</span>
+        <p class="language-name">Erlang</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">✨</span>
+        <p class="language-name">Elixir</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📘</span>
+        <p class="language-name">F#</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🦉</span>
+        <p class="language-name">OCaml</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📜</span>
+        <p class="language-name">Pascal</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📐</span>
+        <p class="language-name">Fortran</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">⚙️</span>
+        <p class="language-name">Assembly</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🔌</span>
+        <p class="language-name">VHDL</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🔧</span>
+        <p class="language-name">Verilog</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🔤</span>
+        <p class="language-name">Tcl</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📄</span>
+        <p class="language-name">VBScript</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">⌨️</span>
+        <p class="language-name">AutoHotkey</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">⚙️</span>
+        <p class="language-name">Ini</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📋</span>
+        <p class="language-name">TOML</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🐳</span>
+        <p class="language-name">Dockerfile</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🔨</span>
+        <p class="language-name">Makefile</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🛠️</span>
+        <p class="language-name">CMake</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📦</span>
+        <p class="language-name">Gradle</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🌐</span>
+        <p class="language-name">Nginx</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🌍</span>
+        <p class="language-name">Apache</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📜</span>
+        <p class="language-name">Log</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">👾</span>
+        <p class="language-name">hsi</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">📄</span>
+        <p class="language-name">hsiext</p>
+      </div>
+
+      <div class="language-item">
+        <span class="language-icon">🔧</span>
+        <p class="language-name">hosc</p>
+      </div>
+    </div>
+
+    <p style="text-align: center; margin-top: 3rem; color: var(--vscode-text-secondary); font-size: 0.95rem;">
+      Và nhiều ngôn ngữ khác thông qua extensions từ <a href="https://marketplace.visualstudio.com" target="_blank" style="color: var(--vscode-blue);">VS Code Marketplace</a>
+    </p>
+  </section>
+
+  <!-- Download Section -->
+  <section class="download" id="download">
+    <div class="download-content">
+      <h2>Tải xuống Hyggshi OS Code</h2>
+      <p>Miễn phí và mã nguồn mở. Sẵn sàng cho Windows, macOS và Linux.</p>
+
+      <a href="#download" id="download-primary" class="btn-primary" style="margin-bottom: 2rem;">
+        <span>⬇</span>
+        <span id="download-text">Tải xuống cho Windows</span>
+        <span id="version-badge" style="margin-left: 0.5rem; font-size: 0.85rem; opacity: 0.9;"></span>
+      </a>
+
+      <div class="platforms">
+        <a href="#download" id="download-windows" class="platform-btn">
+          <strong>Windows</strong>
+          <span id="windows-version">Windows 10/11</span>
+        </a>
+        <a href="#download" id="download-macos" class="platform-btn">
+          <strong>macOS</strong>
+          <span id="macos-version">macOS 10.15+</span>
+        </a>
+        <a href="#download" id="download-linux" class="platform-btn">
+          <strong>Linux</strong>
+          <span id="linux-version">.deb, .rpm, .AppImage</span>
+        </a>
+      </div>
+
+      <p style="margin-top: 2rem; font-size: 0.9rem; color: var(--vscode-text-secondary);">
+        Phiên bản mới nhất: <span id="latest-version" style="color: var(--vscode-blue); font-weight: 600;">Đang tải...</span> | 
+        <a href="#" id="github-repo-link" style="color: var(--vscode-blue);">Xem trên GitHub</a>
+      </p>
+      </div>
+    </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="index.html">Trang chủ</a>
+      <a href="About.html">Giới thiệu</a>
+      <a href="projects.html">Dự án</a>
+      <a href="https://github.com/HyggshiOSDeveloper" target="_blank">GitHub</a>
+      <a href="https://discord.gg/PZuDkFzJtc" target="_blank">Discord</a>
+  </div>
+    <p>© 2024 - 2025 Hyggshi OS Project Center. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Scroll animations
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('show');
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .language-item').forEach(card => {
+      observer.observe(card);
+    });
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const navLinks = document.querySelector('.nav-links');
+    
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', () => {
+        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+      });
+    }
+
+    // Auto-update download links from GitHub Releases
+    async function updateDownloadLinks() {
+      // Cấu hình repo GitHub - Thay đổi tại đây nếu repo khác
+      const GITHUB_REPO = 'Hyggshi-OS-project-center/Hyggshi-OS-Code-Mini'; // Format: owner/repo
+      const API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('Không thể tải thông tin release');
+        
+        const release = await response.json();
+        
+        // Cập nhật version badge
+        const versionBadge = document.getElementById('version-badge');
+        const latestVersion = document.getElementById('latest-version');
+        const githubRepoLink = document.getElementById('github-repo-link');
+        
+        if (versionBadge) {
+          versionBadge.textContent = release.tag_name || release.name || '';
+        }
+        
+        if (latestVersion) {
+          latestVersion.textContent = release.tag_name || release.name || 'Không có';
+        }
+        
+        if (githubRepoLink) {
+          githubRepoLink.href = release.html_url || `https://github.com/${GITHUB_REPO}/releases`;
+        }
+
+        // Tìm assets theo platform
+        const assets = release.assets || [];
+        
+        // Hàm tìm asset theo pattern
+        function findAsset(patterns) {
+          return assets.find(asset => {
+            const name = asset.name.toLowerCase();
+            return patterns.some(pattern => name.includes(pattern));
+          });
+        }
+
+        // Windows assets (.exe, .msi, .zip cho Windows)
+        const windowsAsset = findAsset(['.exe', '.msi', 'windows', 'win', '.zip']);
+        if (windowsAsset) {
+          const downloadPrimary = document.getElementById('download-primary');
+          const downloadWindows = document.getElementById('download-windows');
+          const navDownloadBtn = document.getElementById('nav-download-btn');
+          
+          if (downloadPrimary) {
+            downloadPrimary.href = windowsAsset.browser_download_url;
+          }
+          
+          if (downloadWindows) {
+            downloadWindows.href = windowsAsset.browser_download_url;
+            const windowsVersion = document.getElementById('windows-version');
+            if (windowsVersion) {
+              windowsVersion.textContent = `${windowsAsset.name} (${(windowsAsset.size / 1024 / 1024).toFixed(1)} MB)`;
+            }
+          }
+          
+          // Cập nhật nút download trong nav bar
+          if (navDownloadBtn) {
+            navDownloadBtn.href = windowsAsset.browser_download_url;
+          }
+        }
+
+        // macOS assets (.dmg, .pkg, .zip cho macOS)
+        const macosAsset = findAsset(['.dmg', '.pkg', 'macos', 'mac', 'darwin']);
+        if (macosAsset) {
+          const downloadMacos = document.getElementById('download-macos');
+          if (downloadMacos) {
+            downloadMacos.href = macosAsset.browser_download_url;
+            const macosVersion = document.getElementById('macos-version');
+            if (macosVersion) {
+              macosVersion.textContent = `${macosAsset.name} (${(macosAsset.size / 1024 / 1024).toFixed(1)} MB)`;
+            }
+          }
+        } else {
+          // Nếu không có macOS asset, đánh dấu là chưa sẵn sàng
+          const downloadMacos = document.getElementById('download-macos');
+          if (downloadMacos) {
+            downloadMacos.style.opacity = '0.5';
+            downloadMacos.style.cursor = 'not-allowed';
+            downloadMacos.onclick = (e) => e.preventDefault();
+          }
+        }
+
+        // Linux assets (.deb, .rpm, .AppImage, .tar.gz)
+        const linuxAsset = findAsset(['.deb', '.rpm', '.appimage', 'linux', '.tar.gz']);
+        if (linuxAsset) {
+          const downloadLinux = document.getElementById('download-linux');
+          if (downloadLinux) {
+            downloadLinux.href = linuxAsset.browser_download_url;
+            const linuxVersion = document.getElementById('linux-version');
+            if (linuxVersion) {
+              linuxVersion.textContent = `${linuxAsset.name} (${(linuxAsset.size / 1024 / 1024).toFixed(1)} MB)`;
+            }
+          }
+        } else {
+          // Nếu không có Linux asset, đánh dấu là chưa sẵn sàng
+          const downloadLinux = document.getElementById('download-linux');
+          if (downloadLinux) {
+            downloadLinux.style.opacity = '0.5';
+            downloadLinux.style.cursor = 'not-allowed';
+            downloadLinux.onclick = (e) => e.preventDefault();
+          }
+        }
+
+        // Cập nhật download text với version
+        const downloadText = document.getElementById('download-text');
+        if (downloadText && windowsAsset) {
+          downloadText.textContent = `Tải xuống ${release.tag_name || 'mới nhất'}`;
+        }
+
+        console.log('✅ Download links đã được cập nhật từ GitHub Releases');
+        
+      } catch (error) {
+        console.error('❌ Lỗi khi tải thông tin release:', error);
+        
+        // Fallback: Hiển thị thông báo lỗi
+        const latestVersion = document.getElementById('latest-version');
+        if (latestVersion) {
+          latestVersion.textContent = 'Không thể tải';
+          latestVersion.style.color = 'var(--vscode-text-secondary)';
+        }
+        
+        // Fallback: Link đến trang releases
+        const githubRepoLink = document.getElementById('github-repo-link');
+        if (githubRepoLink) {
+          githubRepoLink.href = `https://github.com/${GITHUB_REPO}/releases`;
+        }
+      }
+    }
+
+    // Gọi hàm khi trang load
+    updateDownloadLinks();
+    
+    // Tự động kiểm tra lại mỗi 5 phút (tùy chọn)
+    // setInterval(updateDownloadLinks, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
+
