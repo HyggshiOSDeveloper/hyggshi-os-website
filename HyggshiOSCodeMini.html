@@ -672,6 +672,7 @@
     .release-version{font-size:1.11rem;font-weight:bold;color:var(--vscode-text);}
     .release-date{font-size:0.98rem;color:var(--vscode-text-secondary);margin-left:.9em;}
     @media(max-width:600px){.release-banner{flex-direction:column;gap:.2em;padding:0.5rem 0.4rem 0.7rem 0.7rem;}}
+    .quyetcode-section{max-width:850px;margin:2.2rem auto 3.1rem auto;border-radius:20px;padding:2rem 1rem 1.0rem;background:var(--vscode-sidebar);box-shadow:0 7px 36px 0 rgba(40,90,170,0.10);border:1.2px solid var(--vscode-border);}
   </style>
 </head>
 <body>
@@ -1129,6 +1130,15 @@ App started successfully.
       <img src="Resources/HOSCM-demo.png" alt="Screenshot Hyggshi OS Code Mini" class="hoscm-demoimg" onerror="this.style.opacity=0.3;this.previousElementSibling.innerHTML='[Đang cập nhật ảnh thực tế]';"/>
       <div class="fallback-msg"></div>
       <div class="img-caption">Giao diện chính: Sidebar, Editor, Terminal. Hỗ trợ nhiều theme, đa ngôn ngữ lập trình.</div>
+    </div>
+  </section>
+
+  <!-- Quyết Code Example Section -->
+  <section class="quyetcode-section" id="quyetcode-example">
+    <h2 class="section-title"><span style="vertical-align:-3px;filter:drop-shadow(0 1.5px 0 #228)">🔴</span> Ví dụ giao diện quá trình quyết code</h2>
+    <div class="screenshot-card fade-in">
+      <img src="Resources/HOSCM_codehvm.c.png" alt="Quyết code với HOS Code Mini" class="hoscm-demoimg" onerror="this.style.opacity=0.3;this.nextElementSibling.innerHTML='[Đang cập nhật ảnh ví dụ]';"/>
+      <div class="img-caption">Quyết code thực tế với Hyggshi OS Code Mini — File: <b>codehvm.c</b>, tích hợp syntax highlight, sidebar &amp; terminal.</div>
     </div>
   </section>
 
