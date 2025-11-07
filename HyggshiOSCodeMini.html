@@ -601,6 +601,68 @@
     .faq-answer{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.86,0,.07,1);background:rgba(180,200,255,0.05);padding:0 1.5rem;font-size:1rem;line-height:1.72;color:var(--vscode-text-secondary);}
     .faq-item.active .faq-answer{max-height:200px;padding-bottom:1.3rem;padding-top:0.15rem;color:var(--vscode-text);}
     @media(max-width:700px){.faq{padding:1.1rem .28rem 1.15rem .40rem;border-radius:13px;}}
+    .git-debug-section {
+      margin: 2.7rem auto 1rem auto;
+      padding: 2rem 1rem 1.5rem 1rem;
+      background: var(--vscode-sidebar);
+      border-radius: 18px;
+      box-shadow: 0 6px 26px rgba(100,150,220,0.11);
+      max-width: 1040px;
+      display: flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    }
+    .git-debug-container {
+      display: flex; gap:2.5rem; align-items:center; width:100%; flex-wrap: wrap;
+      justify-content:center; box-sizing:border-box;
+    }
+    .git-debug-illustration {
+      min-width: 220px; display:flex; flex-direction:column; align-items:center; margin-bottom:1.1rem;
+    }
+    .git-icon {
+      width:66px;height:66px;margin-bottom:1.1rem; background: var(--vscode-dark);box-shadow:0 4px 18px rgba(220,140,60,0.095);border-radius:14px;padding:9px;
+      border:1.7px solid var(--vscode-border);
+    }
+    .debug-console-mockup {
+      width: 230px; background: var(--vscode-darker); border-radius:15px;box-shadow:0 2px 18px rgba(60,90,170,0.09);
+      border:1.1px solid var(--vscode-border);
+      font-family: 'Fira Mono', 'Consolas', monospace; margin-top:4px;
+      overflow:hidden;
+    }
+    .dbg-head {
+      padding: 4px 10px; background:var(--vscode-border); border-radius:15px 15px 0 0; display:flex; gap:5px;
+    }
+    .dbg-head .circle {
+      width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:2.5px;
+    }
+    .dbg-head .red{background:#e05754;}
+    .dbg-head .yellow{background:#e6c062;}
+    .dbg-head .green{background:#6cd46c;}
+    .dbg-body {
+      margin:0; padding:10px 14px; font-size:0.98rem; color:var(--vscode-text-secondary); line-height:1.44; background:none;
+    }
+    body.light-mode .debug-console-mockup{background:#f8f8fa;}
+    body.light-mode .dbg-head{background:#e0e0e0;}
+    body.light-mode .dbg-body{color:#646464;}
+    .git-debug-info{
+      min-width:230px; max-width:370px; padding: 10px 6px;}
+      .git-debug-info h2{margin:0 0 0.8em 0; font-size:1.45rem;font-weight:700;color:var(--vscode-blue);letter-spacing:.5px;}
+    body.light-mode .git-debug-info h2{color: #0078d4;}
+    .git-debug-info p{font-size:1.05rem;color:var(--vscode-text); line-height:1.7; margin:0;}
+    @media(max-width:800px){
+      .git-debug-container{flex-direction:column;gap:1.5rem;}
+      .git-debug-section{padding:1.2rem .3rem;}
+    }
+    /* HOSCM Screenshot */
+    .hoscmscreenshot-section{max-width:850px;margin:3rem auto;border-radius:20px;padding:2rem 1rem 1.3rem;background:var(--vscode-sidebar);box-shadow:0 6px 32px 0 rgba(60,110,200,0.07);border:1.2px solid var(--vscode-border);}
+    .screenshot-card{display:flex;flex-direction:column;align-items:center;gap:0.5rem;}
+    .hoscm-demoimg{width:96%;max-width:670px;border-radius:16px;box-shadow:0 6px 32px 0 rgba(60,110,200,0.10);margin-bottom:8px;border:1.4px solid var(--vscode-border);transition:box-shadow .25s;}
+    .hoscm-demoimg:hover{box-shadow:0 8px 44px 0 rgba(50,130,200,0.16);}
+    .img-caption{font-size:1.08rem;color:var(--vscode-text-secondary);margin-top:4px;}
+    /* Release banner */
+    .release-banner{display:flex;align-items:center;gap:.9em;font-size:1.1rem;justify-content:center;margin:1rem auto 2.2rem auto;padding:1.05rem 1.9rem 1.07rem 1.7rem;background:var(--vscode-darker);border-radius:18px;box-shadow:0 2px 10px rgba(80,100,180,0.08);max-width:570px;}
+    .release-badge{background:#0078d4;color:#fff;font-weight:bold;border-radius:12px;padding:3px 11px;font-size:1.05rem;margin-right:.55em;}
+    .release-version{font-size:1.11rem;font-weight:bold;color:var(--vscode-text);}
+    .release-date{font-size:0.98rem;color:var(--vscode-text-secondary);margin-left:.9em;}
+    @media(max-width:600px){.release-banner{flex-direction:column;gap:.2em;padding:0.5rem 0.4rem 0.7rem 0.7rem;}}
   </style>
 </head>
 <body>
@@ -1021,6 +1083,46 @@
     </div>
   </section>
 
+  <!-- Git & Debugging Section -->
+  <section class="git-debug-section" id="gitdebug">
+    <div class="git-debug-container">
+      <div class="git-debug-illustration">
+        <img src="Resources/Git.png" alt="Git" class="git-icon" />
+        <div class="debug-console-mockup">
+          <div class="dbg-head">
+            <span class="circle red"></span><span class="circle yellow"></span><span class="circle green"></span>
+          </div>
+          <pre class="dbg-body">
+&gt; git status
+On branch master
+nothing to commit, working tree clean
+&gt; python main.py
+[✓] Debugger attached at 127.0.0.1:5678
+App started successfully.
+          </pre>
+        </div>
+      </div>
+      <div class="git-debug-info">
+        <h2>Tích hợp <span style="color: #f05033;">Git</span> &amp; <span style="color:#027bce">Debugging</span></h2>
+        <p>
+          Quản lý mã nguồn với Git tích hợp: <b>commit</b> nhanh, quản lý nhánh, đẩy/pull về GitHub trực tiếp từ trình chỉnh sửa.<br>
+          Công cụ Debug mạnh mẽ giúp kiểm tra &amp; sửa lỗi ngay trong môi trường phát triển.<br>
+          Giao diện &amp; luồng làm việc quen thuộc như Visual Studio Code.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOSCM Screenshot Section -->
+  <section class="hoscmscreenshot-section" id="hoscmscreenshot">
+    <h2 class="section-title"><span style="vertical-align:-2.5px;filter:drop-shadow(0 1.5px 0 #228) ">🖼️</span> Ảnh giao diện HOSCM</h2>
+    <div class="screenshot-card fade-in">
+      <img src="Resources/HOSCM-demo.png" alt="Screenshot Hyggshi OS Code Mini" class="hoscm-demoimg" onerror="this.style.opacity=0.3;this.previousElementSibling.innerHTML='[Đang cập nhật ảnh thực tế]';"/>
+      <div class="fallback-msg"></div>
+      <div class="img-caption">Giao diện chính: Sidebar, Editor, Terminal. Hỗ trợ nhiều theme, đa ngôn ngữ lập trình.</div>
+    </div>
+  </section>
+
   <!-- Download Section -->
   <section class="download" id="download">
     <div class="download-content">
@@ -1054,6 +1156,13 @@
       </p>
       </div>
     </section>
+
+  <!-- Latest Release Banner -->
+  <section class="release-banner" id="releasebanner">
+    <span class="release-badge">Bản phát hành mới nhất: </span>
+    <span class="release-version"><!-- sẽ cập nhật động JS --></span>
+    <span class="release-date"></span>
+  </section>
 
   <!-- Footer -->
   <footer class="footer">
@@ -1340,6 +1449,20 @@
         }
       });
     });
+
+    async function updateReleaseBanner() {
+      try {
+        const resp = await fetch('https://api.github.com/repos/Hyggshi-OS-project-center/Hyggshi-OS-Code-Mini/releases/latest');
+        const data = await resp.json();
+        const v = data.tag_name;
+        const date = new Date(data.published_at).toLocaleDateString('vi-VN', {year:'numeric',month:'2-digit',day:'2-digit'});
+        document.querySelector('.release-version').innerText = v;
+        document.querySelector('.release-date').innerText = `(Ngày phát hành: ${date})`;
+      } catch (e) {
+        document.querySelector('.release-version').innerText = 'Không lấy được phiên bản';
+      }
+    }
+    updateReleaseBanner();
   </script>
 </body>
 </html>
