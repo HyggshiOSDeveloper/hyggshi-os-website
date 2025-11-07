@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hyggshi OS Code – Mini</title>
-  <meta name="description" content="Hyggshi OS Code - Code Mini với IntelliSense, debugging, và Git integration.">
+  <title>Hyggshi OS Code Mini</title>
+  <meta name="description" content="Hyggshi OS Code Mini với IntelliSense, debugging, và Git integration.">
   <link rel="icon" href="Resources/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,12 +30,25 @@
       --vscode-orange: #ff9800;
     }
 
+    /* Light Mode Variables */
+    body.light-mode {
+      --vscode-dark: #ffffff;
+      --vscode-darker: #f5f5f5;
+      --vscode-sidebar: #f8f8f8;
+      --vscode-border: #e0e0e0;
+      --vscode-text: #333333;
+      --vscode-text-secondary: #666666;
+      --vscode-blue: #0078d4;
+      --vscode-blue-hover: #005a9e;
+    }
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--vscode-dark);
       color: var(--vscode-text);
       line-height: 1.6;
       overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     /* Navigation */
@@ -49,6 +62,11 @@
       border-bottom: 1px solid var(--vscode-border);
       z-index: 1000;
       padding: 0.75rem 0;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    body.light-mode .navbar {
+      background: rgba(255, 255, 255, 0.95);
     }
 
     .nav-container {
@@ -109,6 +127,32 @@
       color: white;
     }
 
+    /* Dark Mode Toggle */
+    .theme-toggle {
+      background: transparent;
+      border: 1px solid var(--vscode-border);
+      color: var(--vscode-text);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--vscode-text-secondary);
+    }
+
+    .theme-toggle:active {
+      transform: scale(0.95);
+    }
+
     /* Hero Section */
     .hero {
       margin-top: 70px;
@@ -146,6 +190,14 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
       line-height: 1.2;
+    }
+    body.light-mode .hero h1 {
+      background: none;
+      -webkit-background-clip: inherit;
+      -webkit-text-fill-color: #111;
+      background-clip: inherit;
+      color: #111;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
 
     .hero-subtitle {
@@ -208,6 +260,11 @@
       overflow: hidden;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       border: 1px solid var(--vscode-border);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    body.light-mode .code-mockup {
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
     }
 
     .code-header {
@@ -216,6 +273,7 @@
       display: flex;
       gap: 0.5rem;
       border-bottom: 1px solid var(--vscode-border);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     .code-dot {
@@ -292,7 +350,7 @@
       border: 1px solid var(--vscode-border);
       border-radius: 8px;
       padding: 2rem;
-      transition: all 0.3s;
+      transition: all 0.3s, background-color 0.3s ease, border-color 0.3s ease;
       opacity: 0;
       transform: translateY(30px);
     }
@@ -346,7 +404,7 @@
       border-radius: 8px;
       padding: 1.5rem 1rem;
       text-align: center;
-      transition: all 0.3s;
+      transition: all 0.3s, background-color 0.3s ease, border-color 0.3s ease;
       opacity: 0;
       transform: translateY(20px);
       cursor: default;
@@ -415,7 +473,7 @@
       padding: 1.5rem 2rem;
       text-decoration: none;
       color: var(--vscode-text);
-      transition: all 0.2s;
+      transition: all 0.2s, background-color 0.3s ease, border-color 0.3s ease;
       min-width: 200px;
     }
 
@@ -525,6 +583,24 @@
     .fade-in {
       animation: fadeInUp 0.6s ease-out;
     }
+
+    .faq {
+      max-width: 820px;
+      margin: 0 auto 6rem auto;
+      padding: 2.3rem 1.2rem 1.7rem 1.2rem;
+      background: var(--vscode-sidebar);
+      border-radius: 20px;
+      box-shadow: 0 9px 32px 0 rgba(60, 110, 200, 0.07);
+      border: 1.2px solid var(--vscode-border);
+      transition: background-color .27s, border-color .26s;
+    }
+    .faq-list{margin-top:2.1rem;}
+    .faq-item{margin-bottom:1.1rem;border-radius:13px;box-shadow:0 2px 12px rgba(70,120,200,0.06);background:rgba(0,0,0,0.01);border:1px solid var(--vscode-border);overflow:hidden;transition:background .22s,border-color .22s;}
+    .faq-question{width:100%;text-align:left;padding:1.2rem 1.45rem;border:none;background:none;outline:none;font-weight:660;font-size:1.1rem;letter-spacing:.01em;color:var(--vscode-text);background:transparent;cursor:pointer;transition:background .16s;color:inherit;}
+    .faq-item.active .faq-question, .faq-question:focus{background:rgba(80,140,250,0.08);}
+    .faq-answer{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.86,0,.07,1);background:rgba(180,200,255,0.05);padding:0 1.5rem;font-size:1rem;line-height:1.72;color:var(--vscode-text-secondary);}
+    .faq-item.active .faq-answer{max-height:200px;padding-bottom:1.3rem;padding-top:0.15rem;color:var(--vscode-text);}
+    @media(max-width:700px){.faq{padding:1.1rem .28rem 1.15rem .40rem;border-radius:13px;}}
   </style>
 </head>
 <body>
@@ -540,6 +616,7 @@
         <li><a href="#languages">Ngôn ngữ</a></li>
         <li><a href="#download">Tải xuống</a></li>
         <li><a href="index.html">Trang chủ</a></li>
+        <li><button class="theme-toggle" id="theme-toggle" title="Chuyển đổi chế độ sáng/tối" aria-label="Toggle theme">🌙</button></li>
         <li><a href="#download" id="nav-download-btn" class="btn-download">Tải miễn phí</a></li>
       </ul>
       <button class="mobile-menu-btn">☰</button>
@@ -915,9 +992,33 @@
       </div>
     </div>
 
-    <p style="text-align: center; margin-top: 3rem; color: var(--vscode-text-secondary); font-size: 0.95rem;">
-      Và nhiều ngôn ngữ khác thông qua extensions từ <a href="https://marketplace.visualstudio.com" target="_blank" style="color: var(--vscode-blue);">VS Code Marketplace</a>
-    </p>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="faq" id="faq">
+    <h2 class="section-title">Câu hỏi thường gặp</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-question" type="button">Hyggshi OS Code Mini là gì?</button>
+        <div class="faq-answer">Là code editor hiện đại, gọn nhẹ lấy cảm hứng từ VS Code, dành riêng cho dự án Hyggshi OS. Hỗ trợ nhiều ngôn ngữ, có IntelliSense, Debug, Git,...</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" type="button">Có thể dùng trên Windows/Mac/Linux không?</button>
+        <div class="faq-answer">Có! Bạn có thể tải bản cài phù hợp ở phần Download. Nếu chưa có bản chính thức cho nền tảng, có thể sử dụng bản Portable hoặc qua web editor.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" type="button">Giao diện Dark/Light mode hoạt động như thế nào?</button>
+        <div class="faq-answer">Bạn có thể chuyển đổi Dark/Light ở góc trên bên phải. Trang sẽ tự chuyển theo hệ điều hành hoặc tuỳ chọn bạn lưu.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" type="button">Làm sao để cài extension/thêm chức năng?</button>
+        <div class="faq-answer">Hiện tại phiên bản Mini hỗ trợ extension cơ bản. Sắp tới sẽ có kho riêng cho Hyggshi OS, hoặc bạn có thể góp ý trên Discord.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" type="button">Tôi gặp lỗi khi tải/cài đặt?</button>
+        <div class="faq-answer">Kiểm tra lại đường dẫn tải về, tường lửa/antivirus của bạn. Nếu vẫn lỗi, hãy báo lên Discord hoặc issue trên GitHub!</div>
+      </div>
+    </div>
   </section>
 
   <!-- Download Section -->
@@ -985,18 +1086,30 @@
       observer.observe(card);
     });
 
-    // Smooth scroll
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
+    // Smooth scroll - chỉ áp dụng cho anchor links (bắt đầu bằng #)
+    // Sử dụng event delegation để tránh vấn đề khi href thay đổi
+    document.addEventListener('click', function(e) {
+      const anchor = e.target.closest('a');
+      if (!anchor) return;
+      
+      const href = anchor.getAttribute('href');
+      // Chỉ xử lý nếu href bắt đầu bằng # và không phải là URL
+      if (href && href.startsWith('#') && href.length > 1) {
         e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
+        try {
+          const target = document.querySelector(href);
+          if (target) {
+            target.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        } catch (error) {
+          // Nếu selector không hợp lệ, để browser xử lý bình thường
+          console.warn('Invalid selector:', href);
         }
-      });
+      }
+      // Nếu href là URL (không bắt đầu bằng #), để browser xử lý bình thường
     });
 
     // Mobile menu toggle
@@ -1008,6 +1121,71 @@
         navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
       });
     }
+
+    // Dark Mode Toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    // Load theme from localStorage
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (savedTheme) {
+        if (savedTheme === 'light') {
+          body.classList.add('light-mode');
+          themeToggle.textContent = '☀️';
+        } else {
+          body.classList.remove('light-mode');
+          themeToggle.textContent = '🌙';
+        }
+      } else {
+        // Default to dark mode or system preference
+        if (prefersDark) {
+          body.classList.remove('light-mode');
+          themeToggle.textContent = '🌙';
+        } else {
+          body.classList.add('light-mode');
+          themeToggle.textContent = '☀️';
+        }
+      }
+    }
+
+    // Toggle theme
+    function toggleTheme() {
+      body.classList.toggle('light-mode');
+      const isLightMode = body.classList.contains('light-mode');
+      
+      if (isLightMode) {
+        localStorage.setItem('theme', 'light');
+        themeToggle.textContent = '☀️';
+      } else {
+        localStorage.setItem('theme', 'dark');
+        themeToggle.textContent = '🌙';
+      }
+    }
+
+    // Initialize theme on page load
+    loadTheme();
+
+    // Add click event to toggle button
+    if (themeToggle) {
+      themeToggle.addEventListener('click', toggleTheme);
+    }
+
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      // Only update if user hasn't set a preference
+      if (!localStorage.getItem('theme')) {
+        if (e.matches) {
+          body.classList.remove('light-mode');
+          themeToggle.textContent = '🌙';
+        } else {
+          body.classList.add('light-mode');
+          themeToggle.textContent = '☀️';
+        }
+      }
+    });
 
     // Auto-update download links from GitHub Releases
     async function updateDownloadLinks() {
@@ -1147,6 +1325,21 @@
     
     // Tự động kiểm tra lại mỗi 5 phút (tùy chọn)
     // setInterval(updateDownloadLinks, 5 * 60 * 1000);
+
+    // FAQ accordion toggle hiện đại (chỉ hiện 1, auto scroll lên nếu bị che bởi nav)
+    document.querySelectorAll('.faq-question').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const item = this.parentElement;
+        const opened = document.querySelector('.faq-item.active');
+        if(opened && opened !== item) opened.classList.remove('active');
+        item.classList.toggle('active');
+        if(item.classList.contains('active')) {
+          setTimeout(() => {
+            item.scrollIntoView({behavior:'smooth',block:'center'});
+          },190);
+        }
+      });
+    });
   </script>
 </body>
 </html>
