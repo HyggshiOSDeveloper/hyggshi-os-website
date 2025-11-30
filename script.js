@@ -25,6 +25,9 @@ function initApp() {
         document.body.style.transition = 'opacity 0.5s ease-in';
         document.body.style.opacity = '1';
     }, 100);
+    
+    // Ensure a global theme toggle exists and load theme preference
+    setupGlobalThemeToggle();
 }
 
 function displayMessage() {
@@ -189,6 +192,76 @@ function addMobileMenu() {
 
     } catch (error) {
         // Silently ignore errors
+    }
+}
+
+/* SITE-WIDE THEME TOGGLE: creates a toggle in nav if missing and persists preference */
+function setupGlobalThemeToggle() {
+    try {
+        const body = document.body;
+        const nav = document.querySelector('.nav') || document.querySelector('.nav-container') || document.querySelector('.navbar');
+        if (!nav) return;
+
+        // Find existing toggle
+        let toggle = document.getElementById('global-theme-toggle');
+        if (!toggle) {
+            toggle = document.createElement('button');
+            toggle.id = 'global-theme-toggle';
+            toggle.className = 'theme-toggle';
+            // Icon/text will be set by applyTheme
+            toggle.title = 'Toggle light / dark';
+            // Insert into nav (prefer right side)
+            // If nav is a container with .nav-menu or .nav-links, append to that; otherwise append to nav itself
+            const menu = nav.querySelector('.nav-menu, .nav-links');
+            (menu || nav).appendChild(toggle);
+        }
+
+        function applyThemeFromStorage() {
+            const saved = localStorage.getItem('hyggshi_theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'light') {
+                body.classList.add('light-mode');
+                toggle.textContent = '☀️';
+            } else if (saved === 'dark') {
+                body.classList.remove('light-mode');
+                toggle.textContent = '🌙';
+            } else {
+                // no saved preference → use system
+                if (prefersDark) {
+                    body.classList.remove('light-mode');
+                    toggle.textContent = '🌙';
+                } else {
+                    body.classList.add('light-mode');
+                    toggle.textContent = '☀️';
+                }
+            }
+        }
+
+        applyThemeFromStorage();
+
+        // Toggle handler
+        toggle.addEventListener('click', () => {
+            const isLight = body.classList.toggle('light-mode');
+            localStorage.setItem('hyggshi_theme', isLight ? 'light' : 'dark');
+            toggle.textContent = isLight ? '☀️' : '🌙';
+        });
+
+        // React to system changes only if user hasn't chosen
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('hyggshi_theme')) {
+                    if (e.matches) {
+                        body.classList.remove('light-mode');
+                        toggle.textContent = '🌙';
+                    } else {
+                        body.classList.add('light-mode');
+                        toggle.textContent = '☀️';
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        // no-op
     }
 }
 
