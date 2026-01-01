@@ -98,11 +98,16 @@
 
         const assets = release.assets?.length
           ? release.assets.map(a => `
-                        <a href="${a.browser_download_url}" target="_blank" class="card" style="text-decoration: none;">
-                            <div class="card-icon">📦</div>
-                            <h3>${a.name}</h3>
-                            <span class="badge active">${(a.size / 1024 / 1024).toFixed(2)} MB</span>
-                        </a>
+                        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div class="card-icon">📦</div>
+                                <h3 style="font-size: 1.2rem;">${a.name}</h3>
+                                <span class="badge active" style="margin-bottom: 1.5rem;">${(a.size / 1024 / 1024).toFixed(2)} MB</span>
+                            </div>
+                            <a href="${a.browser_download_url}" target="_blank" class="btn btn-secondary" style="width: 100%;">
+                                Download
+                            </a>
+                        </div>
                     `).join('')
           : '';
 
