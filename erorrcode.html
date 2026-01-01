@@ -1,109 +1,130 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mã lỗi – Hyggshi OS Project Center</title>
-  <link rel="icon" href="Resources/favicon.ico" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Codes – Hyggshi OS</title>
+  <link rel="icon" href="Resources/favicon.ico">
+  <link rel="stylesheet" href="style.css">
   <style>
-    .search-bar { max-width: 720px; margin: 0 auto 1.25rem auto; }
     .search-input {
-      width: 100%; padding: 0.9rem 1rem; border-radius: 12px;
-      border: 1px solid var(--glass-border); background: var(--surface-1);
-      color: var(--text-primary);
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: var(--glass-bg);
+      border: var(--glass-border);
+      border-radius: 50px;
+      color: white;
+      font-size: 1.1rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.3s ease;
     }
-    .code-badge {
-      display: inline-block; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      padding: 0.25rem 0.55rem; border-radius: 8px; background: rgba(108,140,255,0.15);
-      border: 1px solid var(--glass-border); color: var(--text-primary); font-size: 0.9rem;
+
+    .search-input:focus {
+      border-color: var(--c-primary);
+      box-shadow: 0 0 20px var(--c-primary-glow);
     }
-    .label-muted { color: var(--text-secondary); font-size: 0.95rem; }
-    .cases-hero {text-align:center;padding:3.3rem 0 1.6rem 0;}
-    .cases-hero h1 {font-size:2.18rem;font-weight:900;background:linear-gradient(96deg,var(--brand-1,#7ca9fd),var(--brand-2,#14deb3)83%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-    .feature-card {background:var(--surface-1,rgba(255,255,255,0.1));border-radius:21px;box-shadow:0 8px 28px 0 rgba(15,180,255,0.12);transition:box-shadow .19s,transform .11s,background .13s;opacity:0;transform:translateY(47px);}
-    .feature-card.show{opacity:1;transform:translateY(0);}
-    .feature-card:hover {background:rgba(50,210,255,0.09);box-shadow:0 20px 58px 0 rgba(40,220,255,0.13);transform:translateY(-7px) scale(1.015);}
-    .code-badge { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:0.24rem 0.92rem;border-radius:12px;background:linear-gradient(92deg,var(--brand-1,#61b2fd),var(--brand-2,#15f6ded1)85%);color:#fff;font-size:1rem;font-weight:600;margin-right:7px;box-shadow:0 2px 9px rgba(80,150,255,.08); }
-    .label-muted {color:var(--text-secondary);font-size:0.97rem;}
-    @media(max-width:700px){.cases-hero h1{font-size:1.12rem;}.feature-card{padding:.8rem .6rem;border-radius:11px;}}
+
+    .search-input::placeholder {
+      color: var(--c-text-muted);
+    }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <header class="header">
-      <nav class="nav">
-        <div class="logo">
-          <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo" style="height: 40px; width: 40px; object-fit: contain; vertical-align: middle; margin-right: 0.5rem; border-radius: 10px; background: rgba(255,255,255,0.2);">
-          <span class="logo-text">Hyggshi OS</span>
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+        <span>☁️ Hyggshi OS</span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="About.html" class="nav-link">About</a></li>
+        <li><a href="projects.html" class="nav-link">Projects</a></li>
+        <li><a href="erorrcode.html" class="nav-link active">Errors</a></li>
+        <li><a href="download.html" class="nav-link">Download</a></li>
+      </ul>
+      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
+    </div>
+  </header>
+
+  <main class="container section-spacer">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <span class="badge active cloud-float fade-in-up">⚠️ Errors</span>
+      <h1 class="fade-in-up" style="margin-top: 1rem;">Tra cứu <span class="text-gradient">Mã Lỗi</span></h1>
+      <p class="fade-in-up delay-1" style="color: var(--c-text-muted); margin-bottom: 2rem;">
+        Tìm kiếm mã lỗi hoặc từ khóa để xem cách khắc phục.
+      </p>
+
+      <div class="fade-in-up delay-2" style="max-width: 600px; margin: 0 auto;">
+        <input id="errorSearch" class="search-input" type="search"
+          placeholder="🔍 Tìm kiếm (ví dụ: 0x0001214, API, network)..." />
+      </div>
+    </div>
+
+    <div id="errorGrid" class="grid-2 fade-in-up delay-3">
+
+      <div class="card error-item" data-tags="0x0001214 network api github">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+          <span class="badge danger">0x0001214</span>
+          <span style="font-size: 1.5rem;">⚠️</span>
         </div>
-        <ul class="nav-menu">
-          <li><a href="index.html" class="nav-link">Home</a></li>
-          <li><a href="About.html" class="nav-link">About</a></li>
-          <li><a href="projects.html" class="nav-link">Projects</a></li>
-          <li><a href="History.html" class="nav-link">History</a></li>
-          <li><a href="The-Cases.html" class="nav-link">Cases</a></li>
-          <li><a href="download.html" class="nav-link">Download</a></li>
-          <li><a href="license.html" class="nav-link">License</a></li>
-          <li><a href="erorrcode.html" class="nav-link active">Error</a></li>
-          <li><a href="timeline.html" class="nav-link">Timeline</a></li>
-          <li><a href="OSmain.html" class="nav-link">OS</a></li>
+        <h3>Lỗi kết nối API</h3>
+        <p style="color: var(--c-text-muted); margin-bottom: 1rem;">"No response text found" / "Connection Failed"</p>
 
-        </ul>
-      </nav>
-    </header>
-
-    <main class="main">
-      <section class="history-section">
-        <div class="container">
-          <h1 class="section-title">Mã lỗi (Error Codes)</h1>
-
-          <div class="search-bar">
-            <input id="errorSearch" class="search-input" type="search" placeholder="Tìm theo mã lỗi hoặc mô tả… (ví dụ: HOS-002, 0x0001214, Roblox, network)" />
-          </div>
-
-          <div id="errorGrid" class="feature-grid">
-            <div class="feature-card error-item" data-tags="0x0001214 network api github news">
-              <div class="feature-icon">⚠️</div>
-              <h3><span class="code-badge">0x0001214</span> Không tải được dữ liệu API [No response text found] please reply continue</h3>
-              <p class="label-muted">Nguyên nhân</p>
-              <p>Giới hạn API của dịch vụ bên thứ ba, lỗi mạng, hoặc bị chặn API của roblox.</p>
-              <p class="label-muted">Cách xử lý</p>
-              <p>Thử lại hãy thử lại tin nhắn mới.</p>
-            </div>
-
-
-
-          </div>
+        <div
+          style="background: rgba(94, 208, 198, 0.1); padding: 1rem; border-radius: 12px; border-left: 3px solid var(--c-primary);">
+          <p style="font-size: 0.9rem;"><strong>Nguyên nhân:</strong> Lỗi mạng hoặc GitHub API rate limit.</p>
+          <p style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--c-accent);"><strong>Khắc phục:</strong> Kiểm tra
+            mạng và thử lại sau 5 phút.</p>
         </div>
-      </section>
-    </main>
+      </div>
 
-    <footer class="footer">
-      <p>© 2024 - 2025 Hyggshi OS Project Center. All rights reserved. | <a href="license.html" style="color:#7289da;text-decoration:underline;">License</a></p>
-    </footer>
-  </div>
+      <div class="card error-item" data-tags="boot crash startup">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+          <span class="badge warning">SYS_BOOT_ERR</span>
+          <span style="font-size: 1.5rem;">🚫</span>
+        </div>
+        <h3>Lỗi Khởi động</h3>
+        <p style="color: var(--c-text-muted); margin-bottom: 1rem;">Treo logo hoặc màn hình đen khi bật.</p>
 
-  <script src="script.js"></script>
+        <div
+          style="background: rgba(94, 208, 198, 0.1); padding: 1rem; border-radius: 12px; border-left: 3px solid var(--c-primary);">
+          <p style="font-size: 0.9rem;"><strong>Nguyên nhân:</strong> Xung đột script hoặc thiếu assets.</p>
+          <p style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--c-accent);"><strong>Khắc phục:</strong> Cài đặt
+            lại Hyggshi OS Core.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p style="color: var(--c-text-muted);">© 2024 - 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
+    </div>
+  </footer>
+
   <script>
-    // Simple client-side filtering for error cards
     (function () {
       const input = document.getElementById('errorSearch');
       const items = Array.from(document.querySelectorAll('.error-item'));
       if (!input || !items.length) return;
+
       input.addEventListener('input', function () {
         const q = (this.value || '').toLowerCase();
         items.forEach(el => {
           const text = (el.textContent || '').toLowerCase();
           const tags = (el.getAttribute('data-tags') || '').toLowerCase();
           const match = !q || text.includes(q) || tags.includes(q);
-          el.style.display = match ? '' : 'none';
+          el.style.display = match ? 'block' : 'none';
         });
       });
     })();
   </script>
-  <script>(function(){function fade(){document.querySelectorAll('.feature-card').forEach(e=>{var r=e.getBoundingClientRect(); if(r.top<window.innerHeight-69)e.classList.add('show');});}window.addEventListener('scroll',fade,{passive:true});fade();setTimeout(fade,410);})();</script>
+  <script src="theme.js"></script>
 </body>
+
 </html>
-
-

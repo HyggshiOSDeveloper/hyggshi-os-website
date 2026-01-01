@@ -1,1528 +1,235 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hyggshi OS Code Mini</title>
-  <meta name="description" content="Hyggshi OS Code Mini - Trình chỉnh sửa mã nguồn phong cách VS Code: nhẹ, hỗ trợ nhiều ngôn ngữ, tích hợp IntelliSense, debugging, Git, giao diện hiện đại, tuỳ biến Dark/Light, tối ưu cho hệ điều hành Hyggshi OS."/>
-  <meta property="og:title" content="Hyggshi OS Code Mini - Code Editor hiện đại"/>
-  <meta property="og:description" content="Trình chỉnh sửa mã nguồn phong cách VS Code, đa nền tảng, nhiều ngôn ngữ, tối ưu cho Hyggshi OS. Tối ưu UI/UX, hỗ trợ Git, debug, extensions."/>
-  <meta property="og:image" content="Resources/HOSCM-demo.png"/>
-  <meta property="og:type" content="website"/>
-  <meta property="og:url" content="https://hyggshi-os-project-center.github.io/Hyggshi-OS-Code-Mini/HyggshiOSCodeMini.html"/>
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="Hyggshi OS Code Mini - Code Editor hiện đại"/>
-  <meta name="twitter:description" content="Editor cho Hyggshi OS, gọn nhẹ, hiện đại, VS Code-style."/>
-  <meta name="twitter:image" content="Resources/HOSCM-demo.png"/>
   <link rel="icon" href="Resources/favicon.ico">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --vscode-dark: #1e1e1e;
-      --vscode-darker: #181818;
-      --vscode-sidebar: #252526;
-      --vscode-border: #3e3e42;
-      --vscode-text: #cccccc;
-      --vscode-text-secondary: #858585;
-      --vscode-blue: #007acc;
-      --vscode-blue-hover: #005a9e;
-      --vscode-green: #00d1b2;
-      --vscode-purple: #9b59b6;
-      --vscode-orange: #ff9800;
-    }
-
-    /* Light Mode Variables */
-    body.light-mode {
-      --vscode-dark: #ffffff;
-      --vscode-darker: #f5f5f5;
-      --vscode-sidebar: #f8f8f8;
-      --vscode-border: #e0e0e0;
-      --vscode-text: #333333;
-      --vscode-text-secondary: #666666;
-      --vscode-blue: #0078d4;
-      --vscode-blue-hover: #005a9e;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--vscode-dark);
-      color: var(--vscode-text);
-      line-height: 1.6;
-      overflow-x: hidden;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    /* Navigation */
-    .navbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: rgba(30, 30, 30, 0.95);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--vscode-border);
-      z-index: 1000;
-      padding: 0.75rem 0;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-
-    body.light-mode .navbar {
-      background: rgba(255, 255, 255, 0.95);
-    }
-
-    .nav-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 2rem;
+    .ide-mockup {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--vscode-text);
-      text-decoration: none;
-    }
-
-    .logo img {
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-    }
-
-    .nav-links {
-      display: flex;
-      list-style: none;
-      gap: 2rem;
-      align-items: center;
-    }
-
-    .nav-links a {
-      color: var(--vscode-text-secondary);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.95rem;
-      transition: color 0.2s;
-    }
-
-    .nav-links a:hover {
-      color: var(--vscode-text);
-    }
-
-    .nav-links .btn-download {
-      background: var(--vscode-blue);
-      color: white;
-      padding: 0.5rem 1.25rem;
-      border-radius: 4px;
-      font-weight: 600;
-      transition: background 0.2s;
-    }
-
-    .nav-links .btn-download:hover {
-      background: var(--vscode-blue-hover);
-      color: white;
-    }
-
-    /* Dark Mode Toggle */
-    .theme-toggle {
-      background: transparent;
-      border: 1px solid var(--vscode-border);
-      color: var(--vscode-text);
-      padding: 0.5rem 0.75rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1.2rem;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-    }
-
-    .theme-toggle:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--vscode-text-secondary);
-    }
-
-    .theme-toggle:active {
-      transform: scale(0.95);
-    }
-
-    /* Hero Section */
-    .hero {
-      margin-top: 70px;
-      padding: 6rem 2rem;
-      text-align: center;
-      background: linear-gradient(180deg, var(--vscode-dark) 0%, var(--vscode-darker) 100%);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(circle at 50% 0%, rgba(0, 122, 204, 0.1) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .hero-bg {
-      position: absolute;
-      z-index: 1;
-      top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none;
-      opacity: 1;
-      /* Multi-layered radial gradient and VS Code cloud effect */
-      background:
-        radial-gradient(ellipse 63% 27% at 57% 19%, #3c5fffBB 60%, transparent 100%),
-        radial-gradient(ellipse 30% 24% at 18% 43%, #b977fc66 48%, transparent 100%),
-        radial-gradient(ellipse 60% 18% at 79% 84%, #28ead033 44%, transparent 100%),
-        linear-gradient(145deg,#242960 0 30%,#2b3560 70%,#232e52 100%);
-      filter: blur(8px);
-      transition:background .33s,opacity .25s;
-    }
-    body.light-mode .hero-bg {
-      background:
-        radial-gradient(ellipse 52% 21% at 64% 24%, #41adff77 50%, transparent 100%),
-        radial-gradient(ellipse 34% 26% at 22% 48%, #ffe28a44 55%, transparent 100%),
-        radial-gradient(ellipse 34% 15% at 70% 97%, #c0ffe033 40%, transparent 100%),
-        linear-gradient(120deg,#f5fafc 0% 60%,#e5f5fe 100%);
-    }
-    .hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; }
-
-    .hero h1 {
-      font-size: clamp(2.5rem, 6vw, 4.5rem);
-      font-weight: 800;
-      margin-bottom: 1.5rem;
-      background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      line-height: 1.2;
-    }
-    body.light-mode .hero h1 {
-      background: none;
-      -webkit-background-clip: inherit;
-      -webkit-text-fill-color: #111;
-      background-clip: inherit;
-      color: #111;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    }
-
-    .hero-subtitle {
-      font-size: clamp(1.1rem, 2vw, 1.5rem);
-      color: var(--vscode-text-secondary);
-      margin-bottom: 2.5rem;
-      font-weight: 400;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .btn-primary {
-      background: var(--vscode-blue);
-      color: white;
-      padding: 1rem 2rem;
-      border-radius: 4px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn-primary:hover {
-      background: var(--vscode-blue-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      color: var(--vscode-text);
-      padding: 1rem 2rem;
-      border: 1px solid var(--vscode-border);
-      border-radius: 4px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--vscode-text-secondary);
-    }
-
-    /* Code Editor Mockup */
-    .code-mockup {
       max-width: 1000px;
-      margin: 4rem auto 0;
-      background: var(--vscode-sidebar);
-      border-radius: 8px;
+      margin: 2rem auto;
+      height: 450px;
+      background: var(--c-bg-surface);
+      border: var(--glass-border);
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      border: 1px solid var(--vscode-border);
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
     }
 
-    body.light-mode .code-mockup {
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-    }
-
-    .code-header {
-      background: var(--vscode-darker);
-      padding: 0.75rem 1rem;
+    .ide-sidebar {
+      width: 50px;
+      background: rgba(30, 35, 42, 0.9);
       display: flex;
-      gap: 0.5rem;
-      border-bottom: 1px solid var(--vscode-border);
-      transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-
-    .code-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-
-    .code-dot:nth-child(1) { background: #ff5f56; }
-    .code-dot:nth-child(2) { background: #ffbd2e; }
-    .code-dot:nth-child(3) { background: #27c93f; }
-
-    .code-body {
-      padding: 2rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.95rem;
-      line-height: 1.8;
-      color: var(--vscode-text);
-    }
-
-    .code-line {
-      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0;
       gap: 1rem;
-      margin-bottom: 0.5rem;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .code-number {
-      color: var(--vscode-text-secondary);
-      min-width: 2rem;
-      text-align: right;
-    }
-
-    .code-content {
-      flex: 1;
-    }
-
-    .code-keyword { color: #569cd6; }
-    .code-string { color: #ce9178; }
-    .code-comment { color: #6a9955; }
-    .code-function { color: #dcdcaa; }
-    .code-variable { color: #9cdcfe; }
-
-    /* Features Section */
-    .features {
-      padding: 6rem 2rem;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .section-title {
-      text-align: center;
-      font-size: clamp(2rem, 4vw, 3rem);
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: var(--vscode-text);
-    }
-
-    .section-subtitle {
-      text-align: center;
-      color: var(--vscode-text-secondary);
-      font-size: 1.2rem;
-      margin-bottom: 4rem;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-      margin-top: 3rem;
-    }
-
-    .feature-card {
-      background: var(--vscode-sidebar);
-      border: 1px solid var(--vscode-border);
-      border-radius: 8px;
-      padding: 2rem;
-      transition: all 0.3s, background-color 0.3s ease, border-color 0.3s ease;
-      opacity: 0;
-      transform: translateY(30px);
-    }
-
-    .feature-card.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .feature-card:hover {
-      border-color: var(--vscode-blue);
-      transform: translateY(-5px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    }
-
-    .feature-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-
-    .feature-card h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: var(--vscode-text);
-    }
-
-    .feature-card p {
-      color: var(--vscode-text-secondary);
-      line-height: 1.7;
-    }
-
-    /* Languages Section */
-    .languages {
-      padding: 6rem 2rem;
-      background: var(--vscode-darker);
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .languages-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 1.5rem;
-      margin-top: 3rem;
-    }
-
-    .language-item {
-      background: var(--vscode-sidebar);
-      border: 1px solid var(--vscode-border);
-      border-radius: 8px;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      transition: all 0.3s, background-color 0.3s ease, border-color 0.3s ease;
-      opacity: 0;
-      transform: translateY(20px);
-      cursor: default;
-    }
-
-    .language-item.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .language-item:hover {
-      border-color: var(--vscode-blue);
-      transform: translateY(-3px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .language-icon {
-      font-size: 2.5rem;
-      margin-bottom: 0.75rem;
-      display: block;
-    }
-
-    .language-name {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--vscode-text);
-      margin: 0;
-    }
-
-    /* Download Section */
-    .download {
-      padding: 6rem 2rem;
-      background: var(--vscode-darker);
-      text-align: center;
-    }
-
-    .download-content {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .download h2 {
-      font-size: clamp(2rem, 4vw, 3rem);
-      font-weight: 700;
-      margin-bottom: 1rem;
-    }
-
-    .download p {
-      font-size: 1.2rem;
-      color: var(--vscode-text-secondary);
-      margin-bottom: 2.5rem;
-    }
-
-    .platforms {
+    .ide-icon {
+      width: 30px;
+      height: 30px;
       display: flex;
-      gap: 1rem;
+      align-items: center;
       justify-content: center;
-      flex-wrap: wrap;
-      margin-top: 2rem;
-    }
-
-    .platform-btn {
-      background: var(--vscode-sidebar);
-      border: 1px solid var(--vscode-border);
       border-radius: 8px;
-      padding: 1.5rem 2rem;
-      text-decoration: none;
-      color: var(--vscode-text);
-      transition: all 0.2s, background-color 0.3s ease, border-color 0.3s ease;
-      min-width: 200px;
-    }
-
-    .platform-btn:hover {
-      border-color: var(--vscode-blue);
-      background: rgba(0, 122, 204, 0.1);
-      transform: translateY(-3px);
-    }
-
-    .platform-btn strong {
-      display: block;
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .platform-btn span {
-      color: var(--vscode-text-secondary);
-      font-size: 0.9rem;
-    }
-
-    /* Footer */
-    .footer {
-      padding: 3rem 2rem;
-      border-top: 1px solid var(--vscode-border);
-      text-align: center;
-      color: var(--vscode-text-secondary);
-    }
-
-    .footer-links {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .footer-links a {
-      color: var(--vscode-text-secondary);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .footer-links a:hover {
-      color: var(--vscode-text);
-    }
-
-    /* Mobile Menu */
-    .mobile-menu-btn {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--vscode-text);
-      font-size: 1.5rem;
       cursor: pointer;
+      transition: all 0.2s;
     }
 
-    @media (max-width: 768px) {
-      .nav-links {
-        display: none;
-      }
-
-      .mobile-menu-btn {
-        display: block;
-      }
-
-      .hero {
-        padding: 4rem 1rem;
-      }
-
-      .features-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .languages-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 1rem;
-      }
-
-      .code-body {
-        padding: 1rem;
-        font-size: 0.85rem;
-      }
-
-      .hero-buttons {
-        flex-direction: column;
-      }
-
-      .btn-primary,
-      .btn-secondary {
-        width: 100%;
-        justify-content: center;
-      }
+    .ide-icon:hover {
+      background: rgba(94, 208, 198, 0.2);
     }
 
-    /* Animations */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .ide-icon.active {
+      background: var(--c-primary);
+      color: var(--c-bg-deep);
     }
 
-    .fade-in {
-      animation: fadeInUp 0.6s ease-out;
+    .ide-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
-    .faq {
-      max-width: 820px;
-      margin: 0 auto 6rem auto;
-      padding: 2.3rem 1.2rem 1.7rem 1.2rem;
-      background: var(--vscode-sidebar);
-      border-radius: 20px;
-      box-shadow: 0 9px 32px 0 rgba(60, 110, 200, 0.07);
-      border: 1.2px solid var(--vscode-border);
-      transition: background-color .27s, border-color .26s;
+    .ide-tabs {
+      display: flex;
+      background: rgba(30, 35, 42, 0.9);
+      height: 40px;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
-    .faq-list{margin-top:2.1rem;}
-    .faq-item{margin-bottom:1.1rem;border-radius:13px;box-shadow:0 2px 12px rgba(70,120,200,0.06);background:rgba(0,0,0,0.01);border:1px solid var(--vscode-border);overflow:hidden;transition:background .22s,border-color .22s;}
-    .faq-question{width:100%;text-align:left;padding:1.2rem 1.45rem;border:none;background:none;outline:none;font-weight:660;font-size:1.1rem;letter-spacing:.01em;color:var(--vscode-text);background:transparent;cursor:pointer;transition:background .16s;color:inherit;}
-    .faq-item.active .faq-question, .faq-question:focus{background:rgba(80,140,250,0.08);}
-    .faq-answer{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.86,0,.07,1);background:rgba(180,200,255,0.05);padding:0 1.5rem;font-size:1rem;line-height:1.72;color:var(--vscode-text-secondary);}
-    .faq-item.active .faq-answer{max-height:200px;padding-bottom:1.3rem;padding-top:0.15rem;color:var(--vscode-text);}
-    @media(max-width:700px){.faq{padding:1.1rem .28rem 1.15rem .40rem;border-radius:13px;}}
-    .git-debug-section {
-      margin: 2.7rem auto 1rem auto;
-      padding: 2rem 1rem 1.5rem 1rem;
-      background: var(--vscode-sidebar);
-      border-radius: 18px;
-      box-shadow: 0 6px 26px rgba(100,150,220,0.11);
-      max-width: 1040px;
-      display: flex; flex-wrap:wrap; align-items:center; justify-content:center;
+
+    .ide-tab {
+      padding: 0 1.5rem;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.9rem;
+      color: var(--c-text-muted);
     }
-    .git-debug-container {
-      display: flex; gap:2.5rem; align-items:center; width:100%; flex-wrap: wrap;
-      justify-content:center; box-sizing:border-box;
+
+    .ide-tab.active {
+      background: var(--c-bg-surface);
+      color: white;
+      border-bottom: 2px solid var(--c-primary);
     }
-    .git-debug-illustration {
-      min-width: 220px; display:flex; flex-direction:column; align-items:center; margin-bottom:1.1rem;
+
+    .ide-editor {
+      flex: 1;
+      background: var(--c-bg-surface);
+      padding: 1.5rem 2rem;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-size: 14px;
+      color: #e0e0e0;
+      line-height: 1.8;
     }
-    .git-icon {
-      width:66px;height:66px;margin-bottom:1.1rem; background: var(--vscode-dark);box-shadow:0 4px 18px rgba(220,140,60,0.095);border-radius:14px;padding:9px;
-      border:1.7px solid var(--vscode-border);
+
+    .token-keyword {
+      color: var(--c-primary);
     }
-    .debug-console-mockup {
-      width: 230px; background: var(--vscode-darker); border-radius:15px;box-shadow:0 2px 18px rgba(60,90,170,0.09);
-      border:1.1px solid var(--vscode-border);
-      font-family: 'Fira Mono', 'Consolas', monospace; margin-top:4px;
-      overflow:hidden;
+
+    .token-string {
+      color: #FFD166;
     }
-    .dbg-head {
-      padding: 4px 10px; background:var(--vscode-border); border-radius:15px 15px 0 0; display:flex; gap:5px;
+
+    .token-comment {
+      color: #6a9955;
+      font-style: italic;
     }
-    .dbg-head .circle {
-      width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:2.5px;
+
+    .token-func {
+      color: var(--c-accent);
     }
-    .dbg-head .red{background:#e05754;}
-    .dbg-head .yellow{background:#e6c062;}
-    .dbg-head .green{background:#6cd46c;}
-    .dbg-body {
-      margin:0; padding:10px 14px; font-size:0.98rem; color:var(--vscode-text-secondary); line-height:1.44; background:none;
+
+    .ide-status {
+      height: 24px;
+      background: var(--c-primary);
+      color: var(--c-bg-deep);
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      font-size: 0.8rem;
+      justify-content: space-between;
+      font-weight: 600;
     }
-    body.light-mode .debug-console-mockup{background:#f8f8fa;}
-    body.light-mode .dbg-head{background:#e0e0e0;}
-    body.light-mode .dbg-body{color:#646464;}
-    .git-debug-info{
-      min-width:230px; max-width:370px; padding: 10px 6px;}
-      .git-debug-info h2{margin:0 0 0.8em 0; font-size:1.45rem;font-weight:700;color:var(--vscode-blue);letter-spacing:.5px;}
-    body.light-mode .git-debug-info h2{color: #0078d4;}
-    .git-debug-info p{font-size:1.05rem;color:var(--vscode-text); line-height:1.7; margin:0;}
-    @media(max-width:800px){
-      .git-debug-container{flex-direction:column;gap:1.5rem;}
-      .git-debug-section{padding:1.2rem .3rem;}
-    }
-    /* HOSCM Screenshot */
-    .hoscmscreenshot-section{max-width:850px;margin:3rem auto;border-radius:20px;padding:2rem 1rem 1.3rem;background:var(--vscode-sidebar);box-shadow:0 6px 32px 0 rgba(60,110,200,0.07);border:1.2px solid var(--vscode-border);}
-    .screenshot-card{display:flex;flex-direction:column;align-items:center;gap:0.5rem;}
-    .hoscm-demoimg{width:96%;max-width:670px;border-radius:16px;box-shadow:0 6px 32px 0 rgba(60,110,200,0.10);margin-bottom:8px;border:1.4px solid var(--vscode-border);transition:box-shadow .25s;}
-    .hoscm-demoimg:hover{box-shadow:0 8px 44px 0 rgba(50,130,200,0.16);}
-    .img-caption{font-size:1.08rem;color:var(--vscode-text-secondary);margin-top:4px;}
-    /* Release banner */
-    .release-banner{display:flex;align-items:center;gap:.9em;font-size:1.1rem;justify-content:center;margin:1rem auto 2.2rem auto;padding:1.05rem 1.9rem 1.07rem 1.7rem;background:var(--vscode-darker);border-radius:18px;box-shadow:0 2px 10px rgba(80,100,180,0.08);max-width:570px;}
-    .release-badge{background:#0078d4;color:#fff;font-weight:bold;border-radius:12px;padding:3px 11px;font-size:1.05rem;margin-right:.55em;}
-    .release-version{font-size:1.11rem;font-weight:bold;color:var(--vscode-text);}
-    .release-date{font-size:0.98rem;color:var(--vscode-text-secondary);margin-left:.9em;}
-    @media(max-width:600px){.release-banner{flex-direction:column;gap:.2em;padding:0.5rem 0.4rem 0.7rem 0.7rem;}}
-    .quyetcode-section{max-width:850px;margin:2.2rem auto 3.1rem auto;border-radius:20px;padding:2rem 1rem 1.0rem;background:var(--vscode-sidebar);box-shadow:0 7px 36px 0 rgba(40,90,170,0.10);border:1.2px solid var(--vscode-border);}
-    .code-mockup {background: #191e26;border-radius:14px;box-shadow:0 7px 30px rgba(18,30,50,.18);margin:38px auto 0 auto;max-width:980px;position:relative;border:1.2px solid #232f42;padding:0 0 0.65em 0;overflow:hidden;}
-    .code-mockup-header{height:34px;background:#232a3a;display:flex;align-items:center;padding-left:17px;gap:6px;border-radius:14px 14px 0 0;border-bottom:1.1px solid #232f42;}
-    .window-btn{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:6px;box-shadow:0 2px 7px #0002;}
-    .window-btn.red{background:#ff605c;}
-    .window-btn.yellow{background:#ffbd44;}
-    .window-btn.green{background:#00c93c;}
-    .code-area{margin:0;padding:13px 16px 9px 13px;background:none;font-family:'Fira Mono','Consolas','Monaco',monospace;font-size:1.11rem;color:#cbd8f8;overflow-x:auto;white-space:pre;}
-    .linenumber{color:#657e9c;user-select:none;display:inline-block;width:2.2em;text-align:right;margin-right:12px;}
-    .code-key{color:#38b6ff;font-weight:570;}
-    .code-blue{color:#6aceff;}
-    .code-str{color:#f5a97f;}
-    .code-comment{color:#64e386;font-style:italic;}
-    @media (max-width:700px){.code-mockup{max-width:98vw;font-size:.96rem;}}
-    /* IDE mockup VSCode */
-.ide-mockup{display:flex;flex-direction:row;max-width:960px;margin:50px auto 0 auto;box-shadow:0 11px 38px rgba(10,30,70,0.16);border-radius:12px;border:1.2px solid #23324a;overflow:hidden;background:#151926;min-height:310px;}
-.ide-sidebar{width:49px;background:#232842;display:flex;flex-direction:column;align-items:center;padding:13px 0;gap:8px;box-shadow:1.5px 0 10px #181e3d0a;}
-.ide-sidebar-icon{width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;transition:background .16s;}
-.ide-sidebar-icon:hover{background:#3141a222;}
-.ide-sidebar-icon img{width:18.5px;height:18.5px;filter:brightness(1.09);}
-.ide-main{flex:1;display:flex;flex-direction:column;}
-.ide-tabs{display:flex;background:#1c2241;border-bottom:1.1px solid #232f42;gap:2px;}
-.ide-tab{padding:7.5px 16px 7.5px 11px;font-size:.99em;color:#acbff9;display:flex;align-items:center;gap:7px;border-radius:9px 9px 0 0;position:relative;cursor:pointer;user-select:none;opacity:.82;}
-.ide-tab-icon{font-size:1.07em;}
-.ide-tab-active{background:#181f36;color:#fff;font-weight:580;opacity:1;}
-.ide-tab-close{margin-left:8px;font-size:1.10em;color:#7a8cb7;cursor:pointer;}
-.ide-editor{flex:1;background:#191e26;padding:0 0 0 0.7rem;overflow:auto;}
-.ide-code{margin:0;padding:14px 13px 10px  0;font-family:'Fira Mono','Consolas','Monaco',monospace;font-size:1.13rem;color:#cbd8f8;white-space:pre;line-height:1.61;}
-.ide-linenumber{color:#556e99;display:inline-block;width:2.3em;text-align:right;margin-right:10px;user-select:none;}
-.ide-key{color:#2bbeff;font-weight:550;}
-.ide-blue{color:#29dbff;font-weight:540;}
-.ide-str{color:#f9ae6d;}
-.ide-comment{color:#7cf789;font-style:italic;}
-.ide-statusbar{display:flex;align-items:center;justify-content:space-between;height:29px;background:#21305f;color:#b7d1fb;font-size:.98rem;padding:0 12px 0 17px;border-top:1.1px solid #23324a;font-family:'Consolas','Fira Mono',monospace;}
-.ide-status-right{font-weight:540;color:#3ff;}
-@media(max-width:820px){.ide-mockup{max-width:98vw;}.ide-sidebar{width:37px;}.ide-sidebar-icon{width:20px;height:20px;}.ide-sidebar-icon img{width:13.5px;height:13.5px;}.ide-tabs{font-size:93%;}.ide-code{font-size:.98rem;}}
   </style>
 </head>
+
 <body>
-  <!-- Navigation -->
-  <nav class="navbar">
-    <div class="nav-container">
-      <a href="index.html" class="logo">
-        <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS">
-        <span>Hyggshi OS Code</span>
-      </a>
-      <ul class="nav-links">
-        <li><a href="#features">Tính năng</a></li>
-        <li><a href="#languages">Ngôn ngữ</a></li>
-        <li><a href="#download">Tải xuống</a></li>
-        <li><a href="index.html">Trang chủ</a></li>
-        <li><button class="theme-toggle" id="theme-toggle" title="Chuyển đổi chế độ sáng/tối" aria-label="Toggle theme">🌙</button></li>
-        <li><a href="#download" id="nav-download-btn" class="btn-download">Tải miễn phí</a></li>
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+        <span>☁️ Hyggshi OS <span style="opacity: 0.6; font-weight: 400;">| Code Mini</span></span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="projects.html" class="nav-link">Projects</a></li>
+        <li><a href="HyggshiOSCodeMini.html" class="nav-link active">Code Mini</a></li>
+        <li><a href="#download" class="btn btn-primary" style="padding: 0.5rem 1.2rem;">Download</a></li>
       </ul>
-      <button class="mobile-menu-btn">☰</button>
+      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
     </div>
-      </nav>
+  </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-content">
-      <h1 class="intro-animated intro-delay-0 hero-title">Hyggshi OS Code Mini</h1>
-      <p class="subtitle intro-animated intro-delay-1 hero-subtitle">Code editor hiện đại cho Hyggshi OS với IntelliSense, debugging, và Git integration.</p>
-      <div class="hero-buttons intro-animated intro-delay-2">
-        <a href="#download" class="btn btn-primary"><span style="font-size:1.05em">⇩</span> Tải xuống miễn phí</a>
-        <a href="#features" class="btn btn-secondary">Tìm hiểu thêm</a>
-      </div>
-
-    <!-- IDE Mockup - giống VS Code -->
-    <div class="ide-mockup fade-in">
-      <div class="ide-sidebar">
-        <div class="ide-sidebar-icon" title="Explorer">
-          <svg width="19" height="19" fill="none" stroke="#8aa2ff" stroke-width="1.7" viewBox="0 0 24 24"><rect x="5" y="5" width="7" height="7" rx="2"/><rect x="12" y="12" width="7" height="7" rx="2"/><rect x="5" y="12" width="7" height="7" rx="2"/><rect x="12" y="5" width="7" height="7" rx="2"/></svg>
-        </div>
-        <div class="ide-sidebar-icon" title="Search">
-          <svg width="19" height="19" fill="none" stroke="#8aa2ff" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </div>
-        <div class="ide-sidebar-icon" title="Source Control">
-          <svg width="19" height="19" fill="none" stroke="#8aa2ff" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M12 9v3m0 0l-3 3m3-3l3 3"/></svg>
-        </div>
-        <div class="ide-sidebar-icon" title="Run">
-          <svg width="19" height="19" fill="none" stroke="#8aa2ff" stroke-width="1.7" viewBox="0 0 24 24"><polygon points="6,4 21,12 6,20 6,4" style="fill:#3cd5c7;stroke:#29dbff;stroke-width:1.4"/></svg>
-        </div>
-        <div class="ide-sidebar-icon" title="Extensions">
-          <svg width="19" height="19" fill="none" stroke="#8aa2ff" stroke-width="1.7" viewBox="0 0 24 24"><rect x="9" y="9" width="6" height="6" rx="1.6"/><path d="M1 9.5h6v5H1z"/><path d="M17 9.5h6v5h-6z"/></svg>
-        </div>
-      </div>
-      <div class="ide-main">
-        <div class="ide-tabs">
-          <div class="ide-tab ide-tab-active"><span class="ide-tab-icon">🐍</span> codehvm.c <span class="ide-tab-close">×</span></div>
-          <div class="ide-tab"><span class="ide-tab-icon">📝</span> README.md</div>
-          <div class="ide-tab"><span class="ide-tab-icon">⚙️</span> settings.json</div>
-        </div>
-        <div class="ide-editor">
-          <pre class="ide-code"><code><span class="ide-linenumber"> 1</span> <span class="ide-key">function</span> createHyggshiOS() &#123;
-<span class="ide-linenumber"> 2</span>   <span class="ide-key">const</span> os = <span class="ide-blue">new</span> OperatingSystem(&#123;
-<span class="ide-linenumber"> 3</span>     name: <span class="ide-str">"Hyggshi OS"</span>,
-<span class="ide-linenumber"> 4</span>     version: <span class="ide-str">"2.1.7"</span>,
-<span class="ide-linenumber"> 5</span>     platform: <span class="ide-str">"Hyggshi OS"</span>
-<span class="ide-linenumber"> 6</span>   &#125;);
-<span class="ide-linenumber"> 7</span>   <span class="ide-key">return</span> os;
-<span class="ide-linenumber"> 8</span> &#125;
-<span class="ide-linenumber"> 9</span>
-<span class="ide-linenumber">10</span> <span class="ide-comment">// Hyggshi OS – Tương lai của Hyggshi OS</span></code></pre>
-        </div>
-        <div class="ide-statusbar">
-          <span class="ide-status-left">Ln 10, Col 2  |  Spaces: 4  |  UTF-8  |  LF  |  JavaScript</span>
-          <span class="ide-status-right">Hyggshi OS Code Mini 🔵</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Section -->
-  <section class="features" id="features">
-    <h2 class="section-title">Tại sao chọn Hyggshi OS Code Mini?</h2>
-    <p class="section-subtitle">Tất cả những gì bạn cần để phát triển trên Hyggshi OS</p>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">🧠</div>
-        <h3>IntelliSense</h3>
-        <p>Gợi ý code thông minh với autocomplete và syntax highlighting nâng cao cho Lua và API.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">🐛</div>
-        <h3>Debugging</h3>
-        <p>Debug code trực tiếp trong editor với breakpoints, watch variables và call stack visualization.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">🔀</div>
-        <h3>Git Integration</h3>
-        <p>Tích hợp Git hoàn chỉnh để quản lý version control và collaboration với team.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">🎨</div>
-        <h3>Customizable</h3>
-        <p>Tùy chỉnh giao diện, themes, và shortcuts theo sở thích của bạn.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3>Hiệu suất cao</h3>
-        <p>Xử lý các dự án lớn một cách mượt mà với hiệu suất tối ưu.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">🔌</div>
-        <h3>Extensions</h3>
-        <p>Mở rộng chức năng với hàng nghìn extensions từ cộng đồng.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Languages Section -->
-  <section class="languages" id="languages">
-    <h2 class="section-title">Ngôn ngữ được hỗ trợ</h2>
-    <p class="section-subtitle">Hỗ trợ hơn 50+ ngôn ngữ lập trình với syntax highlighting và IntelliSense</p>
-
-    <div class="languages-grid">
-      <div class="language-item">
-        <span class="language-icon">🐍</span>
-        <p class="language-name">Python</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">⚡</span>
-        <p class="language-name">JavaScript</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🔧</span>
-        <p class="language-name">C++</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🌐</span>
-        <p class="language-name">HTML</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🧱</span>
-        <p class="language-name">CSS</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">☕</span>
-        <p class="language-name">Java</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📄</span>
-        <p class="language-name">Markdown</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🔷</span>
-        <p class="language-name">C#</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">💎</span>
-        <p class="language-name">Ruby</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🐹</span>
-        <p class="language-name">Go</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🦀</span>
-        <p class="language-name">Rust</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🍎</span>
-        <p class="language-name">Swift</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📱</span>
-        <p class="language-name">Kotlin</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🎯</span>
-        <p class="language-name">Dart</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🗄️</span>
-        <p class="language-name">SQL</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📜</span>
-        <p class="language-name">YAML</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📂</span>
-        <p class="language-name">XML</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🐘</span>
-        <p class="language-name">PHP</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🐚</span>
-        <p class="language-name">Bash</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📑</span>
-        <p class="language-name">Batch</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">⚡</span>
-        <p class="language-name">PowerShell</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🌀</span>
-        <p class="language-name">TypeScript</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🔮</span>
-        <p class="language-name">Scala</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🧬</span>
-        <p class="language-name">Perl</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🔗</span>
-        <p class="language-name">Haskell</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🌿</span>
-        <p class="language-name">Clojure</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📡</span>
-        <p class="language-name">Erlang</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">✨</span>
-        <p class="language-name">Elixir</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📘</span>
-        <p class="language-name">F#</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🦉</span>
-        <p class="language-name">OCaml</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📜</span>
-        <p class="language-name">Pascal</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📐</span>
-        <p class="language-name">Fortran</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">⚙️</span>
-        <p class="language-name">Assembly</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🔌</span>
-        <p class="language-name">VHDL</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🔧</span>
-        <p class="language-name">Verilog</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🔤</span>
-        <p class="language-name">Tcl</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📄</span>
-        <p class="language-name">VBScript</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">⌨️</span>
-        <p class="language-name">AutoHotkey</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">⚙️</span>
-        <p class="language-name">Ini</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📋</span>
-        <p class="language-name">TOML</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🐳</span>
-        <p class="language-name">Dockerfile</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🔨</span>
-        <p class="language-name">Makefile</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🛠️</span>
-        <p class="language-name">CMake</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📦</span>
-        <p class="language-name">Gradle</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🌐</span>
-        <p class="language-name">Nginx</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🌍</span>
-        <p class="language-name">Apache</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📜</span>
-        <p class="language-name">Log</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">👾</span>
-        <p class="language-name">hsi</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">📄</span>
-        <p class="language-name">hsiext</p>
-      </div>
-
-      <div class="language-item">
-        <span class="language-icon">🔧</span>
-        <p class="language-name">hosc</p>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- FAQ Section -->
-  <section class="faq" id="faq">
-    <h2 class="section-title">Câu hỏi thường gặp</h2>
-    <div class="faq-list">
-      <div class="faq-item">
-        <button class="faq-question" type="button">Hyggshi OS Code Mini là gì?</button>
-        <div class="faq-answer">Là code editor hiện đại, gọn nhẹ lấy cảm hứng từ VS Code, dành riêng cho dự án Hyggshi OS. Hỗ trợ nhiều ngôn ngữ, có IntelliSense, Debug, Git,...</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" type="button">Có thể dùng trên Windows/Mac/Linux không?</button>
-        <div class="faq-answer">Có! Bạn có thể tải bản cài phù hợp ở phần Download. Nếu chưa có bản chính thức cho nền tảng, có thể sử dụng bản Portable hoặc qua web editor.</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" type="button">Giao diện Dark/Light mode hoạt động như thế nào?</button>
-        <div class="faq-answer">Bạn có thể chuyển đổi Dark/Light ở góc trên bên phải. Trang sẽ tự chuyển theo hệ điều hành hoặc tuỳ chọn bạn lưu.</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" type="button">Làm sao để cài extension/thêm chức năng?</button>
-        <div class="faq-answer">Hiện tại phiên bản Mini hỗ trợ extension cơ bản. Sắp tới sẽ có kho riêng cho Hyggshi OS, hoặc bạn có thể góp ý trên Discord.</div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" type="button">Tôi gặp lỗi khi tải/cài đặt?</button>
-        <div class="faq-answer">Kiểm tra lại đường dẫn tải về, tường lửa/antivirus của bạn. Nếu vẫn lỗi, hãy báo lên Discord hoặc issue trên GitHub!</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Git & Debugging Section -->
-  <section class="git-debug-section" id="gitdebug">
-    <div class="git-debug-container">
-      <div class="git-debug-illustration">
-        <img src="Resources/Git.png" alt="Git" class="git-icon" />
-        <div class="debug-console-mockup">
-          <div class="dbg-head">
-            <span class="circle red"></span><span class="circle yellow"></span><span class="circle green"></span>
-          </div>
-          <pre class="dbg-body">
-&gt; git status
-On branch master
-nothing to commit, working tree clean
-&gt; python main.py
-[✓] Debugger attached at 127.0.0.1:5678
-App started successfully.
-          </pre>
-        </div>
-      </div>
-      <div class="git-debug-info">
-        <h2>Tích hợp <span style="color: #f05033;">Git</span> &amp; <span style="color:#027bce">Debugging</span></h2>
-        <p>
-          Quản lý mã nguồn với Git tích hợp: <b>commit</b> nhanh, quản lý nhánh, đẩy/pull về GitHub trực tiếp từ trình chỉnh sửa.<br>
-          Công cụ Debug mạnh mẽ giúp kiểm tra &amp; sửa lỗi ngay trong môi trường phát triển.<br>
-          Giao diện &amp; luồng làm việc quen thuộc như Visual Studio Code.
+  <main class="container">
+    <!-- Hero -->
+    <section class="section-spacer" style="text-align: center;">
+      <div class="fade-in-up">
+        <span class="badge active cloud-float" style="margin-bottom: 1rem; font-size: 1rem;">☁️ Code Editor</span>
+        <h1 style="font-size: 3.5rem;">Code. <span class="text-gradient">Anywhere.</span></h1>
+        <p style="color: var(--c-text-muted); font-size: 1.25rem; max-width: 700px; margin: 1rem auto;">
+          Trình biên tập mã nguồn nhẹ nhất cho Hyggshi OS. Syntax Highlighting, Git Integration, chạy mượt mà.
         </p>
       </div>
-    </div>
-  </section>
 
-  <!-- HOSCM Screenshot Section -->
-  <section class="hoscmscreenshot-section" id="hoscmscreenshot">
-    <h2 class="section-title"><span style="vertical-align:-2.5px;filter:drop-shadow(0 1.5px 0 #228) ">🖼️</span> Ảnh giao diện HOSCM</h2>
-    <div class="screenshot-card fade-in">
-      <img src="Resources/HOSCM-demo.png" alt="Screenshot Hyggshi OS Code Mini" class="hoscm-demoimg" onerror="this.style.opacity=0.3;this.previousElementSibling.innerHTML='[Đang cập nhật ảnh thực tế]';"/>
-      <div class="fallback-msg"></div>
-      <div class="img-caption">Giao diện chính: Sidebar, Editor, Terminal. Hỗ trợ nhiều theme, đa ngôn ngữ lập trình.</div>
-    </div>
-  </section>
-
-  <!-- Quyết Code Example Section -->
-  <section class="quyetcode-section" id="quyetcode-example">
-    <h2 class="section-title"><span style="vertical-align:-3px;filter:drop-shadow(0 1.5px 0 #228)">🔴</span> Ví dụ giao diện quá trình quyết code</h2>
-    <div class="screenshot-card fade-in">
-      <img src="Resources/HOSCM_codehvm.c.png" alt="Quyết code với HOS Code Mini" class="hoscm-demoimg" onerror="this.style.opacity=0.3;this.nextElementSibling.innerHTML='[Đang cập nhật ảnh ví dụ]';"/>
-      <div class="img-caption">Quyết code thực tế với Hyggshi OS Code Mini — File: <b>codehvm.c</b>, tích hợp syntax highlight, sidebar &amp; terminal.</div>
-    </div>
-  </section>
-
-  <!-- Download Section -->
-  <section class="download" id="download">
-    <div class="download-content">
-      <h2>Tải xuống Hyggshi OS Code</h2>
-      <p>Miễn phí và mã nguồn mở. Sẵn sàng cho Windows, macOS và Linux.</p>
-
-      <a href="#download" id="download-primary" class="btn-primary" style="margin-bottom: 2rem;">
-        <span>⬇</span>
-        <span id="download-text">Tải xuống cho Windows</span>
-        <span id="version-badge" style="margin-left: 0.5rem; font-size: 0.85rem; opacity: 0.9;"></span>
-      </a>
-
-      <div class="platforms">
-        <a href="#download" id="download-windows" class="platform-btn">
-          <strong>Windows</strong>
-          <span id="windows-version">Windows 10/11</span>
-        </a>
-        <a href="#download" id="download-macos" class="platform-btn">
-          <strong>macOS</strong>
-          <span id="macos-version">macOS 10.15+</span>
-        </a>
-        <a href="#download" id="download-linux" class="platform-btn">
-          <strong>Linux</strong>
-          <span id="linux-version">.deb, .rpm, .AppImage</span>
-        </a>
-      </div>
-
-      <p style="margin-top: 2rem; font-size: 0.9rem; color: var(--vscode-text-secondary);">
-        Phiên bản mới nhất: <span id="latest-version" style="color: var(--vscode-blue); font-weight: 600;">Đang tải...</span> | 
-        <a href="#" id="github-repo-link" style="color: var(--vscode-blue);">Xem trên GitHub</a>
-      </p>
+      <!-- IDE Mockup -->
+      <div class="ide-mockup fade-in-up delay-1">
+        <div class="ide-sidebar">
+          <div class="ide-icon active">📄</div>
+          <div class="ide-icon">🔍</div>
+          <div class="ide-icon">☁️</div>
+          <div class="ide-icon">📦</div>
+        </div>
+        <div class="ide-main">
+          <div class="ide-tabs">
+            <div class="ide-tab active">
+              <span>main.lua</span>
+            </div>
+            <div class="ide-tab">README.md</div>
+          </div>
+          <div class="ide-editor">
+            <div><span class="token-keyword">local</span> Hyggshi = <span
+                class="token-keyword">require</span>(game.ReplicatedStorage.Hyggshi)</div>
+            <br>
+            <div><span class="token-comment">-- Initialize Cloud System</span></div>
+            <div><span class="token-keyword">function</span> <span class="token-func">System.Start</span>()</div>
+            <div>&nbsp;&nbsp;<span class="token-keyword">print</span>(<span class="token-string">"☁️ Hyggshi OS Code
+                Mini started..."</span>)</div>
+            <div>&nbsp;&nbsp;Hyggshi:<span class="token-func">LoadModule</span>(<span
+                class="token-string">"CloudSync"</span>)</div>
+            <div><span class="token-keyword">end</span></div>
+          </div>
+          <div class="ide-status">
+            <span>main.lua • Ln 7, Col 12 • UTF-8</span>
+            <span>☁️ Hyggshi OS Code Mini</span>
+          </div>
+        </div>
       </div>
     </section>
 
-  <!-- Latest Release Banner -->
-  <section class="release-banner" id="releasebanner">
-    <span class="release-badge">Bản phát hành mới nhất: </span>
-    <span class="release-version"><!-- sẽ cập nhật động JS --></span>
-    <span class="release-date"></span>
-  </section>
+    <!-- Features -->
+    <section class="section-spacer">
+      <h2 class="section-title fade-in-up">Tính năng</h2>
+      <div class="grid-3 fade-in-up delay-1">
+        <div class="card">
+          <div class="card-icon">⚡</div>
+          <h3>Siêu nhẹ</h3>
+          <p style="color: var(--c-text-muted);">Khởi động nhanh, tối ưu bộ nhớ cho mọi thiết bị.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🎨</div>
+          <h3>Syntax Highlight</h3>
+          <p style="color: var(--c-text-muted);">Hỗ trợ Lua, Python, JS, HTML với tông màu Cloud.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">☁️</div>
+          <h3>Cloud Sync</h3>
+          <p style="color: var(--c-text-muted);">Đồng bộ code với GitHub trực tiếp.</p>
+        </div>
+      </div>
+    </section>
 
-  <!-- Footer -->
+    <!-- CTA -->
+    <section id="download" class="section-spacer" style="text-align: center;">
+      <div class="card fade-in-up"
+        style="display: inline-block; padding: 3rem; max-width: 600px; background: linear-gradient(135deg, rgba(94, 208, 198, 0.15), rgba(123, 185, 255, 0.15));">
+        <h2 style="margin-bottom: 1rem;">☁️ Sẵn sàng Code?</h2>
+        <p style="color: var(--c-text-muted); margin-bottom: 2rem;">Tải xuống Hyggshi OS Code Mini ngay.</p>
+        <div class="flex-center" style="gap: 1rem; flex-wrap: wrap;">
+          <a href="https://github.com/Hyggshi-OS-project-center/Hyggshi-OS-Code-Mini/releases" target="_blank"
+            class="btn btn-primary">Download v1.0</a>
+          <a href="#" class="btn btn-secondary">Documentation</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
   <footer class="footer">
-    <div class="footer-links">
-      <a href="index.html">Trang chủ</a>
-      <a href="About.html">Giới thiệu</a>
-      <a href="projects.html">Dự án</a>
-      <a href="https://github.com/HyggshiOSDeveloper" target="_blank">GitHub</a>
-      <a href="https://discord.gg/PZuDkFzJtc" target="_blank">Discord</a>
-  </div>
-    <p>© 2024 - 2025 Hyggshi OS Project Center. All rights reserved.</p>
+    <div class="container">
+      <p style="color: var(--c-text-muted);">© 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
+    </div>
   </footer>
-
-  <script>
-    // Scroll animations
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('show');
-        }
-      });
-    }, observerOptions);
-
-    document.querySelectorAll('.feature-card, .language-item').forEach(card => {
-      observer.observe(card);
-    });
-
-    // Smooth scroll - chỉ áp dụng cho anchor links (bắt đầu bằng #)
-    // Sử dụng event delegation để tránh vấn đề khi href thay đổi
-    document.addEventListener('click', function(e) {
-      const anchor = e.target.closest('a');
-      if (!anchor) return;
-      
-      const href = anchor.getAttribute('href');
-      // Chỉ xử lý nếu href bắt đầu bằng # và không phải là URL
-      if (href && href.startsWith('#') && href.length > 1) {
-        e.preventDefault();
-        try {
-          const target = document.querySelector(href);
-          if (target) {
-            target.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }
-        } catch (error) {
-          // Nếu selector không hợp lệ, để browser xử lý bình thường
-          console.warn('Invalid selector:', href);
-        }
-      }
-      // Nếu href là URL (không bắt đầu bằng #), để browser xử lý bình thường
-    });
-
-    // Mobile menu toggle
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const navLinks = document.querySelector('.nav-links');
-    
-    if (mobileMenuBtn) {
-      mobileMenuBtn.addEventListener('click', () => {
-        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
-      });
-    }
-
-    // Dark Mode Toggle
-    const themeToggle = document.getElementById('theme-toggle');
-    const body = document.body;
-
-    // Load theme from localStorage
-    function loadTheme() {
-      const savedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      
-      if (savedTheme) {
-        if (savedTheme === 'light') {
-          body.classList.add('light-mode');
-          themeToggle.textContent = '☀️';
-        } else {
-          body.classList.remove('light-mode');
-          themeToggle.textContent = '🌙';
-        }
-      } else {
-        // Default to dark mode or system preference
-        if (prefersDark) {
-          body.classList.remove('light-mode');
-          themeToggle.textContent = '🌙';
-        } else {
-          body.classList.add('light-mode');
-          themeToggle.textContent = '☀️';
-        }
-      }
-    }
-
-    // Toggle theme
-    function toggleTheme() {
-      body.classList.toggle('light-mode');
-      const isLightMode = body.classList.contains('light-mode');
-      
-      if (isLightMode) {
-        localStorage.setItem('theme', 'light');
-        themeToggle.textContent = '☀️';
-      } else {
-        localStorage.setItem('theme', 'dark');
-        themeToggle.textContent = '🌙';
-      }
-    }
-
-    // Initialize theme on page load
-    loadTheme();
-
-    // Add click event to toggle button
-    if (themeToggle) {
-      themeToggle.addEventListener('click', toggleTheme);
-    }
-
-    // Listen for system theme changes
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      // Only update if user hasn't set a preference
-      if (!localStorage.getItem('theme')) {
-        if (e.matches) {
-          body.classList.remove('light-mode');
-          themeToggle.textContent = '🌙';
-        } else {
-          body.classList.add('light-mode');
-          themeToggle.textContent = '☀️';
-        }
-      }
-    });
-
-    // Auto-update download links from GitHub Releases
-    async function updateDownloadLinks() {
-      // Cấu hình repo GitHub - Thay đổi tại đây nếu repo khác
-      const GITHUB_REPO = 'Hyggshi-OS-project-center/Hyggshi-OS-Code-Mini'; // Format: owner/repo
-      const API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
-
-      try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error('Không thể tải thông tin release');
-        
-        const release = await response.json();
-        
-        // Cập nhật version badge
-        const versionBadge = document.getElementById('version-badge');
-        const latestVersion = document.getElementById('latest-version');
-        const githubRepoLink = document.getElementById('github-repo-link');
-        
-        if (versionBadge) {
-          versionBadge.textContent = release.tag_name || release.name || '';
-        }
-        
-        if (latestVersion) {
-          latestVersion.textContent = release.tag_name || release.name || 'Không có';
-        }
-        
-        if (githubRepoLink) {
-          githubRepoLink.href = release.html_url || `https://github.com/${GITHUB_REPO}/releases`;
-        }
-
-        // Tìm assets theo platform
-        const assets = release.assets || [];
-        
-        // Hàm tìm asset theo pattern
-        function findAsset(patterns) {
-          return assets.find(asset => {
-            const name = asset.name.toLowerCase();
-            return patterns.some(pattern => name.includes(pattern));
-          });
-        }
-
-        // Windows assets (.exe, .msi, .zip cho Windows)
-        const windowsAsset = findAsset(['.exe', '.msi', 'windows', 'win', '.zip']);
-        if (windowsAsset) {
-          const downloadPrimary = document.getElementById('download-primary');
-          const downloadWindows = document.getElementById('download-windows');
-          const navDownloadBtn = document.getElementById('nav-download-btn');
-          
-          if (downloadPrimary) {
-            downloadPrimary.href = windowsAsset.browser_download_url;
-          }
-          
-          if (downloadWindows) {
-            downloadWindows.href = windowsAsset.browser_download_url;
-            const windowsVersion = document.getElementById('windows-version');
-            if (windowsVersion) {
-              windowsVersion.textContent = `${windowsAsset.name} (${(windowsAsset.size / 1024 / 1024).toFixed(1)} MB)`;
-            }
-          }
-          
-          // Cập nhật nút download trong nav bar
-          if (navDownloadBtn) {
-            navDownloadBtn.href = windowsAsset.browser_download_url;
-          }
-        }
-
-        // macOS assets (.dmg, .pkg, .zip cho macOS)
-        const macosAsset = findAsset(['.dmg', '.pkg', 'macos', 'mac', 'darwin']);
-        if (macosAsset) {
-          const downloadMacos = document.getElementById('download-macos');
-          if (downloadMacos) {
-            downloadMacos.href = macosAsset.browser_download_url;
-            const macosVersion = document.getElementById('macos-version');
-            if (macosVersion) {
-              macosVersion.textContent = `${macosAsset.name} (${(macosAsset.size / 1024 / 1024).toFixed(1)} MB)`;
-            }
-          }
-        } else {
-          // Nếu không có macOS asset, đánh dấu là chưa sẵn sàng
-          const downloadMacos = document.getElementById('download-macos');
-          if (downloadMacos) {
-            downloadMacos.style.opacity = '0.5';
-            downloadMacos.style.cursor = 'not-allowed';
-            downloadMacos.onclick = (e) => e.preventDefault();
-          }
-        }
-
-        // Linux assets (.deb, .rpm, .AppImage, .tar.gz)
-        const linuxAsset = findAsset(['.deb', '.rpm', '.appimage', 'linux', '.tar.gz']);
-        if (linuxAsset) {
-          const downloadLinux = document.getElementById('download-linux');
-          if (downloadLinux) {
-            downloadLinux.href = linuxAsset.browser_download_url;
-            const linuxVersion = document.getElementById('linux-version');
-            if (linuxVersion) {
-              linuxVersion.textContent = `${linuxAsset.name} (${(linuxAsset.size / 1024 / 1024).toFixed(1)} MB)`;
-            }
-          }
-        } else {
-          // Nếu không có Linux asset, đánh dấu là chưa sẵn sàng
-          const downloadLinux = document.getElementById('download-linux');
-          if (downloadLinux) {
-            downloadLinux.style.opacity = '0.5';
-            downloadLinux.style.cursor = 'not-allowed';
-            downloadLinux.onclick = (e) => e.preventDefault();
-          }
-        }
-
-        // Cập nhật download text với version
-        const downloadText = document.getElementById('download-text');
-        if (downloadText && windowsAsset) {
-          downloadText.textContent = `Tải xuống ${release.tag_name || 'mới nhất'}`;
-        }
-
-        console.log('✅ Download links đã được cập nhật từ GitHub Releases');
-        
-      } catch (error) {
-        console.error('❌ Lỗi khi tải thông tin release:', error);
-        
-        // Fallback: Hiển thị thông báo lỗi
-        const latestVersion = document.getElementById('latest-version');
-        if (latestVersion) {
-          latestVersion.textContent = 'Không thể tải';
-          latestVersion.style.color = 'var(--vscode-text-secondary)';
-        }
-        
-        // Fallback: Link đến trang releases
-        const githubRepoLink = document.getElementById('github-repo-link');
-        if (githubRepoLink) {
-          githubRepoLink.href = `https://github.com/${GITHUB_REPO}/releases`;
-        }
-      }
-    }
-
-    // Gọi hàm khi trang load
-    updateDownloadLinks();
-    
-    // Tự động kiểm tra lại mỗi 5 phút (tùy chọn)
-    // setInterval(updateDownloadLinks, 5 * 60 * 1000);
-
-    // FAQ accordion toggle hiện đại (chỉ hiện 1, auto scroll lên nếu bị che bởi nav)
-    document.querySelectorAll('.faq-question').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const item = this.parentElement;
-        const opened = document.querySelector('.faq-item.active');
-        if(opened && opened !== item) opened.classList.remove('active');
-        item.classList.toggle('active');
-        if(item.classList.contains('active')) {
-          setTimeout(() => {
-            item.scrollIntoView({behavior:'smooth',block:'center'});
-          },190);
-        }
-      });
-    });
-
-    async function updateReleaseBanner() {
-      try {
-        const resp = await fetch('https://api.github.com/repos/Hyggshi-OS-project-center/Hyggshi-OS-Code-Mini/releases/latest');
-        const data = await resp.json();
-        const v = data.tag_name;
-        const date = new Date(data.published_at).toLocaleDateString('vi-VN', {year:'numeric',month:'2-digit',day:'2-digit'});
-        document.querySelector('.release-version').innerText = v;
-        document.querySelector('.release-date').innerText = `(Ngày phát hành: ${date})`;
-      } catch (e) {
-        document.querySelector('.release-version').innerText = 'Không lấy được phiên bản';
-      }
-    }
-    updateReleaseBanner();
-  </script>
+  <script src="theme.js"></script>
 </body>
-</html>
 
+</html>

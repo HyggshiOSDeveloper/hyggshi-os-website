@@ -1,308 +1,138 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dự án Hyggshi OS - Các phiên bản và dự án phụ trợ</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Projects – Hyggshi OS</title>
+    <link rel="icon" href="Resources/favicon.ico">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="Resources/favicon.ico" />
-
-    <style>
-        .projects-hero {
-            text-align: center;
-            padding: 4.7rem 0 2.8rem 0;
-            color: white;
-        }
-        .projects-hero h1 {
-            font-size: 3.1rem;
-            font-weight: 900;
-            margin-bottom: 0.5rem;
-            letter-spacing: .8px;
-            background: linear-gradient(88deg, var(--brand-1), var(--brand-2) 85%, #fff 130%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .projects-hero .subtitle {
-            font-size: 1.23rem; opacity: 0.92;
-            color: var(--text-secondary);
-            margin-bottom: 0.8rem;
-            background: rgba(100,130,215,0.12);
-            border-radius: 13px;
-            display: inline-block;
-            box-shadow: 0 5px 28px rgba(40,100,140,0.08);
-            padding: 0.45rem 1.33rem;
-        }
-        .projects-content {
-            max-width: 1090px; margin: 0 auto; padding: 0 13px 32px 13px;
-        }
-        .project-section {
-            background: var(--surface-1,rgba(255,255,255,0.16));
-            border-radius: 31px;
-            box-shadow: 0 15px 48px rgba(68,140,255,0.19), 0 1.5px 14px rgba(60,110,150,0.13);
-            padding: 2.95rem 2.10rem 2.25rem 2.10rem;
-            margin-bottom: 2.7rem; color: white;
-            transition: box-shadow .33s, transform .21s, border-color .13s;
-            border: 1.7px solid var(--glass-border);
-            opacity: 0; transform: translateY(50px);
-        }
-        .project-section.show { opacity: 1; transform: translateY(0); transition-delay: 0.13s; }
-        .project-section:hover {
-            box-shadow: 0 28px 96px 0 rgba(52,180,255,0.23),0 2.5px 22px rgba(30,30,56,0.14);
-            border-color: var(--brand-1);
-            transform: translateY(-7px) scale(1.018);
-        }
-        .project-section h2 {
-            font-size: 2.07rem; font-weight: 900; margin-bottom: 1.17rem;
-            background: linear-gradient(88deg, var(--brand-1), var(--brand-2) 85%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: .18px;
-            display: flex; align-items: center; gap: 1.2rem;
-        }
-        .project-section h2 .status-badge, .project-section h2 .version-badge {font-size:1rem;}
-        .version-badge, .status-badge {
-            padding: 0.23rem 0.82rem; font-size:0.95rem;font-weight:700; margin-left:0.45rem; border-radius:22px;
-            background: linear-gradient(88deg, var(--brand-1), var(--brand-2) 70%);
-            color: #fff; border:none; box-shadow: 0 2px 14px rgba(20,200,210,0.08);
-            display:inline-block; letter-spacing:.1px;
-        }
-        .status-cancelled {background: linear-gradient(90deg, #ff7a7a, #dc3f2f 68%);}
-        .status-paused {background: linear-gradient(90deg, #fcb100, #ff9800 78%);}
-        .status-active {background: linear-gradient(88deg, #21e77a, #02b96d 88%);}
-        .status-development {background: linear-gradient(94deg, #46b2ff, #1976d2 82%);}
-        .project-section p, .project-section li {font-size:1.05rem;}
-        .project-section ul {margin: 1rem 0; padding-left: 1.2rem;}
-        .project-section li {margin-bottom: 0.44rem;}
-        .project-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(298px, 1fr));
-            gap: 1.79rem; margin: 2.1rem 0;
-        }
-        .project-card {
-            background: var(--surface-1,rgba(255,255,255,0.12)); border: 1.3px solid var(--glass-border); border-radius:15px;
-            box-shadow: 0 12px 40px rgba(60,120,255,0.09);
-            padding: 1.45rem 1rem 1.35rem 1.15rem;
-            color: var(--text-primary,#fff);transition: box-shadow .21s, transform .15s;
-            opacity:0;transform:translateY(40px);
-        }
-        .project-card.show {opacity:1;transform:translateY(0);transition-delay:.16s;}
-        .project-card:hover {background:rgba(85,171,255,0.11);transform:translateY(-3px) scale(1.01);}
-        .project-card h4 {
-            color: var(--brand-1-strong,#7ca9fd); margin-bottom:.49rem;font-weight:700;font-size:1.05rem;letter-spacing:.04rem;
-        }
-        .project-card p {opacity:.83;margin:0;font-size:.98rem;line-height:1.57;}
-        .warning-box, .info-box {
-            margin: 1.4rem 0 1rem 0; padding: 1.15rem 1.1rem;border-radius:12px;
-        }
-        .warning-box h4,.info-box h4{font-size:1.05rem;}
-        @media (max-width:820px){
-           .projects-hero h1{font-size:2.2rem;}
-           .projects-content{padding-left:2px;padding-right:2px;}
-           .project-section{padding:1.59rem 0.7rem 1.49rem 0.65rem;border-radius:19px;}
-        }
-        @media (max-width:514px){
-           .project-grid{grid-template-columns:1fr;gap:0.88rem;}
-           .project-card{padding:0.9rem 0.4rem 0.8rem 0.38rem;border-radius:9px;}
-           .project-section{border-radius:9px;}
-        }
-    </style>
 </head>
-    <body>
-        <div class="container">
-          <header class="header">
-            <nav class="nav">
-              <div class="logo">
-                <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo" style="height: 40px; width: 40px; object-fit: contain; vertical-align: middle; margin-right: 0.5rem; border-radius: 10px; background: rgba(255,255,255,0.2);">
-                <span class="logo-text">Hyggshi OS</span>
-              </div>
-              <ul class="nav-menu">
+
+<body>
+    <header class="header">
+        <div class="container nav">
+            <div class="logo">
+                <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+                <span>☁️ Hyggshi OS</span>
+            </div>
+            <ul class="nav-menu">
                 <li><a href="index.html" class="nav-link">Home</a></li>
                 <li><a href="About.html" class="nav-link">About</a></li>
-            <li><a href="projects.html" class="nav-link active">Projects</a></li>
+                <li><a href="projects.html" class="nav-link active">Projects</a></li>
                 <li><a href="History.html" class="nav-link">History</a></li>
-            <li><a href="The-Cases.html" class="nav-link">Cases</a></li>
                 <li><a href="download.html" class="nav-link">Download</a></li>
-            <li><a href="license.html" class="nav-link">License</a></li>
-            <li><a href="erorrcode.html" class="nav-link">Error</a></li>
-            <li><a href="timeline.html" class="nav-link">Timeline</a></li>
-            <li><a href="OSmain.html" class="nav-link">OS</a></li>
-              </ul>
-            </nav>
-          </header>
-
-        <div class="projects-hero">
-            <h1>📂 Dự án chính của Hyggshi OS</h1>
-            <p class="subtitle">Khám phá các phiên bản và dự án phụ trợ</p>
+            </ul>
+            <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
         </div>
+    </header>
 
-        <div class="projects-content">
-            <!-- Hyggshi OS 1.x -->
-            <div class="project-section">
-                <h2>🖥️ Hyggshi OS 1.x</h2>
-                
-                <div class="project-card">
-                    <h4>Hyggshi OS 1.0 <span class="version-badge">Phiên bản đầu tiên</span></h4>
-                    <p>Phiên bản đầu tiên mã nguồn mở. Nền móng hệ điều hành cơ bản: cửa sổ, giao diện, Start Menu đơn giản.</p>
-                </div>
-                
-                <div class="project-card">
-                    <h4>Hyggshi OS 1.1.6 <span class="version-badge">Cải tiến</span></h4>
-                    <p>Bổ sung ứng dụng, cải thiện trải nghiệm người dùng. Chuẩn bị nền tảng cho các bản nâng cao và thử nghiệm.</p>
-                </div>
-            </div>
+    <main class="container">
+        <section class="section-spacer" style="text-align: center;">
+            <span class="badge active cloud-float fade-in-up">☁️ Projects</span>
+            <h1 class="fade-in-up" style="margin-top: 1rem;">Các <span class="text-gradient">Dự án</span></h1>
+            <p class="fade-in-up delay-1" style="color: var(--c-text-muted);">Khám phá hệ sinh thái Hyggshi OS</p>
+        </section>
 
-            <!-- Hyggshi OS 2.0 -->
-            <div class="project-section">
-                <h2>📀 Hyggshi OS 2.0 <span class="status-badge status-active">Hoạt động</span></h2>
-                <p>Phiên bản chính thức thứ hai với bước tiến mạnh mẽ về giao diện và hệ thống:</p>
-                <ul>
-                    <li>Giao diện chuyên nghiệp hơn, ổn định hơn bản 1.x.</li>
-                    <li>Cải thiện quản lý cửa sổ và Start Menu.</li>
-                    <li>Tích hợp các yếu tố từ bản Developer như giao tiếp nội bộ, ứng dụng mẫu.</li>
-                    <li>Âm thanh khởi động đặc trưng gây chú ý và bị một số bên (như Intel) yêu cầu thay đổi do nghi ngờ bản quyền.</li>
-                </ul>
-                
-                <div class="info-box">
-                    <h4>🎯 Tác động</h4>
-                    <p>Đây là bản có ảnh hưởng lớn trong cộng đồng, giúp đưa Hyggshi OS được chú ý hơn.</p>
-                </div>
-            </div>
-
-            <!-- Hyggshi OS Developer -->
-            <div class="project-section">
-                <h2>🧪 Hyggshi OS Developer <span class="status-badge status-active">Hoạt động</span></h2>
-                <p>Phiên bản thử nghiệm dành cho nhà phát triển.</p>
-                <ul>
-                    <li>Có thể chứa lỗi, nhưng mang lại quyền truy cập sớm vào tính năng mới.</li>
-                    <li>Tích hợp ứng dụng Zashi Messaging – nhắn tin không bị kiểm duyệt bởi Roblox chat mặc định.</li>
-                </ul>
-            </div>
-
-            <!-- Hyggshi OS Pro -->
-            <div class="project-section">
-                <h2>⚙️ Hyggshi OS Pro <span class="status-badge status-cancelled">Đã hủy</span></h2>
-                <p>Biến thể nâng cao của Developer.</p>
-                <ul>
-                    <li>Hỗ trợ tuỳ chỉnh hình nền bằng ID, giao diện giống Windows 7.</li>
-                    <li>Dự án đã bị hủy, nhưng nhiều tính năng sẽ được đưa vào bản 3.0.</li>
-                </ul>
-            </div>
-
-            <!-- Hyggshi OS TV -->
-            <div class="project-section">
-                <h2>📺 Hyggshi OS TV <span class="status-badge status-cancelled">Đã hủy</span></h2>
-                <p>Dự án mô phỏng hệ điều hành TV thông minh như Android TV.</p>
-                <ul>
-                    <li>Giao diện tối ưu hóa cho màn hình lớn.</li>
-                    <li>Đã bị hủy do thiếu nhân lực và thời gian.</li>
-                </ul>
-            </div>
-
-            <!-- Hyggshi OS Phone -->
-            <div class="project-section">
-                <h2>📱 Hyggshi OS Phone <span class="status-badge status-paused">Tạm ngưng</span></h2>
-                <p>Phiên bản dành cho điện thoại Roblox, không phụ thuộc Android hay iOS.</p>
-                <ul>
-                    <li>Hệ thống UI tối ưu cho màn hình nhỏ.</li>
-                    <li>Gặp khó khăn về phát triển do thiếu điều kiện và tài nguyên.</li>
-                </ul>
-            </div>
-
-            <!-- Hyggshi OS 3.0 -->
-            <div class="project-section">
-                <h2>🚧 Hyggshi OS 3.0 <span class="status-badge status-development">Đang phát triển</span></h2>
-                <p>Phiên bản mới nhất, với định hướng ổn định, mã nguồn mở, và nâng cấp toàn diện.</p>
-                <ul>
-                    <li>Hứa hẹn tích hợp lại các tính năng tốt nhất từ các phiên bản trước.</li>
-                    <li>Đang gây tranh cãi về việc phát hành mã nguồn mở và kiểm duyệt nội dung.</li>
-                </ul>
-            </div>
-
-            <!-- Hyggshi OS Flex -->
-            <div class="project-section">
-                <h2>🧩 Hyggshi OS Flex <span class="status-badge status-development">Đang phát triển</span></h2>
-                <p>Phiên bản nhẹ và linh hoạt, được thiết kế để dễ dàng chỉnh sửa, tùy biến và phát triển theo ý muốn.</p>
-                <ul>
-                    <li>Thích hợp cho người dùng sáng tạo hoặc muốn tự xây dựng hệ điều hành riêng.</li>
-                    <li>Dễ tích hợp các mô-đun, tính năng, hoặc theme từ các bản Hyggshi OS khác.</li>
-                    <li>Lý tưởng để học tập, thử nghiệm hoặc đóng góp cộng đồng.</li>
-                </ul>
-            </div>
-            
-            
-
-            <!-- Dự án phụ trợ -->
-            <div class="project-section">
-                <h2>🔧 Dự án phụ trợ</h2>
-                
-                <div class="project-grid">
-                    <div class="project-card">
-                        <h4>📨 Zashi Messaging <span class="status-badge status-development">Đang phát triển</span></h4>
-                        <p>Ứng dụng nhắn tin nội bộ của Hyggshi OS. Hoạt động độc lập với Roblox Chat.</p>
+        <!-- Active Projects -->
+        <section class="section-spacer">
+            <h2 class="section-title fade-in-up">Đang <span>Hoạt động</span></h2>
+            <div class="grid-3 fade-in-up delay-1">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div class="card-icon" style="margin-bottom: 0;">☁️</div>
+                        <span class="badge active">Active</span>
                     </div>
-                    
-                    <div class="project-card">
-                        <h4>🧠 Hyggshi OS Module System <span class="status-badge status-development">Đang phát triển</span></h4>
-                        <p>Hệ thống quản lý ứng dụng và script bên trong OS. Cho phép người dùng tạo ứng dụng dạng module (Lua).</p>
+                    <h3>Hyggshi OS 3.0</h3>
+                    <p style="color: var(--c-text-muted);">Phiên bản chính thức mới nhất với thiết kế Cloudar OS. Hỗ trợ
+                        Module System và Cloud Sync.</p>
+                </div>
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div class="card-icon" style="margin-bottom: 0;">🧩</div>
+                        <span class="badge active">Active</span>
                     </div>
+                    <h3>Hyggshi OS Flex</h3>
+                    <p style="color: var(--c-text-muted);">Phiên bản nhẹ, dễ tùy biến dành cho developer muốn fork và
+                        phát triển riêng.</p>
                 </div>
-                
-                <div class="warning-box">
-                    <h4>⚠️ Lưu ý về Zashi Messaging</h4>
-                    <p>Vẫn đang phát triển, nhưng gặp chỉ trích vì thiếu kiểm duyệt và nguy cơ bị lợi dụng.</p>
-                </div>
-                
-                <div class="info-box">
-                    <h4>ℹ️ Thông tin về Module System</h4>
-                    <p>Hiện đang kết nối thông qua GitHub để kiểm soát nội dung.</p>
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div class="card-icon" style="margin-bottom: 0;">💻</div>
+                        <span class="badge active">Active</span>
+                    </div>
+                    <h3>Code Mini</h3>
+                    <p style="color: var(--c-text-muted);">Trình soạn thảo code nhẹ tích hợp trong Hyggshi OS với syntax
+                        highlighting.</p>
                 </div>
             </div>
+        </section>
 
-            <!-- Tổng kết -->
-            <div class="project-section">
-                <h2>📊 Tổng quan dự án</h2>
-                <div class="project-grid">
-                    <div class="project-card">
-                        <h4>✅ Hoạt động</h4>
-                        <p>Hyggshi OS 2.0, Developer, Zashi Messaging, Module System</p>
+        <!-- In Development -->
+        <section class="section-spacer">
+            <h2 class="section-title fade-in-up">Đang <span>Phát triển</span></h2>
+            <div class="grid-2 fade-in-up delay-1">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div class="card-icon" style="margin-bottom: 0;">🔧</div>
+                        <span class="badge warning">Dev</span>
                     </div>
-                    <div class="project-card">
-                        <h4>🚧 Đang phát triển</h4>
-                        <p>Hyggshi OS 3.0, Hyggshi OS Flex, Chat Bot (integration), Hyggshi OS Engine</p>
+                    <h3>Hyggshi OS Engine</h3>
+                    <p style="color: var(--c-text-muted);">Bộ engine core mã nguồn mở để xây dựng các hệ điều hành trên
+                        Roblox.</p>
+                </div>
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div class="card-icon" style="margin-bottom: 0;">💬</div>
+                        <span class="badge warning">Dev</span>
                     </div>
-                    <div class="project-card">
-                        <h4>⏸️ Tạm ngưng</h4>
-                        <p>Hyggshi OS Phone</p>
-                    </div>
-                    <div class="project-card">
-                        <h4>❌ Đã hủy</h4>
-                        <p>Hyggshi OS Pro, Hyggshi OS TV</p>
-                    </div>
+                    <h3>Zashi Messaging</h3>
+                    <p style="color: var(--c-text-muted);">Ứng dụng nhắn tin nội bộ (đang bổ sung hệ thống content
+                        moderation).</p>
                 </div>
             </div>
+        </section>
+
+        <!-- Archived -->
+        <section class="section-spacer">
+            <h2 class="section-title fade-in-up">Đã <span>Lưu trữ</span></h2>
+            <div class="grid-4 fade-in-up delay-1">
+                <div class="card" style="opacity: 0.7;">
+                    <span class="badge danger" style="margin-bottom: 1rem;">Archived</span>
+                    <h3>Hyggshi OS 1.x</h3>
+                    <p style="color: var(--c-text-muted); font-size: 0.9rem;">Phiên bản legacy đầu tiên.</p>
+                </div>
+                <div class="card" style="opacity: 0.7;">
+                    <span class="badge danger" style="margin-bottom: 1rem;">Cancelled</span>
+                    <h3>OS TV</h3>
+                    <p style="color: var(--c-text-muted); font-size: 0.9rem;">Dự án UI cho TV (hủy do thiếu nhân lực).
+                    </p>
+                </div>
+                <div class="card" style="opacity: 0.7;">
+                    <span class="badge danger" style="margin-bottom: 1rem;">Cancelled</span>
+                    <h3>OS Pro</h3>
+                    <p style="color: var(--c-text-muted); font-size: 0.9rem;">Phiên bản cao cấp (đã merge vào 3.0).</p>
+                </div>
+                <div class="card" style="opacity: 0.7;">
+                    <span class="badge danger" style="margin-bottom: 1rem;">Paused</span>
+                    <h3>OS Phone</h3>
+                    <p style="color: var(--c-text-muted); font-size: 0.9rem;">Giao diện di động (tạm dừng).</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p style="color: var(--c-text-muted);">© 2024 - 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
         </div>
-
-        <footer class="footer">
-            <p>&copy; 2024 - 2025 Hyggshi OS Project Center. Tất cả quyền được bảo lưu.</p>
-        </footer>
-    </div>
-
-    <script src="script.js"></script>
-    <script>
-      // Fade-in project sections & cards
-      (function(){
-        function fade() {
-          document.querySelectorAll('.project-section,.project-card').forEach(e=>{
-            var r = e.getBoundingClientRect();
-            if(r.top<window.innerHeight-60) e.classList.add('show');
-          });
-        }
-        window.addEventListener('scroll', fade, {passive:true});
-        fade(); setTimeout(fade,410);
-      })();
-    </script>
+    </footer>
+    <script src="theme.js"></script>
 </body>
+
 </html>

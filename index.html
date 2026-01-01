@@ -1,445 +1,162 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hyggshi OS Project Center – Tương lai của lập trình Roblox</title>
-  <meta name="description" content="Hyggshi OS Project Center là nơi phát triển các dự án Roblox mô phỏng hệ điều hành, thiết kế hiện đại, tốc độ cao và trải nghiệm tối ưu trên mọi thiết bị." />
-  <meta name="robots" content="index, follow" />
-
-  <!-- Open Graph -->
-  <meta property="og:title" content="Hyggshi OS Project Center – Tương lai của Roblox OS" />
-  <meta property="og:description" content="Trung tâm phát triển các dự án Roblox hệ điều hành, thiết kế đẹp, tốc độ nhanh, hỗ trợ mobile." />
-  <meta property="og:image" content="https://hyggshiosdeveloper.github.io/hyggshi-os-website/og-image.png" />
-  <meta property="og:url" content="https://hyggshiosdeveloper.github.io/hyggshi-os-website/" />
-  <meta property="og:type" content="website" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Hyggshi OS Project Center – Roblox OS" />
-  <meta name="twitter:description" content="Phát triển hệ điều hành Roblox với thiết kế đẹp, hiệu suất cao, thân thiện mobile." />
-  <meta name="twitter:image" content="https://hyggshiosdeveloper.github.io/hyggshi-os-website/og-image.png" />
-
-  <!-- JSON-LD Schema -->
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": "Hyggshi OS",
-      "alternateName": "Hyggshi Operating System",
-      "image": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/Resources/hyggshi-logo.png",
-      "url": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/",
-      "description": "Hyggshi OS là hệ điều hành mô phỏng hiện đại lấy cảm hứng từ Windows, được thiết kế trong Roblox để tạo trải nghiệm lập trình và tương tác sáng tạo.",
-      "sku": "HOS-001",
-      "brand": {
-        "@type": "Brand",
-        "name": "Hyggshi OS Project Center"
-      },
-      "creator": {
-        "@type": "Person",
-        "name": "Nguyễn Minh Phúc"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "Hyggshi OS Team",
-        "url": "https://hyggshiosdeveloper.github.io/"
-      },
-      "inLanguage": "vi",
-      "releaseDate": "2025-01-01",
-      "softwareVersion": "2.1.7",
-      "operatingSystem": "Roblox Engine",
-      "applicationCategory": "EducationalApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "VND",
-        "availability": "https://schema.org/InStock",
-        "url": "https://hyggshiosdeveloper.github.io/hyggshi-os-website/"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5",
-        "ratingCount": "32"
-      }
-    }
-    </script>
-
-  <link rel="icon" href="Resources/favicon.ico" />
-    <link rel="stylesheet" href="style.css">
-    <style>
-      .history-hero {
-          text-align: center;
-          padding: 4rem 0;
-          color: white;
-      }
-      
-      .history-hero h1 {
-          font-size: 3rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-          background: linear-gradient(45deg, #fff, #f0f0f0);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-      }
-      
-      .history-hero .subtitle {
-          font-size: 1.2rem;
-          opacity: 0.9;
-          margin-bottom: 2rem;
-      }
-      
-      .author-info {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 15px;
-          padding: 1.5rem;
-          margin-bottom: 3rem;
-          display: inline-block;
-      }
-      
-      .history-content {
-          max-width: 900px;
-          margin: 0 auto;
-          padding: 0 20px;
-      }
-      
-      .history-section {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 20px;
-          padding: 2.5rem;
-          margin-bottom: 2rem;
-          color: white;
-          transition: all 0.3s ease;
-      }
-      
-      .history-section:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-      }
-      
-      .history-section h2 {
-          font-size: 1.8rem;
-          font-weight: 600;
-          margin-bottom: 1.5rem;
-          color: #fff;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-      }
-      
-      .history-section h3 {
-          font-size: 1.4rem;
-          font-weight: 600;
-      }
-      .version-badge {
-          background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-          color: white;
-          padding: 0.3rem 0.8rem;
-          border-radius: 20px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          margin-left: 0.5rem;
-      }
-      
-      .warning-box {
-          background: rgba(255, 193, 7, 0.2);
-          border: 1px solid rgba(255, 193, 7, 0.4);
-          border-radius: 10px;
-          padding: 1rem;
-          margin-bottom: 1rem;
-          color: #fff;
-          font-size: 0.9rem;
-          font-weight: 600;
-          margin-left: 0.5rem;
-      }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hyggshi OS – Hệ điều hành mã nguồn mở trên Roblox</title>
+  <meta name="description"
+    content="Hyggshi OS - Hệ điều hành mô phỏng mã nguồn mở cho Roblox. Giao diện hiện đại, tùy biến cao.">
+  <link rel="icon" href="Resources/favicon.ico">
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div class="container">
-        <header class="header">
-            <nav class="nav">
-                <div class="logo">
-          <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo" style="height: 40px; width: 40px; object-fit: contain; vertical-align: middle; margin-right: 0.5rem; border-radius: 10px; background: rgba(255,255,255,0.2);">
-          <span class="logo-text">Hyggshi OS</span>
-                </div>
-                <ul class="nav-menu">
-                <li><a href="index.html" class="nav-link active">Home</a></li>
-                <li><a href="About.html" class="nav-link">About</a></li>
-                <li><a href="projects.html" class="nav-link">Projects</a></li>
-                <li><a href="History.html" class="nav-link">History</a></li>
-                <li><a href="The-Cases.html" class="nav-link">Cases</a></li>
-                <li><a href="download.html" class="nav-link">Download</a></li>
-                <li><a href="license.html" class="nav-link">License</a></li>
-                <li><a href="erorrcode.html" class="nav-link">Error</a></li>
-                <li><a href="timeline.html" class="nav-link">Timeline</a></li>
-                <li><a href="OSmain.html" class="nav-link">OS</a></li>
-                </ul>
-            </nav>
-        </header>
-
-        <main class="main">
-            <section class="hero">
-                <div class="hero-content">
-          <h1 class="hero-title">Hyggshi OS Project Center</h1>
-          <p class="hero-subtitle"><strong>Chào mừng đến với Hyggshi OS Project Center</strong></p>
-          <p>Trải nghiệm thiết kế web hiện đại, công nghệ tiên tiến và giao diện đẹp mắt – tất cả trong dự án Hyggshi OS mô phỏng hệ điều hành trên Roblox.</p>
-                    <div class="hero-buttons">
-            <a class="btn btn-primary" href="https://www.roblox.com" target="_blank">Khám phá trên Roblox</a>
-            <a class="btn btn-github" href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center" target="_blank">Xem trên GitHub</a>
-            <a class="btn btn-secondary" href="#learn">Tìm hiểu thêm</a>
-                    </div>
-                </div>
-                <div class="hero-visual">
-                    <div class="floating-card">
-                        <div class="card-icon">🚀</div>
-            <h3>Nhanh & Phản hồi tốt</h3>
-            <p>Tối ưu cho mọi thiết bị</p>
-                    </div>
-                </div>
-            </section>
-
-      <section class="gallery-section">
-        <div class="gallery-container">
-          <div class="gallery-slider" id="gallerySlider">
-            <div class="gallery-slide">
-              <div class="gallery-image">
-                <img src="Resources/13.png" alt="Hyggshi OS 2.0" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-              </div>
-              <div class="gallery-caption">
-                <h3>Update 1 HSI 2.0</h3>
-                <p>Phiên bản mới nhất của Hyggshi OS</p>
-              </div>
-            </div>
-            <div class="gallery-slide">
-              <div class="gallery-image">
-                <img src="Resources/upscalemedia-transformed (1).jpeg" alt="Zashi Messaging" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-              </div>
-              <div class="gallery-caption">
-                <h3>Hình nền hệ thống</h3>
-                <p>Giao diện nền của Hyggshi OS</p>
-              </div>
-            </div>
-            <div class="gallery-slide">
-              <div class="gallery-image">
-                <img src="Resources/15.png" alt="RRT Technology" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-              </div>
-              <div class="gallery-caption">
-                <h3>Hình nền hệ thống</h3>
-                <p>Giao diện nền của Hyggshi OS</p>
-              </div>
-            </div>
-            <div class="gallery-slide">
-              <div class="gallery-image">
-                <img src="Resources/upscalemedia-transformed (2).jpeg" alt="Background Image" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-              </div>
-              <div class="gallery-caption">
-                <h3>Hình nền hệ thống</h3>
-                <p>Giao diện nền của Hyggshi OS</p>
-              </div>
-            </div>
-            <div class="gallery-slide">
-              <div class="gallery-image">
-                <img src="Resources/road-1920x1080-5k-4k-wallpaper-8k-clouds-sunset-12465.jpg" alt="Background Image" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-              </div>
-              <div class="gallery-caption">
-                <h3>Hình nền hệ thống</h3>
-                <p>Giao diện nền của Hyggshi OS</p>
-              </div>
-            </div>
-            <div class="gallery-slide">
-              <div class="gallery-image">
-                <img src="Resources/welcome_background.png" alt="Background Image" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-              </div>
-              <div class="gallery-caption">
-                <h3>Tối ưu cho mọi thiết bị</h3>
-                <p>Tốc độ tải nhanh chóng</p>
-              </div>
-            </div>
-          </div>
-          
-          <button class="gallery-nav prev" onclick="changeSlide(-1)">‹</button>
-          <button class="gallery-nav next" onclick="changeSlide(1)">›</button>
-          
-          <div class="gallery-dots" id="galleryDots">
-            <div class="gallery-dot active" onclick="goToSlide(0)"></div>
-            <div class="gallery-dot" onclick="goToSlide(1)"></div>
-            <div class="gallery-dot" onclick="goToSlide(2)"></div>
-            <div class="gallery-dot" onclick="goToSlide(3)"></div>
-            <div class="gallery-dot" onclick="goToSlide(4)"></div>
-            <div class="gallery-dot" onclick="goToSlide(5)"></div>
-          </div>
-        </div>
-        
-        <div class="gallery-note">
-          Images not sliding? Reload the page!
-        </div>
-      </section>
-
-      <section id="intro" class="history-section">
-        <div class="container">
-          <h2 class="section-title">Giới thiệu</h2>
-          <div class="feature-grid">
-            <div class="feature-card">
-              <div class="feature-icon">🧭</div>
-              <h3>Hyggshi OS Project Center</h3>
-              <p>Trung tâm phát triển các dự án hệ điều hành mô phỏng trên Roblox. Hướng tới trải nghiệm mở, hiện đại, tối ưu trên mọi thiết bị và dễ dàng đóng góp.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">🧑‍💻</div>
-              <h3>Mã nguồn mở</h3>
-              <p>Khuyến khích cộng đồng tham gia: tạo ứng dụng, giao diện, module và gửi đóng góp qua GitHub để hệ sinh thái ngày càng lớn mạnh.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">🤝</div>
-              <h3>Cộng đồng</h3>
-              <p>Tham gia Discord để trao đổi ý tưởng, nhận hỗ trợ và theo dõi các bản cập nhật mới nhất của Hyggshi OS.</p>
-            </div>
-          </div>
-          <div class="hero-buttons" style="margin-top:1.5rem;">
-            <a class="btn btn-secondary" href="About.html">Tìm hiểu dự án</a>
-            <a class="btn btn-primary" href="projects.html">Xem các dự án</a>
-            <a class="btn btn-github" href="https://discord.gg/PZuDkFzJtc" target="_blank" rel="noopener">Tham gia Discord</a>
-          </div>
-        </div>
-      </section>
-
-      <section id="news" class="history-section">
-        <div class="container">
-          <h2 class="section-title">Tin tức</h2>
-          <div id="news-items" class="feature-grid">
-            <div class="feature-card">
-              <div class="feature-icon">📰</div>
-              <h3>Cập nhật đang tải…</h3>
-              <p>Đang lấy tin mới nhất từ GitHub…</p>
-            </div>
-          </div>
-          <div class="hero-buttons" style="margin-top:1.5rem;">
-            <a class="btn btn-github" href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases" target="_blank" rel="noopener">Xem tất cả phát hành</a>
-            <a class="btn btn-secondary" href="projects.html">Xem các dự án</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="features" id="learn">
-                <div class="feature-grid">
-          <div class="feature-card">
-            <div class="feature-icon">🚀</div>
-            <h3>Nhanh và phản hồi tốt</h3>
-            <p>Tối ưu cho mọi thiết bị</p>
-          </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🎨</div>
-            <h3>Thiết kế hiện đại</h3>
-            <p>Giao diện đẹp và trực quan</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
-            <h3>Hiệu suất vượt trội</h3>
-            <p>Tốc độ tải nhanh chóng</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📱</div>
-            <h3>Thân thiện di động</h3>
-            <p>Hiển thị hoàn hảo trên mọi màn hình</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🛠️</div>
-            <h3>mã nguồn mở</h3>
-            <p>tùy chỉnh mạnh</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">🔄</div>
-            <h3>tính năng có sẵn</h3>
-            <p>tất cả mọi tính năng cũng có hệ điều hành thật</p>
-                    </div>
-                </div>
-            </section>
-    </main>
-
-        <footer class="footer">
-      <p>© 2024 - 2025 Hyggshi OS Project Center. All rights reserved. | <a href="https://discord.gg/PZuDkFzJtc" target="_blank" style="color:#7289da;text-decoration:underline;">Tham gia Discord</a></p>
-        </footer>
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo">
+        <span>☁️ Hyggshi OS</span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html" class="nav-link active">Home</a></li>
+        <li><a href="About.html" class="nav-link">About</a></li>
+        <li><a href="projects.html" class="nav-link">Projects</a></li>
+        <li><a href="History.html" class="nav-link">History</a></li>
+        <li><a href="download.html" class="nav-link">Download</a></li>
+      </ul>
+      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
     </div>
+  </header>
 
-    <script src="script.js"></script>
-    <script>
-      // Fade-in effect
-      (function(){
-        function fade(){
-          document.querySelectorAll('.gallery-section,.history-section,.features,.feature-card,.gallery-slide,.hero-content').forEach(e=>{
-            var r=e.getBoundingClientRect(); if(r.top<window.innerHeight-55) e.classList.add('show'); });
-        }
-        window.addEventListener('scroll',fade,{passive:true}); fade();setTimeout(fade,370);
-      })();
-    </script>
+  <main class="container">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content fade-in-up">
+        <span class="badge active cloud-float" style="margin-bottom: 1.5rem; font-size: 1rem;">☁️ Cloudar OS
+          Style</span>
+        <h1>Hệ điều hành <span class="text-gradient">mã nguồn mở</span> trên Roblox</h1>
+        <p>Trải nghiệm giao diện nhẹ nhàng như mây, tuỳ biến cao và hoàn toàn miễn phí. Phát triển bởi cộng đồng, dành
+          cho cộng đồng.</p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <a href="download.html" class="btn btn-primary">
+            <span>☁️</span> Tải xuống ngay
+          </a>
+          <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center" target="_blank"
+            class="btn btn-github">
+            <span>⭐</span> GitHub
+          </a>
+        </div>
+      </div>
+      <div class="hero-visual"></div>
+    </section>
+
+    <!-- Features Bento Grid -->
+    <section class="section-spacer">
+      <h2 class="section-title fade-in-up">Tính năng <span>Nổi bật</span></h2>
+
+      <div class="bento-grid fade-in-up delay-1">
+        <div class="bento-item large">
+          <div class="card-icon">☁️</div>
+          <h3>Giao diện Cloud</h3>
+          <p style="color: var(--c-text-muted);">Thiết kế nhẹ nhàng, tông màu Cyan mát mẻ. Hỗ trợ Dark Mode với phong
+            cách "Cloud Night".</p>
+        </div>
+        <div class="bento-item">
+          <div class="card-icon">⚡</div>
+          <h3>Siêu nhẹ</h3>
+          <p style="color: var(--c-text-muted);">Tối ưu hoá hiệu năng, chạy mượt trên mọi thiết bị.</p>
+        </div>
+        <div class="bento-item">
+          <div class="card-icon">🔓</div>
+          <h3>Mã nguồn mở</h3>
+          <p style="color: var(--c-text-muted);">Toàn bộ code trên GitHub. Tự do tùy biến.</p>
+        </div>
+        <div class="bento-item">
+          <div class="card-icon">🎨</div>
+          <h3>Tuỳ biến cao</h3>
+          <p style="color: var(--c-text-muted);">Theme, Widget, Apps - tất cả đều có thể chỉnh sửa theo ý bạn.</p>
+        </div>
+        <div class="bento-item large">
+          <div class="card-icon">🌐</div>
+          <h3>Cộng đồng toàn cầu</h3>
+          <p style="color: var(--c-text-muted);">Tham gia Discord, đóng góp ý tưởng, và cùng phát triển Hyggshi OS với
+            hàng nghìn thành viên khác.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- News Section -->
+    <section class="section-spacer">
+      <h2 class="section-title fade-in-up">Tin tức <span>Mới nhất</span></h2>
+      <div id="github-releases" class="grid-3 fade-in-up delay-1">
+        <div class="card">
+          <div class="card-icon">⏳</div>
+          <h3>Đang tải...</h3>
+          <p style="color: var(--c-text-muted);">Kết nối đến GitHub API...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section-spacer fade-in-up">
+      <div class="card"
+        style="text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, rgba(94, 208, 198, 0.1), rgba(123, 185, 255, 0.1));">
+        <h2 style="margin-bottom: 1rem;">Sẵn sàng trải nghiệm?</h2>
+        <p
+          style="color: var(--c-text-muted); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+          Tải xuống Hyggshi OS ngay hôm nay và khám phá hệ điều hành nhẹ nhàng như mây.
+        </p>
+        <a href="download.html" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2.5rem;">
+          ☁️ Bắt đầu ngay
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-links">
+        <a href="About.html">About</a>
+        <a href="projects.html">Projects</a>
+        <a href="license.html">License</a>
+        <a href="https://discord.gg/PZuDkFzJtc" target="_blank">Discord</a>
+        <a href="https://github.com/HyggshiOSDeveloper" target="_blank">GitHub</a>
+      </div>
+      <p style="color: var(--c-text-muted);">© 2024 - 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
+    </div>
+  </footer>
+
   <script>
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.gallery-slide');
-    const dots = document.querySelectorAll('.gallery-dot');
-    const totalSlides = slides.length;
-
-    function showSlide(n) {
-      const slider = document.getElementById('gallerySlider');
-      currentSlide = (n + totalSlides) % totalSlides;
-      
-      slider.style.transform = `translateX(-${currentSlide * 100}%)`;
-      
-      // Update dots
-      dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === currentSlide);
-      });
-    }
-
-    function changeSlide(direction) {
-      showSlide(currentSlide + direction);
-    }
-
-    function goToSlide(n) {
-      showSlide(n);
-    }
-
-    // Auto slide every 5 seconds
-    setInterval(() => {
-      changeSlide(1);
-    }, 5000);
-
-    // Initialize
-    showSlide(0);
-  </script>
-  <script>
-    // Populate News from GitHub Releases
-    (async function loadNews() {
-      const container = document.getElementById('news-items');
+    // GitHub Releases Fetcher
+    (async function () {
+      const container = document.getElementById('github-releases');
       if (!container) return;
+
       try {
-        const res = await fetch('https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases');
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) throw new Error('No releases');
-        const items = data.slice(0, 3).map(r => {
-          const date = new Date(r.published_at || r.created_at);
-          const dateStr = date.toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric' });
-          return `
-            <a class="feature-card" href="${r.html_url}" target="_blank" rel="noopener">
-              <div class="feature-icon">📰</div>
-              <h3>${r.name || r.tag_name}</h3>
-              <p>Phát hành: ${dateStr}</p>
-            </a>
-          `;
-        }).join('');
-        container.innerHTML = items;
+        const res = await fetch('https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases?per_page=3');
+        const releases = await res.json();
+
+        if (!releases.length) {
+          container.innerHTML = '<div class="card"><p>Chưa có bản phát hành nào.</p></div>';
+          return;
+        }
+
+        container.innerHTML = releases.map(r => `
+                    <a href="${r.html_url}" target="_blank" class="card" style="text-decoration: none;">
+                        <div class="badge active" style="margin-bottom: 1rem;">${r.tag_name}</div>
+                        <h3>${r.name || r.tag_name}</h3>
+                        <p style="color: var(--c-text-muted); font-size: 0.9rem;">
+                            ${new Date(r.published_at).toLocaleDateString('vi-VN')}
+                        </p>
+                    </a>
+                `).join('');
       } catch (e) {
-        container.innerHTML = `
-          <div class="feature-card">
-            <div class="feature-icon">ℹ️</div>
-            <h3>Chưa có tin mới</h3>
-            <p>Không thể tải dữ liệu tin tức lúc này. Vui lòng thử lại sau.</p>
-          </div>`;
+        container.innerHTML = '<div class="card"><p style="color: var(--c-text-muted);">Không thể tải dữ liệu.</p></div>';
       }
     })();
   </script>
+  <script src="theme.js"></script>
 </body>
+
 </html>

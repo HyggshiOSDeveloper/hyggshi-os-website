@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOSRT – Research & Tools</title>
+  <link rel="icon" href="Resources/favicon.ico">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .marquee {
+      overflow: hidden;
+      white-space: nowrap;
+      mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 4rem;
+      animation: marq 25s linear infinite;
+    }
+
+    @keyframes marq {
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .partner-item {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--c-text-muted);
+    }
+
+    .partner-item img {
+      height: 28px;
+      width: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+        <span>☁️ Hyggshi OS <span style="opacity: 0.6; font-weight: 400;">| Research</span></span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="About.html" class="nav-link">About</a></li>
+        <li><a href="projects.html" class="nav-link">Projects</a></li>
+        <li><a href="HOSRT.html" class="nav-link active">HOSRT</a></li>
+      </ul>
+      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero -->
+    <section class="section-spacer">
+      <div class="grid-2" style="align-items: center; gap: 3rem;">
+        <div class="fade-in-up">
+          <span class="badge active cloud-float" style="margin-bottom: 1rem;">🔬 Research Division</span>
+          <h1 style="font-size: 3rem;">HOSRT</h1>
+          <p style="color: var(--c-text-muted); font-size: 1.2rem; margin-bottom: 2rem;">
+            Hyggshi OS Research Technology – Trung tâm nghiên cứu và phát triển công nghệ lõi.
+          </p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="#tools" class="btn btn-primary">☁️ Xem Tools</a>
+            <a href="#" class="btn btn-secondary">📄 Documentation</a>
+          </div>
+        </div>
+
+        <div class="card fade-in-up delay-1"
+          style="background: linear-gradient(135deg, rgba(94, 208, 198, 0.1), rgba(123, 185, 255, 0.1));">
+          <h3 style="margin-bottom: 1.5rem; color: var(--c-primary);">System Status</h3>
+          <div style="display: grid; gap: 1rem;">
+            <div
+              style="display: flex; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <span style="color: var(--c-text-muted);">Latest Build</span>
+              <span>v2.7.0 (Canary)</span>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+              <span style="color: var(--c-text-muted);">Experiments</span>
+              <span style="color: var(--c-accent);">5 Active</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--c-text-muted);">Status</span>
+              <span style="color: var(--c-success);">☁️ Operational</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tools -->
+    <section id="tools" class="section-spacer">
+      <h2 class="section-title fade-in-up">Research <span>Tools</span></h2>
+      <div class="grid-3 fade-in-up delay-1">
+        <div class="card">
+          <div class="card-icon">🧪</div>
+          <h3>Simulation Suite</h3>
+          <p style="color: var(--c-text-muted);">Môi trường giả lập để stress test hệ thống UI/UX.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">📊</div>
+          <h3>Visualization</h3>
+          <p style="color: var(--c-text-muted);">Biểu đồ hóa dữ liệu runtime và mức tiêu thụ tài nguyên.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🧠</div>
+          <h3>AI Playground</h3>
+          <p style="color: var(--c-text-muted);">Thử nghiệm các mô hình AI/NPC đơn giản.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Partners Marquee -->
+    <section class="card fade-in-up" style="background: rgba(0,0,0,0.2); margin-bottom: 4rem;">
+      <p
+        style="text-align: center; color: var(--c-text-muted); margin-bottom: 2rem; font-weight: 600; letter-spacing: 2px;">
+        PARTNERS & INTEGRATIONS</p>
+      <div class="marquee">
+        <div class="marquee-track">
+          <div class="partner-item"><img src="https://roblox.com/favicon.ico"> Roblox</div>
+          <div class="partner-item"><img src="https://openrouter.ai/favicon.ico"> OpenRouter</div>
+          <div class="partner-item"><img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg">
+            ChatGPT</div>
+          <div class="partner-item"><img src="https://open-meteo.com/favicon.ico"> Open-Meteo</div>
+          <div class="partner-item"><img src="https://roblox.com/favicon.ico"> Roblox</div>
+          <div class="partner-item"><img src="https://openrouter.ai/favicon.ico"> OpenRouter</div>
+          <div class="partner-item"><img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg">
+            ChatGPT</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p style="color: var(--c-text-muted);">© 2025 Hyggshi OS Research Division. ☁️ Cloudar OS Style.</p>
+    </div>
+  </footer>
+  <script src="theme.js"></script>
+</body>
+
+</html>

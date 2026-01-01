@@ -1,283 +1,201 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hyggshi OS 1.3</title>
-  <link rel="icon" href="Resources/favicon.ico">
-  <style>
-    :root {
-      --bg-main: linear-gradient(130deg, #191c2b 0%, #161e38 85%, #1b1c2f 100%);
-      --surface: rgba(39, 57, 102, 0.22);
-      --surface-glass: rgba(62, 72, 135, 0.12);
-      --primary: #85d9ff;
-      --secondary: #b49bfb;
-      --brand: #62e6c7;
-      --text-strong: #fff;
-      --text-main: #deedfd;
-      --radius: 20px;
-      --shadow-big:0 18px 64px rgba(30,30,90,0.16);
-      --shadow-card:0 5px 22px rgba(72,123,185,0.13);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyggshi OS 1.3 Remastered</title>
+    <link rel="icon" href="Resources/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .video-hero {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
 
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-      color: #fff; /* White text for readability over video */
-      overflow-x: hidden;
-      background: var(--bg-main); /* Normal background for the rest of the page */
-      min-height: 100vh;
-    }
+        .video-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
 
-    /* Hero section wrapper - contains the video + hero content */
-    .hero-section {
-      position: relative;
-      overflow: hidden; /* hide video overflow outside hero */
-      min-height: 100vh; /* full viewport hero */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(30, 35, 42, 0.8), rgba(42, 48, 56, 0.7));
+            backdrop-filter: blur(2px);
+            z-index: 0;
+        }
 
-    /* Video Background - now absolute inside hero-section */
-    .video-background {
-      position: absolute; /* confined to hero-section */
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1; /* Puts video behind content */
-      overflow: hidden; /* Ensures video doesn't spill */
-    }
-    .video-background video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* Covers the entire space, cropping if necessary */
-    }
-
-    /* Hero Content Overlay */
-    .hero-content {
-      position: relative; /* Allows z-index and proper positioning over video */
-      z-index: 1; /* Puts content in front of video */
-      height: 100vh; /* Make hero content take full viewport height */
-      display: flex;
-      flex-direction: column; /* Align items vertically */
-      align-items: center; /* Vertically center content */
-      justify-content: center; /* Horizontally center content */
-      text-align: center;
-      background: rgba(0, 0, 0, 0.35); /* Semi-transparent overlay for better text readability */
-      padding: 20px; /* Add some padding */
-      box-sizing: border-box;
-      width: 100%;
-    }
-
-    .hero-title {
-      font-size: 3.5em; /* Large title */
-      font-weight: 900;
-      letter-spacing: 2px;
-      margin-bottom: 0.5em;
-      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7); /* Text shadow for emphasis */
-    }
-
-    .hero-slogan {
-        font-size: 1.5em;
-        margin-top: -0.5em;
-        margin-bottom: 1.5em;
-        text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
-    }
-
-    .hero-buttons a {
-        display: inline-block;
-        margin: 0 15px;
-        padding: 12px 25px;
-        background-color: #007bff; /* Example button color */
-        color: white;
-        text-decoration: none;
-        border-radius: 8px;
-        font-weight: bold;
-        transition: background-color 0.3s ease;
-    }
-    .hero-buttons a:hover {
-        background-color: #0056b3;
-    }
-
-    /* Basic container for future content */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 15px;
-      box-sizing: border-box;
-    }
-
-    /* Added styles from HyggshiOSStudioHome.html for consistency */
-    .features-section{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:28px;margin:60px auto 25px auto;max-width:1200px;}
-    .feature-box{background:var(--surface);backdrop-filter:blur(9px);border-radius:var(--radius);padding:36px 22px 27px 22px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;align-items:center;text-align:center;transition:.22s;}
-    .feature-box:hover{background:var(--surface-glass);transform:translateY(-4px) scale(1.022);}
-    .feature-ic{font-size:2.6em;margin-bottom:12px;filter:drop-shadow(0 0 6px #61ffee28);}
-    .feature-title{font-size:1.24em;font-weight:700;color:var(--brand);margin-bottom:.5em;}
-    .feature-desc{font-size:.98em;line-height:1.60;opacity:.93;color:var(--text-main);}
-    .gallery-section{max-width:1120px;margin:55px auto 32px auto;}
-    .gallery-title{font-weight:900;font-size:2em;color:var(--secondary);margin-bottom:18px;text-align:center;letter-spacing:.3px;}
-    .gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
-    .gallery-item{border-radius:17px;overflow:hidden;box-shadow:0 4px 22px #1e6bcf22;background:rgba(53,74,122,.12);min-height:184px;position:relative;}
-    .gallery-img{width:100%;display:block;}
-    .download-section{max-width:660px;margin:60px auto 0 auto;background:var(--surface);border-radius:20px;box-shadow:var(--shadow-card);padding:32px 20px;text-align:center;}
-    .download-title{color:var(--primary);font-size:2.15em;font-weight:900;letter-spacing:.1em;}
-    .dl-info{margin:15px 0 23px 0;color:#b9dafc;}
-    .dl-btns{display:flex;justify-content:center;gap:1.2em;margin-bottom:10px;}
-    .download-section .btn-main { background:linear-gradient(90deg,var(--primary),var(--brand));color:#232b43;font-weight:700;padding:13px 30px;border-radius:16px;font-size:1.28em;box-shadow:0 3px 21px #2cc1ff54;border:none;cursor:pointer;transition:.23s;}
-    .download-section .btn-main:hover {background:linear-gradient(88deg,#34fff6,#5b8bff 90%);color:#202439;transform:translateY(-2px) scale(1.03);}
-    .download-section .btn-sec {background:rgba(120,85,255,0.13);color:var(--primary);font-weight:600;padding:13px 28px;border-radius:14px;font-size:1.1em;cursor:pointer;border:1.5px solid #4e62c344;box-shadow:0 2px 12px #13153223;transition:.22s;}
-    .download-section .btn-sec:hover {background:rgba(105,85,255,0.22);color:#fff;transform:translateY(-1px) scale(1.03);}
-    .community-section{max-width:880px;margin:62px auto 0 auto;text-align:center;}
-    .community-title{font-size:1.7em;font-weight:900;color:var(--brand);margin-bottom:.32em;}
-    .community-links{display:flex;justify-content:center;gap:26px;flex-wrap:wrap;}
-    .comm-link{background:var(--surface);backdrop-filter:blur(6px);border-radius:13px;padding:14px 32px;display:flex;align-items:center;gap:.7em;font-weight:600;font-size:1.03em;color:var(--secondary);border:1.5px solid #47376733;text-decoration:none;transition:.19s;box-shadow:0 2px 12px #1e6bcf15;}
-    .comm-link:hover{background:var(--brand);color:#1b1f3d;transform:scale(1.042);}    
-    /* Marquee / ticker for partners */
-    .marquee-wrapper{width:100%;overflow:hidden;background:linear-gradient(90deg, rgba(0,0,0,0.10), rgba(0,0,0,0.04));border-top:1px solid rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.03);padding:8px 0;margin-top:18px;border-radius:10;}
-    .marquee{display:flex;gap:28px;align-items:center;white-space:nowrap;padding:6px 0;animation:marquee 20s linear infinite;}
-    .marquee:hover{animation-play-state:paused;} /* pause on hover for readability */
-    .marquee-item{display:flex;align-items:center;gap:10px;color:var(--text-main);font-weight:600;padding:4px 8px;}
-    .marquee-item img{height:22px;width:auto;filter:grayscale(60%) brightness(1.05);}
-    @keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-    
-    /* Partners section */
-    .partners-section{max-width:1100px;margin:48px auto;padding:28px 18px;background:transparent;text-align:center;color:var(--text-main);}
-    .partners-title{font-size:1.5em;font-weight:800;color:var(--primary);margin-bottom:14px;}
-    .partner-grid{display:flex;gap:20px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:12px;}
-    .partner-card{background:rgba(255,255,255,0.03);border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 6px 22px rgba(10,18,40,0.25);transition:transform .18s,box-shadow .18s;}
-    .partner-card img{height:36px;width:auto;display:block;filter:grayscale(70%) brightness(1.1);transition:filter .18s,transform .18s;}
-    .partner-card:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(30,60,120,0.15);}    
-    .partner-name{font-weight:700;color:var(--text-main);}
-    
-    footer{margin-top:55px;padding:22px 0 12px 0;text-align:center;font-size:.96em;color:#8899bb;background:rgba(20,23,40,0.72);border-top:1.4px solid #2d3b5a;box-shadow:0 -2px 14px #22325408;position:relative;z-index:1;}
-
-    @media (max-width:768px) {
-        .hero-title { font-size: 2.5em; }
-        .hero-slogan { font-size: 1.1em; }
-        .hero-buttons a { margin: 0 8px; padding: 10px 20px; font-size: 0.9em; }
-        .features-section{gap:21px; padding: 0 10px;}
-        .gallery-section{margin:29px auto; padding: 0 10px;}
-        .download-section{padding:15px 4px; margin: 40px auto;}
-        .community-section { margin: 40px auto; padding: 0 10px;}
-        .comm-link {padding: 10px 20px; font-size: 0.9em;}
-    }
-  </style>
+        .video-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            padding: 2rem;
+        }
+    </style>
 </head>
+
 <body>
 
-  <section class="hero-section">
-    <div class="video-background">
-      <video autoplay loop muted playsinline poster="Resources/HOS13R.png">
-        <source src="Resources/HOS13R.mp4" type="video/mp4">
-      </video>
-    </div>
-
-    <div class="hero-content">
-  <div class="container">
-        <h1 class="hero-title"><strong>Hyggshi OS 1.3</strong></h1>
-        <p class="hero-slogan">Phát triển thế giới Roblox của riêng bạn</p>
-        <div class="hero-buttons">
-            <a href="#download" class="btn-main">Tải xuống miễn phí</a>
-            <a href="#features" class="btn-sec">Khám phá tính năng</a>
-      </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Các phần nội dung khác sẽ được thêm vào đây, đặt bên dưới .hero-content để hiển thị trên video -->
-
-  <section class="features-section container" id="features">
-    <div class="feature-box">
-      <div class="feature-ic">🌈</div>
-      <div class="feature-title">Giao diện tuỳ chỉnh & nền tối</div>
-      <div class="feature-desc">Có sẵn nhiều theme, Glassmorphism, chuyển màu động, Hỗ trợ nền tối/Light Mode.</div>
-    </div>
-  </section>
-
-  <section class="gallery-section container">
-    <div class="gallery-title">Ảnh giao diện & Chức năng</div>
-    <div class="gallery-grid">
-      <div class="gallery-item"><img class="gallery-img" src="Resources/Weather.png" alt="Weather"></div>
-      <div class="gallery-item"><img class="gallery-img" src="Resources/Music.png" alt="Music"></div>
-      <div class="gallery-item"><img class="gallery-img" src="Resources/1.3.png" alt="Simulator"></div>
-    </div>
-  </section>
-
-  <section class="download-section" id="download">
-    <div class="download-title">Chọn Phiên bản & Tải về</div>
-    <div class="dl-info">Hỗ trợ Windows 10+, MacOS Monterey trở lên, tích hợp tự động cập nhật.</div>
-    <div class="dl-btns">
-      <a class="btn-main" href="https://github.com/HyggshiOSDev/HyggshiOSStudio/releases/latest" target="_blank">Tải xuống mới nhất</a>
-      <a class="btn-sec" href="#changelog">Xem nhật ký cập nhật</a>
-    </div>
-    <div style="margin-top:9px;color:#92cfff;">Phiên bản mới nhất: <b>v2.6.1</b>  |  Cập nhật ngày 11/2025</div>
-  </section>
-
-  <section class="community-section">
-    <div class="community-title">Cộng đồng & Hỗ trợ</div>
-    <div class="community-links">
-      <a class="comm-link" href="https://discord.gg/VQCgsmcTuw" target="_blank">💬 Tham gia Discord</a>
-      <a class="comm-link" href="https://github.com/HyggshiOSDev/HyggshiOSStudio/wiki" target="_blank">📚 Wiki & Hướng dẫn</a>
-      <a class="comm-link" href="#faq">🛈 FAQ</a>
-      <a class="comm-link" href="https://github.com/HyggshiOSDev/HyggshiOSStudio/releases" target="_blank">📰 Changelog</a>
-      <a class="comm-link" href="mailto:support@hyggshi.dev">✉️ Hỗ trợ Email</a>
-    </div>
-  </section>
-
-  <section class="partners-section container" aria-label="Đối tác">
-    <div class="partners-title">Đối tác</div>
-    <div class="marquee-wrapper" aria-hidden="false" role="region" aria-label="Partners ticker">
-      <div class="container">
-        <div class="marquee" aria-hidden="false">
-          <div class="marquee-item"><img src="https://openrouter.ai/favicon.ico" alt="OpenRouter"><span>OpenRouter</span></div>
-          <div class="marquee-item"><img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg" alt="ChatGPT"><span>ChatGPT</span></div>
-          <div class="marquee-item"><img src="https://open-meteo.com/favicon.ico" alt="Open-Meteo"><span>Open-Meteo</span></div>
-          <div class="marquee-item"><img src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" alt="Gemini"><span>Gemini</span></div>
-          <div class="marquee-item"><img src="https://roblox.com/favicon.ico" alt="Roblox"><span>Roblox</span></div>
-          <div class="marquee-item"><img src="https://openweathermap.org/favicon.ico" alt="open weather map"><span>open weather map</span></div>
-          <!-- duplicate for seamless loop -->
-          <div class="marquee-item"><img src="https://openrouter.ai/favicon.ico" alt="OpenRouter"><span>OpenRouter</span></div>
-          <div class="marquee-item"><img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg" alt="ChatGPT"><span>ChatGPT</span></div>
-          <div class="marquee-item"><img src="https://open-meteo.com/favicon.ico" alt="Open-Meteo"><span>Open-Meteo</span></div>
-          <div class="marquee-item"><img src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" alt="Gemini"><span>Gemini</span></div>
-          <div class="marquee-item"><img src="https://roblox.com/favicon.ico" alt="Roblox"><span>Roblox</span></div>
-          <div class="marquee-item"><img src="https://openweathermap.org/favicon.ico" alt="open weather map"><span>open weather map</span></div>
+    <!-- Nav on top of video -->
+    <header class="header" style="position: fixed; background: rgba(30, 35, 42, 0.5); backdrop-filter: blur(15px);">
+        <div class="container nav">
+            <div class="logo">
+                <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+                <span>☁️ Hyggshi OS</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="About.html" class="nav-link">About</a></li>
+                <li><a href="projects.html" class="nav-link">Projects</a></li>
+                <li><a href="HyggshiOS1.3.html" class="nav-link active">OS 1.3</a></li>
+                <li><a href="download.html" class="nav-link">Download</a></li>
+            </ul>
+            <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
         </div>
-      </div>
-    </div>
-    <div class="partner-grid">
-      <a class="partner-card" href="https://openrouter.ai/" target="_blank" title="OpenRouter">
-        <img src="https://openrouter.ai/favicon.ico" alt="OpenRouter logo">
-        <span class="partner-name">OpenRouter</span>
-      </a>
-      <a class="partner-card" href="https://chat.openai.com/" target="_blank" title="ChatGPT">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg" alt="ChatGPT logo">
-        <span class="partner-name">ChatGPT</span>
-      </a>
-      <a class="partner-card" href="https://open-meteo.com/" target="_blank" title="Open-Meteo">
-        <img src="https://open-meteo.com/favicon.ico" alt="Open-Meteo logo">
-        <span class="partner-name">Open-Meteo</span>
-      </a>
-      <a class="partner-card" href="https://gemini.google/" target="_blank" title="Gemini">
-        <img src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" alt="Gemini logo">
-        <span class="partner-name">Gemini</span>
-      </a>
-      <a class="partner-card" href="https://www.roblox.com/" target="_blank" title="Roblox">
-        <img src="https://roblox.com/favicon.ico" alt="Roblox logo">
-        <span class="partner-name">Roblox</span>
-      </a>
-      <a class="partner-card" href="https://openweathermap.org/" target="_blank" title="open weather map">
-        <img src="https://openweathermap.org/favicon.ico" alt="open weather map logo">
-        <span class="partner-name">open weather map</span>
-      </a>
-  </div>
-  </section>
+    </header>
 
-  <footer>
-    © 2025 Hyggshi OS Project Center — Powered by Hyggshi OS | Không liên kết với Roblox Corp.
-  </footer>
+    <!-- Video Hero -->
+    <section class="video-hero">
+        <div class="video-overlay"></div>
+        <video class="video-bg" autoplay loop muted playsinline poster="Resources/HOS13R.png">
+            <source src="Resources/HOS13R.mp4" type="video/mp4">
+        </video>
 
+        <div class="video-content fade-in-up">
+            <img src="Resources/Hyggshi OS 1.3 Remastered.png" alt="Logo 1.3"
+                style="height: 100px; margin: 0 auto 1.5rem auto; filter: drop-shadow(0 0 30px rgba(94, 208, 198, 0.5));">
+            <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem;">Hyggshi OS <span class="text-gradient">1.3
+                    Remastered</span></h1>
+            <p style="font-size: 1.5rem; color: rgba(255,255,255,0.9); margin-bottom: 2.5rem; font-weight: 300;">
+                Phát triển thế giới Roblox của riêng bạn ☁️
+            </p>
+            <div class="flex-center" style="gap: 1.5rem; flex-wrap: wrap;">
+                <a href="#download" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;">☁️ Tải xuống
+                    miễn phí</a>
+                <a href="#features" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1.1rem;">Khám
+                    phá</a>
+            </div>
+        </div>
+    </section>
+
+    <main class="container">
+        <!-- Features -->
+        <section id="features" class="section-spacer">
+            <h2 class="section-title fade-in-up">Tính năng <span>Nổi bật</span></h2>
+            <div class="grid-3 fade-in-up delay-1">
+                <div class="card">
+                    <div class="card-icon">☁️</div>
+                    <h3>Cloud Aesthetic</h3>
+                    <p style="color: var(--c-text-muted);">Giao diện nhẹ nhàng với tông màu Cyan và hiệu ứng mây.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h3>Tối ưu hiệu năng</h3>
+                    <p style="color: var(--c-text-muted);">Nhẹ hơn 30% so với phiên bản cũ, chạy mượt trên mọi thiết bị.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎨</div>
+                    <h3>Theme System</h3>
+                    <p style="color: var(--c-text-muted);">Hỗ trợ Dark/Light mode và tùy biến theme theo ý thích.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gallery -->
+        <section class="section-spacer">
+            <h2 class="section-title fade-in-up">Thư viện <span>Screenshots</span></h2>
+            <div class="grid-3 fade-in-up delay-1">
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <img src="Resources/Weather.png" alt="Weather" style="width: 100%; transition: transform 0.3s;"
+                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="padding: 1rem;">
+                        <h4 style="margin: 0;">☁️ Weather App</h4>
+                    </div>
+                </div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <img src="Resources/Music.png" alt="Music" style="width: 100%; transition: transform 0.3s;"
+                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="padding: 1rem;">
+                        <h4 style="margin: 0;">🎵 Music Player</h4>
+                    </div>
+                </div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <img src="Resources/1.3.png" alt="Desktop" style="width: 100%; transition: transform 0.3s;"
+                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="padding: 1rem;">
+                        <h4 style="margin: 0;">🖥️ Desktop</h4>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Download -->
+        <section id="download" class="section-spacer">
+            <div class="card fade-in-up"
+                style="max-width: 800px; margin: 0 auto; text-align: center; padding: 3rem; background: linear-gradient(135deg, rgba(94, 208, 198, 0.15), rgba(123, 185, 255, 0.15));">
+                <span class="badge active cloud-float" style="margin-bottom: 1rem; font-size: 1rem;">v2.6.1</span>
+                <h2 class="text-gradient" style="font-size: 2.5rem; margin-bottom: 1rem;">Tải xuống ngay</h2>
+                <p style="color: var(--c-text-muted); font-size: 1.1rem; margin-bottom: 2rem;">
+                    Hỗ trợ Windows 10+, MacOS Monterey trở lên.
+                </p>
+                <div class="flex-center" style="gap: 1.5rem; flex-wrap: wrap;">
+                    <a href="https://github.com/HyggshiOSDev/HyggshiOSStudio/releases/latest" target="_blank"
+                        class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.2rem;">
+                        ☁️ Tải xuống
+                    </a>
+                    <a href="https://github.com/HyggshiOSDev/HyggshiOSStudio/releases" target="_blank"
+                        class="btn btn-secondary">
+                        Xem Changelog
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community -->
+        <section class="section-spacer fade-in-up">
+            <h2 class="section-title">Cộng đồng</h2>
+            <div class="flex-center" style="gap: 1.5rem; flex-wrap: wrap;">
+                <a href="https://discord.gg/VQCgsmcTuw" target="_blank" class="card"
+                    style="text-decoration: none; display: flex; align-items: center; gap: 1rem; padding: 1.2rem 2rem;">
+                    <span style="font-size: 1.5rem;">💬</span>
+                    <span style="font-weight: 600;">Discord</span>
+                </a>
+                <a href="https://github.com/HyggshiOSDev/HyggshiOSStudio/wiki" target="_blank" class="card"
+                    style="text-decoration: none; display: flex; align-items: center; gap: 1rem; padding: 1.2rem 2rem;">
+                    <span style="font-size: 1.5rem;">📚</span>
+                    <span style="font-weight: 600;">Wiki</span>
+                </a>
+                <a href="mailto:support@hyggshi.dev" class="card"
+                    style="text-decoration: none; display: flex; align-items: center; gap: 1rem; padding: 1.2rem 2rem;">
+                    <span style="font-size: 1.5rem;">✉️</span>
+                    <span style="font-weight: 600;">Email</span>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p style="color: var(--c-text-muted);">© 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
+        </div>
+    </footer>
+    <script src="theme.js"></script>
 </body>
+
 </html>

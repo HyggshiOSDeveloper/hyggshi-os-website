@@ -1,253 +1,150 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch sử Hyggshi OS - Từ trò chơi nhỏ đến mã nguồn mở</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>History – Hyggshi OS</title>
+    <link rel="icon" href="Resources/favicon.ico">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="Resources/favicon.ico" />
-
     <style>
-        .history-hero { text-align: center; padding: 4.2rem 0 2.42rem 0; color: white; }
-        .history-hero h1 { font-size: 3rem; font-weight: 900; background: linear-gradient(88deg, var(--brand-1), var(--brand-2) 88%, #fff 150%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-        .subtitle{font-size:1.14rem;opacity:.92;color:var(--text-secondary);background:rgba(120,150,250,.08);padding:.34rem 1.17rem;border-radius:14px;display:inline-block;box-shadow:0 6px 24px rgba(80,100,180,.09);}
-        .author-info{background:var(--surface-1,#17213815);border-radius:13px;padding:1.18rem 1rem 1.05rem 1.13rem;box-shadow:0 2px 14px rgba(130,148,211,.12);color:var(--brand-2,#1eb5b9);font-size:1.02rem;margin-bottom:2.1rem;max-width:515px;margin-left:auto;margin-right:auto;}
-        .history-content{max-width:980px;margin:0 auto;padding:0 9px 26px 9px;}
-        .history-section{background:var(--surface-1,#26281b1b);border-radius:25px;box-shadow:0 13px 56px rgba(90,140,255,0.15);padding:2.15rem 2rem 2.08rem 2rem;transition:box-shadow .25s,transform .15s;border:1.5px solid var(--glass-border);margin-bottom:2.07rem;opacity:0;transform:translateY(40px);}
-        .history-section.show{opacity:1;transform:translateY(0);}
-        .history-section:hover{box-shadow:0 19px 68px 0 rgba(90,168,255,0.11);transform:translateY(-4px) scale(1.008);}
-        h2{font-size:2rem;font-weight:800;background:linear-gradient(88deg,var(--brand-1,#7ca9fd),var(--brand-2,#16cdb5) 95%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.09rem;margin-bottom:.87rem;}
-        .version-badge{background:linear-gradient(88deg,var(--brand-1,#6c8cff),var(--brand-2,#14deb3) 70%);color:#fff;padding:0.22rem 0.82rem;font-size:.95rem;font-weight:700;margin-left:.5em;border-radius:22px;}
-        .warning-box{background:linear-gradient(100deg,#ffe98329,#fcb70025);border:1.5px solid #ffd8547e;color:#ffbe36;}
-        .history-section h3 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin: 1.5rem 0 1rem 0;
-            color: #fff;
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
         }
-        
-        .history-section p {
-            line-height: 1.8;
-            margin-bottom: 1rem;
-            opacity: 0.9;
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--c-primary), var(--c-accent));
+            transform: translateX(-50%);
+            border-radius: 3px;
         }
-        
-        .history-section ul {
-            margin: 1rem 0;
-            padding-left: 2rem;
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 3rem;
+            position: relative;
         }
-        
-        .history-section li {
-            margin-bottom: 0.5rem;
-            line-height: 1.6;
-            opacity: 0.9;
+
+        .timeline-item:nth-child(odd) {
+            justify-content: flex-start;
+            padding-right: 55%;
         }
-        
-        .warning-box {
-            background: rgba(255, 193, 7, 0.2);
-            border: 1px solid rgba(255, 193, 7, 0.4);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
+
+        .timeline-item:nth-child(even) {
+            justify-content: flex-end;
+            padding-left: 55%;
         }
-        
-        .warning-box h4 {
-            color: #ffc107;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+
+        .timeline-item::after {
+            content: '☁️';
+            position: absolute;
+            left: 50%;
+            top: 1.5rem;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            background: var(--c-bg-deep);
+            padding: 0.5rem;
+            border-radius: 50%;
         }
-        
-        .future-section {
-            background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(33, 150, 243, 0.2));
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-        
-        .back-button {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
-            padding: 0.8rem 1.5rem;
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-        
-        .back-button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
+
         @media (max-width: 768px) {
-            .history-hero h1 {
-                font-size: 2rem;
+            .timeline::before {
+                left: 20px;
             }
-            
-            .history-section {
-                padding: 1.5rem;
+
+            .timeline-item {
+                padding: 0 0 0 50px !important;
+                justify-content: flex-start !important;
             }
-            
-            .history-section h2 {
-                font-size: 1.5rem;
-            }
-            
-            .back-button {
-                top: 10px;
-                left: 10px;
-                padding: 0.6rem 1rem;
-                font-size: 0.9rem;
+
+            .timeline-item::after {
+                left: 20px !important;
+                transform: translateX(-50%);
             }
         }
-        @media(max-width:790px){.history-hero h1{font-size:2.13rem;}.history-section{padding:1.07rem .47rem 1.17rem .57rem;border-radius:16px;}}
     </style>
 </head>
+
 <body>
-    <div class="container">
-      <header class="header">
-        <nav class="nav">
-          <div class="logo">
-            <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo" style="height: 40px; width: 40px; object-fit: contain; vertical-align: middle; margin-right: 0.5rem; border-radius: 10px; background: rgba(255,255,255,0.2);">
-            <span class="logo-text">Hyggshi OS</span>
-          </div>
-          <ul class="nav-menu">
-            <li><a href="index.html" class="nav-link">Home</a></li>
-            <li><a href="About.html" class="nav-link">About</a></li>
-            <li><a href="projects.html" class="nav-link">Projects</a></li>
-            <li><a href="History.html" class="nav-link active">History</a></li>
-            <li><a href="The-Cases.html" class="nav-link">Cases</a></li>
-            <li><a href="download.html" class="nav-link">Download</a></li>
-            <li><a href="license.html" class="nav-link">License</a></li>
-            <li><a href="erorrcode.html" class="nav-link">Error</a></li>
-            <li><a href="timeline.html" class="nav-link">Timeline</a></li>
-            <li><a href="OSmain.html" class="nav-link">OS</a></li>
-          </ul>
-        </nav>
-      </header>
-
-        <div class="history-hero">
-            <h1>🧾 Lịch sử Hyggshi OS</h1>
-            <p class="subtitle">Từ một trò chơi nhỏ đến mã nguồn mở trên Roblox</p>
-            <div class="author-info">
-                <strong>Tác giả & Người sáng lập:</strong> Nguyễn Minh Phúc<br>
-                <strong>Dự án bắt đầu:</strong> Như một game hệ điều hành mô phỏng đơn giản<br>
-                <strong>Triết lý:</strong> "Tự do sáng tạo, tự do kiểm soát hệ điều hành của riêng bạn"
+    <header class="header">
+        <div class="container nav">
+            <div class="logo">
+                <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+                <span>☁️ Hyggshi OS</span>
             </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="About.html" class="nav-link">About</a></li>
+                <li><a href="projects.html" class="nav-link">Projects</a></li>
+                <li><a href="History.html" class="nav-link active">History</a></li>
+                <li><a href="download.html" class="nav-link">Download</a></li>
+            </ul>
+            <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
         </div>
+    </header>
 
-        <div class="history-content">
-            <!-- Khởi đầu khiêm tốn -->
-            <div class="history-section">
-                <h2>🐣 Khởi đầu khiêm tốn – Từ trò chơi dở đến giấc mơ hệ điều hành</h2>
-                <p>Ban đầu, Hyggshi OS chỉ là một trò chơi nhỏ, chưa hoàn thiện, được tạo ra bởi một lập trình viên độc lập với mục đích mô phỏng một hệ điều hành trên Roblox. Thời điểm đó, hầu hết các hệ điều hành mô phỏng đều không mã nguồn mở, khiến việc tùy chỉnh hoặc học hỏi trở nên rất khó khăn.</p>
-                <p>Sau khoảng 50 lần xin mã nguồn từ các game khác nhưng đều bị từ chối, tác giả quyết định tạo ra hệ điều hành của riêng mình – mã nguồn mở hoàn toàn.</p>
-            </div>
+    <main class="container">
+        <section class="section-spacer" style="text-align: center;">
+            <span class="badge active cloud-float fade-in-up">☁️ History</span>
+            <h1 class="fade-in-up" style="margin-top: 1rem;">Lịch sử <span class="text-gradient">Phát triển</span></h1>
+        </section>
 
-            <!-- Hyggshi OS 1.0 -->
-            <div class="history-section">
-                <h2>🧑‍💻 Hyggshi OS 1.0 <span class="version-badge">Phiên bản đầu tiên</span></h2>
-                <p>Hyggshi OS 1.0 ra đời, đánh dấu một bước ngoặt lớn: một hệ điều hành mô phỏng mã nguồn mở trên Roblox. Tuy nhiên, phiên bản đầu tiên vẫn còn thiếu sót nhiều:</p>
-                <ul>
-                    <li>Không có trình quản lý cửa sổ tốt.</li>
-                    <li>Các cửa sổ UI chưa hoàn chỉnh hoặc không hoạt động.</li>
-                    <li>Start Menu sơ sài, giao diện yếu.</li>
-                    <li>Thiếu tính năng tùy chỉnh giao diện người dùng.</li>
-                </ul>
-            </div>
-
-            <!-- Hyggshi OS Developer -->
-            <div class="history-section">
-                <h2>🔧 Hyggshi OS Developer <span class="version-badge">Bản thử nghiệm</span></h2>
-                <p>Đây là phiên bản phát triển, cho phép thử nghiệm những tính năng mới nhất và chưa ổn định, như:</p>
-                <ul>
-                    <li><strong>Ứng dụng Zashi Messaging:</strong> Cho phép gửi tin nhắn không bị kiểm duyệt như chat mặc định Roblox.</li>
-                    <li>Hỗ trợ giao diện người dùng nâng cao, mở đường cho custom module.</li>
-                </ul>
-                <p>Tuy nhiên, vì là phiên bản thử nghiệm nên cũng đi kèm nhiều lỗi và thiếu tính ổn định.</p>
-            </div>
-
-            <!-- Hyggshi OS TV -->
-            <div class="history-section">
-                <h2>📺 Hyggshi OS TV <span class="version-badge">1.1.6 TV</span></h2>
-                <p>Phiên bản 1.1.6 TV là nỗ lực chuyển Hyggshi OS thành một hệ điều hành giống Android TV / Smart TV. Nhưng dự án bị hủy bỏ do thiếu nguồn nhân lực và thời gian phát triển.</p>
-            </div>
-
-            <!-- Hyggshi OS Pro -->
-            <div class="history-section">
-                <h2>💻 Hyggshi OS Pro <span class="version-badge">Biến thể nâng cao</span></h2>
-                <p>Một dự án tham vọng hơn:</p>
-                <ul>
-                    <li>Cho phép custom giao diện qua ID ảnh.</li>
-                    <li>Giao diện Windows 7-like.</li>
-                    <li>Thêm tính năng mạnh mẽ không có trong bản 1.3.</li>
-                </ul>
-                <p>Dù dự án bị hủy, nhiều chức năng của bản Pro vẫn được giữ lại để đưa vào phiên bản 3.0.</p>
-            </div>
-
-            <!-- Hyggshi OS Phone -->
-            <div class="history-section">
-                <h2>📱 Hyggshi OS Phone <span class="version-badge">Dự án đình trệ</span></h2>
-                <p>Một dự án khác từng được lên kế hoạch là phiên bản cho điện thoại Roblox, không dựa trên Android/iOS. Tuy nhiên, dự án đang bị đình trệ do:</p>
-                <ul>
-                    <li>Thiếu tài nguyên phát triển.</li>
-                    <li>Không đủ điều kiện vận hành.</li>
-                </ul>
-            </div>
-
-            <!-- Tranh cãi và thách thức -->
-            <div class="history-section">
-                <h2>⚠️ Tranh cãi và thách thức hiện tại – Hyggshi OS 3.0</h2>
-                <p>Phiên bản đang được phát triển: Hyggshi OS 3.0. Tuy nhiên, dự án hiện đang đối mặt với nhiều tranh cãi:</p>
-                <ul>
-                    <li><strong>Cộng đồng Roblox chia rẽ:</strong> Nhiều người lo ngại mã nguồn sẽ bị sao chép hoặc lạm dụng.</li>
-                    <li><strong>Ứng dụng Zashi Messaging:</strong> Bị chỉ trích là thiếu kiểm soát nội dung, dễ bị lạm dụng để gửi nội dung xúc phạm, đe dọa.</li>
-                    <li><strong>Hệ thống quản lý module script:</strong> Chưa đầy đủ – phần lớn chỉ được giám sát qua GitHub.</li>
-                </ul>
-                <div class="warning-box">
-                    <h4>⚠️ Lưu ý quan trọng</h4>
-                    <p>Một số cộng đồng mạng gọi Hyggshi là "nền tảng thiếu kiểm soát", yêu cầu cải thiện cơ chế kiểm duyệt.</p>
+        <div class="timeline fade-in-up delay-1">
+            <div class="timeline-item">
+                <div class="card" style="width: 100%;">
+                    <span class="badge" style="background: var(--c-bg-surface); margin-bottom: 0.5rem;">2023</span>
+                    <h3>Ý tưởng ban đầu</h3>
+                    <p style="color: var(--c-text-muted);">Sau 50 lần bị từ chối mã nguồn, quyết định tự phát triển
+                        Hyggshi OS.</p>
                 </div>
             </div>
-
-            <!-- Vấn đề bản quyền -->
-            <div class="history-section">
-                <h2>🧠 Vấn đề bản quyền âm thanh – Intel vào cuộc</h2>
-                <p>Gần đây, Intel đã gửi lời yêu cầu chính thức đến Hyggshi OS:</p>
-                <div class="warning-box">
-                    <h4>📢 Thông báo từ Intel</h4>
-                    <p><em>"Hello Hyggshi OS.<br>
-                    Chúng tôi nhận thấy âm thanh khởi động trong bản Developer và 2.0 có điểm tương đồng với sản phẩm của chúng tôi.<br>
-                    Chúng tôi đề nghị bạn thay đổi âm thanh khởi động để tránh gây hiểu nhầm hoặc quảng bá không được cấp phép."</em></p>
+            <div class="timeline-item">
+                <div class="card" style="width: 100%;">
+                    <span class="badge" style="background: var(--c-bg-surface); margin-bottom: 0.5rem;">2024</span>
+                    <h3>Hyggshi OS 1.0</h3>
+                    <p style="color: var(--c-text-muted);">Phiên bản đầu tiên ra mắt - giao diện đơn giản, PoC thành
+                        công.</p>
                 </div>
-                <p>Đây là lời cảnh tỉnh cho dự án về vấn đề bản quyền nội dung âm thanh trong game.</p>
             </div>
-
-            <!-- Tương lai -->
-            <div class="history-section future-section">
-                <h2>🔮 Tương lai nào cho Hyggshi OS?</h2>
-                <p>Hyggshi OS có tiềm năng trở thành một nền tảng hệ điều hành mã nguồn mở lớn nhất Roblox, nhưng để đạt được điều đó, cần:</p>
-                <ul>
-                    <li><strong>Quản lý nội dung nghiêm túc hơn.</strong></li>
-                    <li><strong>Tăng cường đội ngũ phát triển, cộng tác viên.</strong></li>
-                    <li><strong>Hoàn thiện trải nghiệm người dùng (UI/UX).</strong></li>
-                    <li><strong>Đảm bảo mã nguồn mở được kiểm soát và bảo vệ hợp lý.</strong></li>
-                </ul>
+            <div class="timeline-item">
+                <div class="card" style="width: 100%;">
+                    <span class="badge active" style="margin-bottom: 0.5rem;">2024</span>
+                    <h3>Hyggshi OS 2.0</h3>
+                    <p style="color: var(--c-text-muted);">Chuyển mình với giao diện Glassmorphism, Start Menu cải tiến.
+                    </p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="card" style="width: 100%;">
+                    <span class="badge active" style="margin-bottom: 0.5rem;">2025</span>
+                    <h3>Cloudar OS Style</h3>
+                    <p style="color: var(--c-text-muted);">Ra mắt thiết kế mới với tông màu Cloud Cyan, nhẹ nhàng và
+                        hiện đại.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="card" style="width: 100%;">
+                    <span class="badge warning" style="margin-bottom: 0.5rem;">Hiện tại</span>
+                    <h3>Hyggshi OS 3.0</h3>
+                    <p style="color: var(--c-text-muted);">Đang phát triển - Module System, Cloud Sync, Engine mới.</p>
+                </div>
             </div>
         </div>
+    </main>
 
-        <footer class="footer">
-            <p>&copy; 2024 - 2025 Hyggshi OS Project Center. Tất cả quyền được bảo lưu.</p>
-        </footer>
-    </div>
-
-    <script src="script.js"></script>
-    <script> (function(){function fade(){document.querySelectorAll('.history-section').forEach(e=>{var r=e.getBoundingClientRect();if(r.top<window.innerHeight-40)e.classList.add('show');});}window.addEventListener('scroll',fade,{passive:true});fade();setTimeout(fade,350);})(); </script>
+    <footer class="footer">
+        <div class="container">
+            <p style="color: var(--c-text-muted);">© 2024 - 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
+        </div>
+    </footer>
+    <script src="theme.js"></script>
 </body>
+
 </html>

@@ -1,250 +1,103 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="Resources/favicon.ico" />
-  <link rel="stylesheet" href="style.css" />
-  <title>The Cases – Các vụ việc đáng chú ý trong lịch sử Hyggshi OS</title>
-  <style>
-    
-    .cases-hero {
-      text-align: center;
-      padding: 4rem 0 2rem 0;
-      color: white;
-    }
-    .cases-hero h1 {
-      font-size: 2.65rem; font-weight:900; background:linear-gradient(88deg,var(--brand-1,#6c8cff),var(--brand-2,#14deb3)90%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;padding-bottom:1rem; }
-    .case-list {
-      max-width: 950px; margin: 0 auto; display: flex; flex-direction: column; gap: 2.2rem;
-    }
-    .case-card {
-      background: var(--surface-1,#18344ca1); border-radius:28px; padding:2.3rem 2.1rem; color:white;
-      box-shadow: 0 10px 42px rgba(0,128,255,.13); transition: box-shadow .22s,transform .17s,background .17s;position:relative;opacity:0;transform:translateY(45px);}
-    .case-card.show{opacity:1;transform:translateY(0);}
-    .case-card:hover {background:rgba(40,170,255,.09);box-shadow:0 18px 88px rgba(28,150,255,.13);transform:translateY(-8px) scale(1.012);}
-    .case-title {
-      font-size: 1.22rem; font-weight: 800; margin-bottom: 0.25rem; color: var(--brand-1-strong,#77a9fd);display:flex;align-items:center;gap:7px; }
-    .code-badge { font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; padding: 0.28rem 0.7rem; border-radius: 10px; background: linear-gradient(100deg, var(--brand-1,#7ca9fd), var(--brand-2,#12eec2)85%); color: #fff; font-size: 1rem; font-weight:600; margin-right:7px; margin-left:2px; box-shadow:0 3px 12px rgba(80,150,255,.08);} 
-    .label-muted {color: var(--text-secondary);font-size: 0.98rem;}
-    .case-desc {
-      font-size: 1.05rem;
-      opacity: 0.93;
-      margin-bottom: 0.2rem;
-    }
-    .case-section {
-      margin-bottom: 0.2rem;
-    }
-    .case-section strong {
-      color: #ffd166;
-      font-weight: 600;
-    }
-    .case-impact, .case-result {
-      font-style: italic;
-      opacity: 0.8;
-      margin-top: 0.2rem;
-    }
-    .case-impact {
-      color: #00bfae;
-    }
-    .case-result {
-      color: #fca311;
-    }
-    .back-button {
-      position: absolute;
-      top: 24px;
-      left: 32px;
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50px;
-      padding: 0.8rem 1.5rem;
-      color: white;
-      text-decoration: none;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      z-index: 1000;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-    .back-button:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
-    }
-    @media (max-width: 768px) {
-      .container {
-        margin-top: 40px;
-      }
-      .cases-hero h1 {
-        font-size: 1.2rem;
-      }
-      .case-card {
-        padding: 1.18rem .59rem;
-        border-radius: 12px;
-      }
-      .back-button {
-        top: 10px;
-        left: 10px;
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-      }
-    }
-    @media(max-width:790px){.cases-hero h1{font-size:1.66rem;}.case-card{padding:1.18rem .59rem;border-radius:12px;}}
-  </style>
+  <title>The Cases – Hyggshi OS</title>
+  <link rel="icon" href="Resources/favicon.ico">
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div class="container">
-    <header class="header">
-      <nav class="nav">
-        <div class="logo">
-          <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo" style="height: 40px; width: 40px; object-fit: contain; vertical-align: middle; margin-right: 0.5rem; border-radius: 10px; background: rgba(255,255,255,0.2);">
-          <span class="logo-text">Hyggshi OS</span>
-        </div>
-        <ul class="nav-menu">
-          <li><a href="index.html" class="nav-link">Home</a></li>
-          <li><a href="About.html" class="nav-link">About</a></li>
-          <li><a href="projects.html" class="nav-link">Projects</a></li>
-          <li><a href="History.html" class="nav-link">History</a></li>
-          <li><a href="The-Cases.html" class="nav-link active">Cases</a></li>
-          <li><a href="download.html" class="nav-link">Download</a></li>
-          <li><a href="license.html" class="nav-link">License</a></li>
-          <li><a href="erorrcode.html" class="nav-link">Error</a></li>
-          <li><a href="timeline.html" class="nav-link">Timeline</a></li>
-          <li><a href="OSmain.html" class="nav-link">OS</a></li>
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+        <span>☁️ Hyggshi OS</span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="About.html" class="nav-link">About</a></li>
+        <li><a href="projects.html" class="nav-link">Projects</a></li>
+        <li><a href="The-Cases.html" class="nav-link active">Cases</a></li>
+        <li><a href="download.html" class="nav-link">Download</a></li>
+      </ul>
+      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
+    </div>
+  </header>
 
-          <li>
-            <a href="https://discord.gg/PZuDkFzJtc" class="nav-link" target="_blank" title="Join Discord" style="display:flex;align-items:center;gap:0.3rem;">
-              <svg height="22" viewBox="0 0 32 32" width="22" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M27.2 6.8A26.9 26.9 0 0 0 20.9 5a1 1 0 0 0-.5.1c-.2.1-.3.3-.3.5-.2.7-.4 1.5-.5 2.2-2.7-.4-5.4-.4-8.1 0-.1-.7-.3-1.5-.5-2.2a.7.7 0 0 0-.3-.5c-.2-.1-.4-.2-
-0.5-.1A26.9 26.9 0 0 0 4.8 6.8a.7.7 0 0 0-.3.3C1.7 11.2.3 15.5.6 19.8a.7.7 0 0 0 .2.4c3.2 2.4 6.3 3.8 9.4 4.7a1 1 0 0 0 1.1-.4c.3-.4.6-.9.8-1.3-3.1-.9-6-2.2-8.7-4.1a.2.2 0 0 1-.1-.2c0-.1 0-.2.1-.2.2-.2.4-.3.6-.2 7.7 5.6 18.1 5.6 25.7 0 .2-.1.4 0 .6.2 0 .1 0 .2-.1.2-2.7 1.9-5.6 3.2-8.7 4.1.3.5.6.9.8 1.3a1 1 0 0 0 1.1.4c3.1-.9 6.2-2.3 9.4-4.7a.7.7 0 0 0 .2-.4c.4-4.3-1-8.6-3.9-12.7a.7.7 0 0 0-.3-.3zM11.7 18.6c-1.1 0-2-1-2-2.1 0-1.2.9-2.1 2-2.1s2 1 2 2.1c0 1.2-.9 2.1-2 2.1zm8.6 0c-1.1 0-2-1-2-2.1 0-1.2.9-2.1 2-2.1s2 1 2 2.1c0 1.2-.9 2.1-2 2.1z"/></svg>
-              <span style="display:none;">Discord</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </header>
+  <main class="container">
+    <section class="section-spacer" style="text-align: center;">
+      <span class="badge active cloud-float fade-in-up">⚖️ Cases</span>
+      <h1 class="fade-in-up" style="margin-top: 1rem;">The <span class="text-gradient">Cases</span></h1>
+      <p class="fade-in-up delay-1" style="color: var(--c-text-muted);">Các vụ việc đáng chú ý trong lịch sử phát triển
+      </p>
+    </section>
 
-    <main>
-      <section class="cases-hero">
-        <h1><span class="icon">⚖️</span> The Cases – Các vụ việc đáng chú ý trong lịch sử Hyggshi OS</h1>
-      </section>
-      <section class="case-list">
-        <div class="case-card feature-card">
-          <div class="case-title"><span class="icon">📁</span>Case #1 – 50 lần bị từ chối mã nguồn (03/12/2024)</div>
-          <div class="case-desc">Mô tả: Trước khi phát triển Hyggshi OS, tác giả đã nhiều lần xin mã nguồn từ các game hệ điều hành Roblox khác để học hỏi và tùy chỉnh.</div>
-          <div class="case-section"><strong>Kết quả:</strong>
-            <ul>
-              <li>Tất cả 50 lần xin đều bị từ chối.</li>
-              <li>Tác giả quyết định phát triển hệ điều hành mã nguồn mở của riêng mình: Hyggshi OS.</li>
-            </ul>
+    <section style="max-width: 800px; margin: 0 auto;">
+      <div class="grid fade-in-up delay-2" style="gap: 2rem;">
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <h3>📁 Case #1 – 50 lần bị từ chối</h3>
+            <span class="badge active">Resolved</span>
           </div>
-          <div class="case-impact">Ảnh hưởng: Gây động lực cho tư tưởng mở và dẫn đến sự ra đời của Hyggshi OS 1.0.</div>
+          <p style="color: var(--c-text-muted); font-size: 0.9rem; margin-bottom: 1rem;">03/12/2024</p>
+          <p style="color: var(--c-text-muted);">Tác giả đã xin mã nguồn từ 50 dự án khác nhưng đều bị từ chối → Quyết
+            định tự phát triển Hyggshi OS mã nguồn mở.</p>
         </div>
-        <div class="case-card feature-card">
-          <div class="case-title"><span class="icon">📁</span>Case #2 – Zashi Messaging bị chỉ trích vì thiếu kiểm duyệt (05/02/2025)</div>
-          <div class="case-desc">Mô tả: Ứng dụng nhắn tin trong Hyggshi OS (Zashi Messaging) cho phép người dùng gửi tin nhắn không bị kiểm duyệt như Roblox Chat mặc định.</div>
-          <div class="case-section"><strong>Vấn đề:</strong>
-            <ul>
-              <li>Tin nhắn có thể chứa nội dung xúc phạm, đe dọa, dụ dỗ.</li>
-              <li>Không có bộ lọc tự động, dẫn đến nhiều phản ánh tiêu cực từ cộng đồng.</li>
-              <li>Biệt danh cộng đồng đặt: "Nền tảng thiếu kiểm soát"</li>
-            </ul>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <h3>📁 Case #2 – Zashi Messaging</h3>
+            <span class="badge warning">In Progress</span>
           </div>
-          <div class="case-result">Kết quả: Tạm thời bị hạn chế sử dụng trong một số bản build Developer.</div>
+          <p style="color: var(--c-text-muted); font-size: 0.9rem; margin-bottom: 1rem;">05/02/2025</p>
+          <p style="color: var(--c-text-muted);">Ứng dụng nhắn tin thiếu kiểm duyệt nội dung → Đang bổ sung bộ lọc và
+            content moderation.</p>
         </div>
-        <div class="case-card feature-card">
-          <div class="case-title"><span class="icon">📁</span>Case #3 – Intel yêu cầu gỡ âm thanh khởi động (16/03/2025)</div>
-          <div class="case-desc">Mô tả: Âm thanh khởi động của Hyggshi OS 2.0 và Developer bị nghi là quá giống một sản phẩm âm thanh thương mại.</div>
-          <div class="case-section"><strong>Phản hồi từ Intel:</strong>
-            <blockquote style="margin: 0.5rem 0; opacity:0.8; border-left: 3px solid #ffd166; padding-left: 1rem;">"Chúng tôi nhận được một bản thực hành của Hyggshi OS Developer và 2.0.<br>Chúng tôi cần bạn đổi âm thanh này để không quảng bá cho hệ điều hành này?"</blockquote>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <h3>📁 Case #3 – Copyright Âm thanh</h3>
+            <span class="badge danger">Critical</span>
           </div>
-          <div class="case-result">Kết quả:
-            <ul>
-              <li>Đội ngũ Hyggshi OS đang xem xét thay đổi hoặc làm lại âm thanh khởi động.</li>
-              <li>Đưa ra cảnh báo về vấn đề bản quyền tài sản âm thanh cho toàn bộ dự án.</li>
-            </ul>
-          </div>
+          <p style="color: var(--c-text-muted); font-size: 0.9rem; margin-bottom: 1rem;">16/03/2025</p>
+          <p style="color: var(--c-text-muted);">Intel yêu cầu gỡ âm thanh khởi động do vi phạm bản quyền → Đã thay thế
+            bằng assets tự sản xuất.</p>
         </div>
-        <div class="case-card feature-card">
-          <div class="case-title"><span class="icon">📁</span>Case #4 – Tranh cãi phát hành mã nguồn mở 3.0 (21/05/2025)</div>
-          <div class="case-desc">Mô tả: Phiên bản Hyggshi OS 3.0 dự định phát hành mã nguồn mở đầy đủ.</div>
-          <div class="case-section"><strong>Tranh cãi từ cộng đồng:</strong>
-            <ul>
-              <li>Một số người ủng hộ vì tính minh bạch và học hỏi.</li>
-              <li>Một số khác lo ngại sẽ bị sao chép trắng trợn, thậm chí bị biến tướng hoặc thương mại hoá trái phép.</li>
-            </ul>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <h3>📁 Case #4 – Tranh cãi Open Source 3.0</h3>
+            <span class="badge active">Resolved</span>
           </div>
-          <div class="case-result">Kết quả (tạm thời):
-            <ul>
-              <li>Mã nguồn chỉ phát hành từng phần qua GitHub và có giấy phép sử dụng.</li>
-              <li>Đang lên kế hoạch kiểm soát qua hệ thống Module kiểm duyệt nội dung.</li>
-            </ul>
-          </div>
+          <p style="color: var(--c-text-muted); font-size: 0.9rem; margin-bottom: 1rem;">21/05/2025</p>
+          <p style="color: var(--c-text-muted);">Cộng đồng lo ngại mở toàn bộ mã nguồn → Áp dụng License HOSL-1.0 và
+            phát hành từng phần.</p>
         </div>
-        <div class="case-card feature-card">
-          <div class="case-title"><span class="icon">📁</span>Case #5 – Hủy các dự án phụ do thiếu nhân lực (25/05/2025)</div>
-          <div class="case-desc">Dự án bị huỷ:
-            <ul>
-              <li>Hyggshi OS TV</li>
-              <li>Hyggshi OS Pro</li>
-              <li>Hyggshi OS Phone (tạm dừng)</li>
-            </ul>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+            <h3>📁 Case #5 – Hủy dự án phụ</h3>
+            <span class="badge" style="background: var(--c-bg-surface);">Archived</span>
           </div>
-          <div class="case-section"><strong>Nguyên nhân:</strong>
-            <ul>
-              <li>Thiếu người duy trì và phát triển lâu dài.</li>
-              <li>Tập trung vào bản 3.0 khiến nhóm không đủ tài nguyên cho các nhánh phụ.</li>
-            </ul>
-          </div>
-          <div class="case-impact">Ảnh hưởng:
-            <ul>
-              <li>Một số người dùng mong đợi các dự án phụ tỏ ra thất vọng.</li>
-              <li>Dẫn đến quyết định tích hợp các tính năng tốt nhất của các dự án bị hủy vào Hyggshi OS 3.0.</li>
-            </ul>
-          </div>
+          <p style="color: var(--c-text-muted); font-size: 0.9rem; margin-bottom: 1rem;">25/05/2025</p>
+          <p style="color: var(--c-text-muted);">OS TV, OS Pro, OS Phone bị hủy hoặc tạm dừng do thiếu nhân lực → Tập
+            trung vào OS 3.0.</p>
         </div>
-        <div class="case-card feature-card">
-          <div class="case-title"><span class="icon">📁</span>Case #6 – Hyggshi OS Flex: Nguy cơ nhầm lẫn tên (08/08/2025)</div>
-          <div class="case-desc">Mô tả: Trong quá trình giới thiệu dự án mới Hyggshi OS Flex, nhóm nhận thấy có nguy cơ người dùng đọc nhầm “Flex” thành “FIex” do sự tương đồng hình dạng giữa chữ “l” thường và chữ “I” in hoa trong một số font chữ.</div>
-          <div class="case-section"><strong>Ảnh hưởng:</strong>
-            <ul>
-              <li>Gây hiểu nhầm tên dự án, ảnh hưởng đến khả năng nhận diện thương hiệu.</li>
-            </ul>
-          </div>
-          <div class="case-section"><strong>Giải pháp:</strong>
-            <ul>
-              <li>Cập nhật font chữ rõ ràng hơn trong các tài liệu, tránh font dễ gây nhầm lẫn.</li>
-              <li>Khi viết tài liệu và logo, làm nổi bật “l” bằng thiết kế riêng hoặc đổi sang font sans-serif có độ phân biệt cao.</li>
-              <li>Thêm mô tả giải thích tên khi giới thiệu dự án lần đầu.</li>
-            </ul>
-          </div>
-        </div>
-        <div class="case-card feature-card">
-          <div class="case-title"><span class="icon">📁</span>Case #7 – Tranh luận: “Hyggshi sử dụng công cụ tự động hóa nào không?” (25/11/2025)</div>
-          <div class="case-desc">Mô tả: Một số thành viên trong cộng đồng đặt câu hỏi rằng Hyggshi OS có sử dụng các công cụ hỗ trợ tự động để phát triển nhanh, do một vài poster và demo trông giống sản phẩm được tạo hoặc hỗ trợ bởi công cụ tự động.</div>
-          <div class="case-section"><strong>Nguyên nhân gây hiểu nhầm:</strong>
-            <ul>
-              <li>Các đoạn code và thiết kế được làm rất nhanh → nghi dùng công cụ hỗ trợ tự động.</li>
-              <li>Một số poster, demo có phong cách giống nội dung do công cụ tự động hỗ trợ.</li>
-            </ul>
-          </div>
-          <div class="case-section"><strong>Phản hồi chính thức từ Hyggshi OS:</strong>
-            <p>“Hyggshi OS là dự án cá nhân. Nhóm có thể sử dụng công cụ hỗ trợ để tăng tốc thiết kế và viết code, nhưng không dựa vào các hệ thống tự động làm lõi của hệ điều hành.”</p>
-          </div>
-          <div class="case-result">Kết quả:
-            <ul>
-              <li>Tranh luận lắng xuống. Được ghi vào lịch sử Hyggshi OS như một hiểu lầm mang tính cộng đồng.</li>
-              <li>Hyggshi OS là dự án cá nhân; nhóm có thể sử dụng công cụ hỗ trợ để tăng tốc thiết kế và viết code, nhưng không dựa vào các hệ thống tự động làm lõi của hệ điều hành.</li>
-              <li><strong>⚠ Một số thành phần cốt lõi của Hyggshi OS (API, Engine Modules, Technology) sẽ được chuyển sang mã nguồn đóng để bảo vệ hệ thống.
-                Phần giao diện, app cơ bản và cấu trúc OS vẫn mã nguồn mở, người dùng vẫn có thể sử dụng và tùy chỉnh bình thường.</strong></li>
-            </ul>
-          </div>
-        </div>
-      </section>
-    </main>
-    <footer class="footer">
-      <p>© 2024 - 2025 Hyggshi OS Project Center. All rights reserved. | <a href="https://discord.gg/PZuDkFzJtc" target="_blank" style="color:#7289da;text-decoration:underline;">Tham gia Discord</a></p>
-    </footer>
-  </div>
-  <script src="script.js"></script>
-  <script> (function(){function fade(){document.querySelectorAll('.case-card').forEach(e=>{var r=e.getBoundingClientRect();if(r.top<window.innerHeight-40)e.classList.add('show');});}window.addEventListener('scroll',fade,{passive:true});fade();setTimeout(fade,350);})(); </script>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p style="color: var(--c-text-muted);">© 2024 - 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
+    </div>
+  </footer>
+  <script src="theme.js"></script>
 </body>
+
 </html>

@@ -1,194 +1,128 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tải xuống – Hyggshi OS Project Center</title>
-  <link rel="icon" href="Resources/favicon.ico" />
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    .hero-title { font-size:2.7rem; font-weight:900; letter-spacing:.7px; background:linear-gradient(88deg,var(--brand-1,#7ca9fd),var(--brand-2) 88%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
-    .hero-subtitle { font-size:1.09rem; background:rgba(40,160,255,0.08); color:var(--text-secondary);padding:0.41em 1.12em;border-radius:13px;display:inline-block;box-shadow:0 5px 13px rgba(78,150,220,.12);margin-bottom:.55em;}
-    .history-section {background:var(--surface-1);border-radius:25px;box-shadow:0 13px 44px rgba(70,110,255,0.11);margin-bottom:1.2em;padding:3.3rem 1.5vw;transition:box-shadow .18s,transform .14s,opacity .22s;opacity:0;transform:translateY(37px);}
-    .history-section.show{opacity:1;transform:translateY(0);}
-    .feature-card{background:var(--surface-1,rgba(255,255,255,0.11));border-radius:18px;box-shadow:0 7px 38px rgba(70,170,255,.09);transition:box-shadow .17s,transform .13s;}
-    .feature-card:hover{background:rgba(34,180,255,0.13);transform:translateY(-3px);}
-    .section-title {font-size:2.19rem;font-weight:900;background:linear-gradient(88deg,var(--brand-1),var(--brand-2)72%,#fff 110%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-    @media(max-width:715px){.hero-title{font-size:1.57rem;}.history-section{border-radius:13px;padding:1.25rem .5rem;}}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download – Hyggshi OS</title>
+  <link rel="icon" href="Resources/favicon.ico">
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <div class="container">
-    <header class="header">
-      <nav class="nav">
-        <div class="logo">
-          <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo" style="height: 40px; width: 40px; object-fit: contain; vertical-align: middle; margin-right: 0.5rem; border-radius: 10px; background: rgba(255,255,255,0.2);">
-          <span class="logo-text">Hyggshi OS</span>
-        </div>
-        <ul class="nav-menu">
-          <li><a href="index.html" class="nav-link">Home</a></li>
-          <li><a href="About.html" class="nav-link">About</a></li>
-          <li><a href="projects.html" class="nav-link">Projects</a></li>
-          <li><a href="History.html" class="nav-link">History</a></li>
-          <li><a href="The-Cases.html" class="nav-link">Cases</a></li>
-          <li><a href="download.html" class="nav-link active">Download</a></li>
-          <li><a href="license.html" class="nav-link">License</a></li>
-          <li><a href="erorrcode.html" class="nav-link">Error</a></li>
-          <li><a href="timeline.html" class="nav-link">Timeline</a></li>
-          <li><a href="OSmain.html" class="nav-link">OS</a></li>
-        </ul>
-      </nav>
-    </header>
+  <header class="header">
+    <div class="container nav">
+      <div class="logo">
+        <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+        <span>☁️ Hyggshi OS</span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="About.html" class="nav-link">About</a></li>
+        <li><a href="projects.html" class="nav-link">Projects</a></li>
+        <li><a href="History.html" class="nav-link">History</a></li>
+        <li><a href="download.html" class="nav-link active">Download</a></li>
+      </ul>
+      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
+    </div>
+  </header>
 
-    <main class="main">
-      <section class="hero">
-        <div class="hero-content">
-          <h1 class="hero-title">Tải xuống Hyggshi OS</h1>
-          <p class="hero-subtitle">Chọn cách tải phù hợp: chơi trực tiếp trên Roblox hoặc tải bản phát hành mới nhất từ GitHub.</p>
-          <div class="hero-buttons">
-            <a class="btn btn-github" href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases/latest" target="_blank" rel="noopener">Bản phát hành mới nhất</a>
-            <a class="btn btn-secondary" href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases" target="_blank" rel="noopener">Tất cả phát hành</a>
-          </div>
-        </div>
-        <div class="hero-visual">
-          <div class="floating-card">
-            <div class="card-icon">⬇️</div>
-            <h3>Tải nhanh</h3>
-            <p>Liên kết trực tiếp, an toàn</p>
-          </div>
-        </div>
-      </section>
+  <main class="container">
+    <section class="section-spacer" style="text-align: center;">
+      <div class="fade-in-up">
+        <span class="badge active cloud-float" style="font-size: 1rem; margin-bottom: 1rem;">☁️ Download</span>
+        <h1>Tải xuống <span class="text-gradient">Hyggshi OS</span></h1>
+        <p style="color: var(--c-text-muted); font-size: 1.2rem; margin-bottom: 2rem;">
+          Chọn phiên bản phù hợp và bắt đầu trải nghiệm.
+        </p>
+      </div>
+      <div class="flex-center fade-in-up delay-1" style="gap: 1rem; flex-wrap: wrap;">
+        <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases/latest" target="_blank"
+          class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+          ☁️ Tải bản mới nhất
+        </a>
+        <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases" target="_blank"
+          class="btn btn-secondary">
+          Xem tất cả phiên bản
+        </a>
+      </div>
+    </section>
 
-      <section class="history-section">
-        <div class="container">
-          <h2 class="section-title">Phiên bản mới nhất</h2>
-          <div id="latest-release" class="feature-grid">
-            <div class="feature-card">
-              <div class="feature-icon">⏳</div>
-              <h3>Đang tải thông tin…</h3>
-              <p>Vui lòng chờ trong giây lát.</p>
-            </div>
-          </div>
+    <!-- Latest Release -->
+    <section class="fade-in-up delay-2">
+      <h2 class="section-title">Phiên bản <span>Mới nhất</span></h2>
+      <div id="latest-release" class="grid-3">
+        <div class="card" style="grid-column: 1/-1; text-align: center;">
+          <div class="card-icon cloud-float" style="margin: 0 auto 1rem auto;">⏳</div>
+          <h3>Đang tải thông tin...</h3>
+          <p style="color: var(--c-text-muted);">Kết nối đến GitHub...</p>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="history-section">
-        <div class="container">
-          <h2 class="section-title">Yêu cầu & Hướng dẫn</h2>
-          <div class="feature-grid">
-            <div class="feature-card">
-              <div class="feature-icon">🧰</div>
-              <h3>Yêu cầu cơ bản</h3>
-              <ul style="text-align:left; opacity:0.9; line-height:1.7;">
-                <li>Tài khoản Roblox hợp lệ</li>
-                <li>Kết nối Internet ổn định</li>
-                <li>Thiết bị có thể chạy Roblox (PC/Laptop)</li>
-              </ul>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">📦</div>
-              <h3>Cách tải bản phát hành</h3>
-              <ol style="text-align:left; opacity:0.9; line-height:1.7;">
-                <li>Mở mục “Bản phát hành mới nhất”.</li>
-                <li>Chọn asset phù hợp để tải về.</li>
-                <li>Làm theo hướng dẫn đi kèm (nếu có).</li>
-              </ol>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">🔐</div>
-              <h3>Lưu ý an toàn</h3>
-              <p>Chỉ tải file từ trang GitHub chính thức của dự án để đảm bảo an toàn. Tránh các nguồn không rõ ràng.</p>
-            </div>
-          </div>
+    <!-- Requirements -->
+    <section class="section-spacer fade-in-up delay-3">
+      <h2 class="section-title">Yêu cầu <span>Hệ thống</span></h2>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-icon">🎮</div>
+          <h3>Roblox</h3>
+          <p style="color: var(--c-text-muted);">Tài khoản Roblox hợp lệ để chạy trải nghiệm.</p>
         </div>
-      </section>
-    </main>
+        <div class="card">
+          <div class="card-icon">🔧</div>
+          <h3>Studio</h3>
+          <p style="color: var(--c-text-muted);">Roblox Studio (nếu muốn chỉnh sửa source code).</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🌐</div>
+          <h3>Internet</h3>
+          <p style="color: var(--c-text-muted);">Kết nối mạng ổn định để tải assets và cập nhật.</p>
+        </div>
+      </div>
+    </section>
+  </main>
 
-    <footer class="footer">
-      <p>© 2024 - 2025 Hyggshi OS Project Center. All rights reserved.</p>
-    </footer>
-  </div>
+  <footer class="footer">
+    <div class="container">
+      <p style="color: var(--c-text-muted);">© 2024 - 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
+    </div>
+  </footer>
 
-  <script src="script.js"></script>
   <script>
-    // Auto-refresh latest GitHub release with ETag + visibility refresh
-    (function () {
-      const API_URL = 'https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases/latest';
+    (async function () {
       const container = document.getElementById('latest-release');
-      if (!container) return;
+      try {
+        const res = await fetch('https://api.github.com/repos/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases/latest');
+        const release = await res.json();
 
-      let lastEtag = null;
-      let lastReleaseId = null;
-      let refreshTimer = null;
+        const assets = release.assets?.length
+          ? release.assets.map(a => `
+                        <a href="${a.browser_download_url}" target="_blank" class="card" style="text-decoration: none;">
+                            <div class="card-icon">📦</div>
+                            <h3>${a.name}</h3>
+                            <span class="badge active">${(a.size / 1024 / 1024).toFixed(2)} MB</span>
+                        </a>
+                    `).join('')
+          : '';
 
-      async function fetchLatestRelease() {
-        try {
-          const res = await fetch(API_URL, {
-            headers: {
-              'Accept': 'application/vnd.github+json',
-              'X-GitHub-Api-Version': '2022-11-28',
-              'If-None-Match': lastEtag || ''
-            },
-            cache: 'no-store'
-          });
-
-          if (res.status === 304) return; // Not modified
-
-          lastEtag = res.headers.get('ETag') || lastEtag;
-          const release = await res.json();
-          if (!release || !release.tag_name) return;
-          if (lastReleaseId === release.id) return;
-          lastReleaseId = release.id;
-
-          const date = new Date(release.published_at || release.created_at);
-          const dateStr = date.toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric' });
-          const assets = Array.isArray(release.assets) && release.assets.length
-            ? release.assets.map(a => `
-                <a class="feature-card" href="${a.browser_download_url}" target="_blank" rel="noopener">
-                  <div class="feature-icon">📥</div>
-                  <h3>${a.name}</h3>
-                  <p>Kích thước: ${(a.size/1024/1024).toFixed(2)} MB</p>
-                </a>
-              `).join('')
-            : `<div class="feature-card"><div class="feature-icon">ℹ️</div><h3>Chưa có asset đính kèm</h3><p>Vui lòng xem chi tiết trên trang phát hành.</p></div>`;
-
-          container.innerHTML = `
-            <div class="feature-card" style="grid-column: 1 / -1;">
-              <div class="feature-icon">🏷️</div>
-              <h3>${release.name || release.tag_name}</h3>
-              <p>Phát hành: ${dateStr}</p>
-              <p><a href="${release.html_url}" target="_blank" rel="noopener" class="btn btn-secondary" style="margin-top:0.5rem;">Xem trên GitHub</a></p>
-            </div>
-            ${assets}
-          `;
-        } catch (e) {
-          if (!container.dataset.hadContent) {
-            container.innerHTML = `
-              <div class="feature-card">
-                <div class="feature-icon">⚠️</div>
-                <h3>Không thể tải dữ liệu</h3>
-                <p>Vui lòng thử lại sau hoặc truy cập trang phát hành trên GitHub.</p>
-              </div>
-            `;
-          }
-        }
+        container.innerHTML = `
+                    <div class="card" style="grid-column: 1/-1; text-align: center; background: linear-gradient(135deg, rgba(94, 208, 198, 0.1), rgba(123, 185, 255, 0.1));">
+                        <span class="badge active" style="margin-bottom: 1rem; font-size: 1rem;">${release.tag_name}</span>
+                        <h2>${release.name || release.tag_name}</h2>
+                        <p style="color: var(--c-text-muted); margin: 1rem 0;">
+                            Phát hành: ${new Date(release.published_at).toLocaleDateString('vi-VN')}
+                        </p>
+                        <a href="${release.html_url}" target="_blank" class="btn btn-primary">Xem chi tiết & Changelog</a>
+                    </div>
+                    ${assets}
+                `;
+      } catch (e) {
+        container.innerHTML = '<div class="card" style="grid-column:1/-1;text-align:center;"><p>Không thể kết nối GitHub.</p></div>';
       }
-
-      function scheduleRefresh() {
-        if (refreshTimer) clearInterval(refreshTimer);
-        refreshTimer = setInterval(fetchLatestRelease, 300000); // 5 minutes
-      }
-
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) fetchLatestRelease();
-      });
-
-      fetchLatestRelease();
-      scheduleRefresh();
     })();
-
-    // Fade-in effect
-    (function(){ function fade(){ document.querySelectorAll('.history-section,.feature-card').forEach(e=>{ var r=e.getBoundingClientRect(); if(r.top<window.innerHeight-60) e.classList.add('show');}); } window.addEventListener('scroll',fade,{passive:true}); fade(); setTimeout(fade,350); })();
   </script>
+  <script src="theme.js"></script>
 </body>
+
 </html>
