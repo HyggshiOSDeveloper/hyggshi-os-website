@@ -1,0 +1,288 @@
+/* === Image Viewer === */
+.app-image-viewer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.iv-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.iv-toolbar button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition), color var(--transition);
+}
+
+.iv-toolbar button:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.iv-toolbar button .material-icons-round {
+    font-size: 18px;
+}
+
+.iv-separator {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 4px;
+}
+
+.iv-canvas {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.iv-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-muted);
+}
+
+.iv-placeholder .material-icons-round {
+    font-size: 64px;
+}
+
+.iv-placeholder p {
+    font-size: 14px;
+}
+
+.iv-canvas img {
+    max-width: 100%;
+    max-height: 100%;
+    transition: transform var(--transition);
+}
+
+/* === Music Player === */
+.app-music-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 24px;
+    gap: 16px;
+    background: linear-gradient(180deg, rgba(108, 92, 231, 0.15), transparent);
+}
+
+.mp-artwork {
+    width: 160px;
+    height: 160px;
+    background: var(--bg-glass);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.mp-artwork .material-icons-round {
+    font-size: 64px;
+    color: var(--accent);
+}
+
+.mp-info {
+    text-align: center;
+}
+
+.mp-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.mp-artist {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.mp-progress {
+    width: 100%;
+    max-width: 280px;
+}
+
+.mp-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.mp-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+}
+
+.mp-times {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.mp-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.mp-controls button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition), background var(--transition);
+}
+
+.mp-controls button:hover {
+    color: var(--text-primary);
+}
+
+.mp-controls button .material-icons-round {
+    font-size: 22px;
+}
+
+.mp-play {
+    width: 48px !important;
+    height: 48px !important;
+    background: var(--accent) !important;
+    color: #fff !important;
+}
+
+.mp-play:hover {
+    filter: brightness(1.15);
+}
+
+.mp-play .material-icons-round {
+    font-size: 28px !important;
+}
+
+/* === Video Player === */
+.app-video-player {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #000;
+}
+
+.vp-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.vp-container video {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    object-fit: contain;
+}
+
+.vp-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.vp-container:hover .vp-controls {
+    opacity: 1;
+}
+
+.vp-progress {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+}
+
+.vp-progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0;
+}
+
+.vp-btns {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.vp-btns-left,
+.vp-btns-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.vp-btns button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition);
+}
+
+.vp-btns button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.vp-btns button .material-icons-round {
+    font-size: 22px;
+}
+
+.vp-time {
+    font-size: 12px;
+    color: #eee;
+    font-weight: 500;
+}

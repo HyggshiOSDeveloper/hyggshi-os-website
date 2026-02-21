@@ -1,0 +1,654 @@
+/* === Light Mode Overrides === */
+body.light-mode {
+    --bg-dark: #f0f2f5;
+    --bg-surface: rgba(255, 255, 255, 0.8);
+    --bg-glass: rgba(255, 255, 255, 0.6);
+    --bg-glass-heavy: rgba(245, 246, 250, 0.9);
+    --bg-hover: rgba(0, 0, 0, 0.05);
+    --bg-active: rgba(0, 0, 0, 0.08);
+
+    --text-primary: #1c1e21;
+    --text-secondary: rgba(28, 30, 33, 0.7);
+    --text-muted: rgba(28, 30, 33, 0.45);
+
+    --border: rgba(0, 0, 0, 0.08);
+    --border-light: rgba(0, 0, 0, 0.12);
+
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.15);
+    --shadow-window: 0 12px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border);
+}
+
+body.light-mode .window-titlebar {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+body.light-mode .desktop-icon .icon-img {
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .icon-label {
+    color: #1c1e21;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+body.light-mode .calc-btn {
+    background: rgba(0, 0, 0, 0.04);
+    color: #1c1e21;
+}
+
+body.light-mode .calc-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .calc-btn.func {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .calc-btn.op {
+    color: #fff;
+}
+
+body.light-mode .set-style-card span,
+body.light-mode .set-nav,
+body.light-mode .fm-nav-item,
+body.light-mode .te-filename,
+body.light-mode .br-url,
+body.light-mode .clock-date,
+body.light-mode .tray-icon .material-icons-round {
+    color: #1c1e21;
+}
+
+body.light-mode .term-prompt {
+    color: #1c1e21;
+}
+
+body.light-mode .term-input {
+    color: #1c1e21;
+}
+
+body.light-mode .chat-item-delete:hover {
+    background: rgba(255, 0, 0, 0.05);
+}
+
+body.light-mode .chat-model-select {
+    background: #f1f3f4;
+    border-color: #dadce0;
+    color: #3c4043;
+}
+
+body.light-mode .chat-msg-content {
+    background: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .chat-msg.user .chat-msg-content {
+    background: var(--accent-soft);
+}
+
+body.light-mode .chat-input-box {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .set-input-text {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #1c1e21;
+}
+
+body.light-mode .set-input-text:focus {
+    background: #fff;
+    border-color: var(--accent);
+}
+
+/* ========================================
+   THEME MODE SELECTOR (Settings)
+   ======================================== */
+.set-modes {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.set-mode-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.set-mode-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-light);
+    transform: translateY(-2px);
+}
+
+.set-mode-card.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.set-mode-card .material-icons-round {
+    font-size: 28px;
+    color: var(--text-secondary);
+}
+
+.set-mode-card.active .material-icons-round {
+    color: var(--accent);
+}
+
+.set-mode-card span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* ========================================
+   UI STYLE PREVIEW CARDS (Settings)
+   ======================================== */
+.set-styles {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.set-style-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color var(--transition), transform var(--transition), background var(--transition);
+    width: 100px;
+}
+
+.set-style-card:hover {
+    background: var(--bg-hover);
+    transform: translateY(-2px);
+}
+
+.set-style-card.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.set-style-card span {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.set-style-card.active span {
+    color: var(--accent);
+}
+
+.style-preview {
+    width: 80px;
+    height: 54px;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.style-preview .sp-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+}
+
+.style-preview .sp-win {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    width: 50px;
+    height: 32px;
+    border-radius: 4px;
+}
+
+/* Preview: Glassmorphism */
+.glassmorphism-preview {
+    background: linear-gradient(135deg, #1a1a2e, #2d1b69);
+}
+
+.glassmorphism-preview .sp-bar {
+    background: rgba(15, 15, 30, 0.85);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glassmorphism-preview .sp-win {
+    background: rgba(25, 25, 45, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+}
+
+/* Preview: Liquid Glass */
+.liquid-preview {
+    background: linear-gradient(135deg, #0a1628, #1a2a4a);
+}
+
+.liquid-preview .sp-bar {
+    background: rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.liquid-preview .sp-win {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Preview: Neumorphism */
+.neumorphism-preview {
+    background: #2a2a3d;
+}
+
+.neumorphism-preview .sp-bar {
+    background: #252538;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.neumorphism-preview .sp-win {
+    background: #2a2a3d;
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.04);
+    border: none;
+}
+
+/* Preview: Acrylic */
+.acrylic-preview {
+    background: linear-gradient(135deg, #141420, #1e1e30);
+}
+
+.acrylic-preview .sp-bar {
+    background: rgba(20, 20, 32, 0.9);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.acrylic-preview .sp-win {
+    background: rgba(30, 30, 50, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Preview: Flat */
+.flat-preview {
+    background: #16161e;
+}
+
+.flat-preview .sp-bar {
+    background: #1e1e2a;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.flat-preview .sp-win {
+    background: #22222e;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ========================================
+   THEME: LIQUID GLASS
+   Apple-inspired, ultra-transparent refractive glass
+   ======================================== */
+body.theme-liquid-glass {
+    --bg-glass: rgba(255, 255, 255, 0.05);
+    --bg-glass-heavy: rgba(255, 255, 255, 0.07);
+    --bg-surface: rgba(255, 255, 255, 0.04);
+    --bg-hover: rgba(255, 255, 255, 0.08);
+    --bg-active: rgba(255, 255, 255, 0.12);
+    --border: rgba(255, 255, 255, 0.15);
+    --border-light: rgba(255, 255, 255, 0.2);
+    --blur: 32px;
+    --blur-heavy: 50px;
+    --radius: 18px;
+    --radius-lg: 24px;
+    --radius-sm: 12px;
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 0.5px rgba(255, 255, 255, 0.12);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(255, 255, 255, 0.15);
+    --shadow-window: 0 16px 50px rgba(0, 0, 0, 0.25), 0 0 0 0.5px rgba(255, 255, 255, 0.12);
+}
+
+body.theme-liquid-glass .window {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 18px;
+    box-shadow:
+        0 16px 50px rgba(0, 0, 0, 0.25),
+        0 0 0 0.5px rgba(255, 255, 255, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(30px) saturate(1.8);
+    -webkit-backdrop-filter: blur(30px) saturate(1.8);
+}
+
+body.theme-liquid-glass .window-titlebar {
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.theme-liquid-glass .window.focused {
+    box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.3),
+        0 0 0 0.5px rgba(255, 255, 255, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+body.theme-liquid-glass #taskbar {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(50px) saturate(1.8);
+    -webkit-backdrop-filter: blur(50px) saturate(1.8);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.15);
+}
+
+body.theme-liquid-glass #start-menu {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(50px) saturate(1.8);
+    -webkit-backdrop-filter: blur(50px) saturate(1.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+body.theme-liquid-glass #context-menu {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(40px) saturate(1.8);
+    -webkit-backdrop-filter: blur(40px) saturate(1.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+}
+
+body.theme-liquid-glass #calendar-popup,
+body.theme-liquid-glass .shutdown-dialog {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(50px) saturate(1.8);
+    -webkit-backdrop-filter: blur(50px) saturate(1.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+}
+
+body.theme-liquid-glass .desktop-icon .icon-img {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+}
+
+/* ========================================
+   THEME: NEUMORPHIC GLASS
+   Soft embossed glass look
+   ======================================== */
+body.theme-neumorphism {
+    --bg-glass: rgba(42, 42, 61, 0.6);
+    --bg-glass-heavy: rgba(37, 37, 56, 0.8);
+    --bg-surface: rgba(46, 46, 66, 0.5);
+    --bg-hover: rgba(255, 255, 255, 0.05);
+    --bg-active: rgba(255, 255, 255, 0.08);
+    --border: rgba(255, 255, 255, 0.05);
+    --border-light: rgba(255, 255, 255, 0.08);
+    --blur: 20px;
+    --blur-heavy: 30px;
+    --shadow: 6px 6px 16px rgba(0, 0, 0, 0.3), -6px -6px 16px rgba(255, 255, 255, 0.02);
+    --shadow-lg: 10px 10px 30px rgba(0, 0, 0, 0.4), -10px -10px 30px rgba(255, 255, 255, 0.03);
+    --shadow-window: 8px 8px 24px rgba(0, 0, 0, 0.4), -8px -8px 24px rgba(255, 255, 255, 0.025);
+}
+
+body.theme-neumorphism .window {
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+}
+
+body.theme-neumorphism .window-titlebar {
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+body.theme-neumorphism .window.focused {
+    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.5), -10px -10px 30px rgba(255, 255, 255, 0.04);
+}
+
+body.theme-neumorphism #taskbar {
+    background: #252538;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-top: none;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+body.theme-neumorphism #start-btn,
+body.theme-neumorphism .taskbar-app {
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3), -3px -3px 8px rgba(255, 255, 255, 0.025);
+    border-radius: 10px;
+}
+
+body.theme-neumorphism #start-btn:hover,
+body.theme-neumorphism .taskbar-app:hover {
+    box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.3), inset -3px -3px 8px rgba(255, 255, 255, 0.025);
+}
+
+body.theme-neumorphism #start-menu {
+    background: #2a2a3d;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.5), -10px -10px 30px rgba(255, 255, 255, 0.04);
+}
+
+body.theme-neumorphism #context-menu {
+    background: #2a2a3d;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.4), -6px -6px 16px rgba(255, 255, 255, 0.03);
+}
+
+body.theme-neumorphism #calendar-popup,
+body.theme-neumorphism .shutdown-dialog {
+    background: #2a2a3d;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.5), -10px -10px 30px rgba(255, 255, 255, 0.04);
+}
+
+body.theme-neumorphism .desktop-icon .icon-img {
+    background: #2a2a3d;
+    border: none;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.35), -4px -4px 10px rgba(255, 255, 255, 0.03);
+}
+
+body.theme-neumorphism .calc-btn {
+    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3), -3px -3px 8px rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    margin: 2px;
+}
+
+body.theme-neumorphism .calc-btn:active {
+    box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.3), inset -3px -3px 8px rgba(255, 255, 255, 0.02);
+}
+
+/* ========================================
+   THEME: ACRYLIC
+   Microsoft Fluent Design — noise over blur
+   ======================================== */
+body.theme-acrylic {
+    --bg-glass: rgba(30, 30, 50, 0.72);
+    --bg-glass-heavy: rgba(22, 22, 38, 0.88);
+    --bg-surface: rgba(25, 25, 42, 0.8);
+    --bg-hover: rgba(255, 255, 255, 0.05);
+    --bg-active: rgba(255, 255, 255, 0.08);
+    --border: rgba(255, 255, 255, 0.06);
+    --border-light: rgba(255, 255, 255, 0.1);
+    --blur: 24px;
+    --blur-heavy: 40px;
+    --radius: 8px;
+    --radius-lg: 10px;
+    --radius-sm: 6px;
+}
+
+body.theme-acrylic .window {
+    background: rgba(30, 30, 50, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+body.theme-acrylic .window::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 0;
+}
+
+body.theme-acrylic .window>* {
+    position: relative;
+    z-index: 1;
+}
+
+body.theme-acrylic .window-titlebar {
+    background: rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.theme-acrylic #taskbar {
+    background: rgba(22, 22, 38, 0.88);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+body.theme-acrylic #taskbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.035;
+    pointer-events: none;
+}
+
+body.theme-acrylic #start-menu {
+    background: rgba(22, 22, 38, 0.88);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+}
+
+body.theme-acrylic #context-menu {
+    background: rgba(22, 22, 38, 0.9);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+}
+
+body.theme-acrylic #calendar-popup,
+body.theme-acrylic .shutdown-dialog {
+    background: rgba(22, 22, 38, 0.88);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+}
+
+body.theme-acrylic .desktop-icon .icon-img {
+    background: rgba(30, 30, 50, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+}
+
+/* ========================================
+   THEME: FLAT GLASS
+   Minimalist transparent approach
+   ======================================== */
+body.theme-flat {
+    --bg-glass: rgba(30, 30, 42, 0.7);
+    --bg-glass-heavy: rgba(25, 25, 36, 0.85);
+    --bg-surface: rgba(34, 34, 48, 0.6);
+    --bg-hover: rgba(255, 255, 255, 0.06);
+    --bg-active: rgba(255, 255, 255, 0.1);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-light: rgba(255, 255, 255, 0.12);
+    --blur: 16px;
+    --blur-heavy: 24px;
+    --radius: 8px;
+    --radius-lg: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-window: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+body.theme-flat .window {
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+}
+
+body.theme-flat .window-titlebar {
+    background: #191924;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+body.theme-flat .window.focused {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.theme-flat #taskbar {
+    background: #141420;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+body.theme-flat #start-menu {
+    background: #1a1a26;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+}
+
+body.theme-flat #context-menu {
+    background: #1a1a26;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+}
+
+body.theme-flat #calendar-popup,
+body.theme-flat .shutdown-dialog {
+    background: #1a1a26;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+body.theme-flat .desktop-icon .icon-img {
+    background: #1e1e2a;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+}

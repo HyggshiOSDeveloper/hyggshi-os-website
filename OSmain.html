@@ -1,2580 +1,764 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hyggshi OS Web Edition</title>
-  <style>
-    /* --- Reset & Base --- */
-    * { box-sizing: border-box; }
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif;
-      color: #e6e6e6;
-      user-select: none;
-      background: #000;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overflow: hidden;
-      /* Performance optimizations */
-      transform: translateZ(0);
-      backface-visibility: hidden;
-      perspective: 1000px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web OS</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/desktop.css">
+    <link rel="stylesheet" href="css/window.css">
+    <link rel="stylesheet" href="css/apps-core.css">
+    <link rel="stylesheet" href="css/apps-media.css">
+    <link rel="stylesheet" href="css/apps-chat.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
 
-    /* Modern scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.05);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.2);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255,255,255,0.3);
-    }
+<body>
 
-    /* --- Desktop --- */
-    .desktop {
-      position: relative;
-      height: 100%;
-      width: 100%;
-      background:
-        radial-gradient(1200px 800px at 20% 0%, rgba(80,120,255,0.18), rgba(0,0,0,0) 60%),
-        radial-gradient(1000px 700px at 80% 100%, rgba(255,120,200,0.12), rgba(0,0,0,0) 60%),
-        radial-gradient(800px 600px at 50% 50%, rgba(120,80,255,0.08), rgba(0,0,0,0) 50%),
-        url('Resources/background.png') center/cover no-repeat fixed;
-      overflow: hidden;
-      backdrop-filter: blur(0.5px);
-      /* Performance optimizations */
-      transform: translateZ(0);
-      will-change: auto;
-    }
-
-    /* Optimized background particles - reduced for performance */
-    .desktop::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: 
-        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.08), transparent),
-        radial-gradient(2px 2px at 160px 80px, rgba(255,255,255,0.06), transparent);
-      background-repeat: repeat;
-      background-size: 300px 200px;
-      animation: float 30s ease-in-out infinite;
-      pointer-events: none;
-      will-change: transform;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-5px); }
-    }
-
-    /* --- Desktop icons --- */
-    .desktop-icons {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      display: grid;
-      grid-template-columns: repeat(1, 88px);
-      gap: 12px 16px;
-      padding-bottom: 64px;
-      z-index: 10;
-    }
-    .icon {
-      width: 88px;
-      padding: 10px 8px;
-      text-align: center;
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
-      backdrop-filter: blur(6px) saturate(120%);
-      transition: transform 150ms ease-out, box-shadow 150ms ease-out;
-      will-change: transform, box-shadow;
-      cursor: default;
-      position: relative;
-      overflow: hidden;
-    }
-    .icon::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-      transition: left 0.3s ease-out;
-      will-change: left;
-    }
-    .icon:hover::before {
-      left: 100%;
-    }
-    .icon:hover { 
-      background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08)); 
-      box-shadow: 0 10px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
-      transform: translateY(-1px);
-    }
-    .icon:active { transform: scale(0.96) translateY(0px); }
-    .icon img {
-      display: block;
-      width: 36px;
-      height: 36px;
-      margin: 0 auto 8px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-      transition: transform 200ms ease;
-    }
-    .icon:hover img {
-      transform: scale(1.05);
-    }
-    .icon .label {
-      font-size: 12px;
-      line-height: 1.2;
-      color: #f2f2f2;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
-      white-space: normal;
-      font-weight: 500;
-    }
-
-    /* --- Windows --- */
-    .window {
-      position: absolute;
-      min-width: 360px;
-      min-height: 260px;
-      max-width: calc(100% - 24px);
-      max-height: calc(100% - 88px);
-      background: linear-gradient(180deg, rgba(32,32,40,0.92), rgba(20,20,28,0.88));
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.1) inset;
-      backdrop-filter: blur(8px) saturate(120%);
-      transition: transform 150ms ease-out, box-shadow 150ms ease-out;
-      will-change: transform, box-shadow;
-    }
-    .window.hidden { display: none; }
-    .window.minimized { display: none; }
-    .window.active { 
-      outline: 2px solid rgba(112, 160, 255, 0.6); 
-      box-shadow: 0 24px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(112,160,255,0.3) inset;
-      transform: scale(1.001);
-    }
-    .window.dragging {
-      opacity: 0.95;
-      box-shadow: 0 30px 80px rgba(80,120,255,0.3), 0 0 0 2px #70a0ff inset;
-      transition: none;
-      /* Performance optimizations for dragging */
-      will-change: transform;
-      transform: translateZ(0);
-    }
-
-    .titlebar {
-      height: 42px;
-      display: flex;
-      align-items: center;
-      padding: 0 12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
-      cursor: move;
-      gap: 10px;
-      box-shadow: inset 0 -1px 0 rgba(0,0,0,0.4);
-      position: relative;
-    }
-    .titlebar::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    }
-    .titlebar .traffic {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .btn {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.5);
-      display: inline-block;
-      cursor: pointer;
-      transition: all 150ms ease;
-      position: relative;
-    }
-    .btn:hover { 
-      filter: brightness(1.1); 
-      box-shadow: 0 0 0 2px rgba(255,255,255,0.2) inset;
-      transform: scale(1.1);
-    }
-    .btn:active { transform: scale(0.95); }
-    .btn-close { background: linear-gradient(135deg, #ff5f57, #ff4444); }
-    .btn-min   { background: linear-gradient(135deg, #febc2e, #ffb300); }
-    .btn-max   { background: linear-gradient(135deg, #28c840, #22a836); }
-    .titlebar .title {
-      margin-left: 8px;
-      font-weight: 600;
-      color: #fff;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-      font-size: 14px;
-      letter-spacing: 0.3px;
-    }
-    .titlebar .spacer { flex: 1; }
-
-    .content {
-      height: calc(100% - 42px);
-      background: linear-gradient(180deg, rgba(14,14,20,0.6), rgba(12,12,18,0.4));
-      padding: 12px;
-      overflow: auto;
-      user-select: text;
-      position: relative;
-    }
-    .content::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-    }
-
-    /* Notes app */
-    .notes-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
-    .notes-toolbar input[type="text"] {
-      flex: 1;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: #fff;
-      padding: 8px 10px;
-      border-radius: 6px;
-    }
-    .notes-toolbar button {
-      background: #2b76ff;
-      border: none;
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .notes-textarea {
-      width: 100%;
-      height: calc(100% - 48px);
-      resize: none;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.16);
-      color: #f8f8f8;
-      padding: 10px;
-      border-radius: 8px;
-      outline: none;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
-
-    /* Browser app */
-    .browser-bar { display: flex; gap: 8px; margin-bottom: 8px; }
-    .browser-bar input[type="text"] {
-      flex: 1;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: #fff;
-      padding: 8px 10px;
-      border-radius: 6px;
-    }
-    .browser-bar button {
-      background: #2b76ff;
-      border: none;
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .browser-frame {
-      width: 100%;
-      height: calc(100% - 48px);
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 10px;
-      background: radial-gradient(600px 400px at 50% 0%, rgba(80,120,255,0.05), transparent), #0e0e12;
-    }
-
-    /* --- Taskbar --- */
-    .taskbar {
-      position: absolute;
-      left: 0; right: 0; bottom: 0;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      background: rgba(20,20,20,0.95);
-      border-top: 1px solid rgba(255,255,255,0.08);
-      padding: 0 6px;
-      z-index: 1000;
-    }
-    .taskbar::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    }
-    
-    /* Taskbar apps */
-    .apps {
-      display: flex;
-      gap: 4px;
-      flex: 1;
-    }
-    .task-btn {
-      min-width: 120px;
-      padding: 10px 12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.06));
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 10px;
-      color: #f2f2f2;
-      cursor: pointer;
-      text-align: left;
-      transition: transform 150ms ease-out, box-shadow 150ms ease-out;
-      will-change: transform, box-shadow;
-      font-weight: 500;
-      position: relative;
-      overflow: hidden;
-    }
-    .task-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-      transition: left 0.4s;
-    }
-    .task-btn:hover::before {
-      left: 100%;
-    }
-    .task-btn:hover { 
-      background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08)); 
-      box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-      transform: translateY(-1px);
-    }
-    .task-btn.active { 
-      outline: 2px solid rgba(112,160,255,0.7); 
-      box-shadow: 0 0 0 1px rgba(112,160,255,0.4) inset;
-      background: linear-gradient(180deg, rgba(112,160,255,0.15), rgba(112,160,255,0.08));
-    }
-    
-    /* Clock */
-    .clock {
-      width: 70px;
-      padding: 0 0 0 8px;
-      color: #fff;
-      font-size: 16px;
-      text-align: right;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      background: none;
-      border-radius: 6px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: center;
-      line-height: 1.1;
-    }
-    .taskbar .clock {
-      margin-left: auto;
-      padding-left: 0;
-      font-size: 16px;
-      color: #fff;
-      background: none;
-      position: relative;
-      z-index: 1;
-      width: 70px;
-      height: 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: center;
-    }
-    
-    /* --- Start button & menu --- */
-    /* Start button */
-    .start-btn {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-    }
-    .start-btn svg {
-      width: 18px;
-      height: 18px;
-      fill: white;
-    }
-    .start-btn:hover {
-      background: rgba(255,255,255,0.1);
-      border-radius: 4px;
-    }
-
-    .start-menu {
-      position: absolute;
-      left: 8px;
-      bottom: 56px;
-      width: 320px;
-      background: linear-gradient(180deg, rgba(24,24,32,0.98), rgba(16,16,24,0.95));
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-      padding: 12px;
-      backdrop-filter: blur(12px) saturate(140%);
-      z-index: 10000;
-      transform: translateY(10px);
-      opacity: 0;
-      visibility: hidden;
-      transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms cubic-bezier(0.4, 0, 0.2, 1), visibility 200ms cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: none;
-    }
-    .start-menu.show { 
-      transform: translateY(0);
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-    .start-menu::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    }
-    .start-section {
-      margin-bottom: 8px;
-    }
-    .start-section-title {
-      font-size: 11px;
-      color: rgba(255,255,255,0.6);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
-      padding: 0 4px;
-      font-weight: 600;
-    }
-    .start-item { 
-      padding: 12px 16px; 
-      border-radius: 10px; 
-      cursor: pointer; 
-      color: #f0f0f0; 
-      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      position: relative;
-      overflow: hidden;
-    }
-    .start-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-      transition: left 0.4s;
-    }
-    .start-item:hover::before {
-      left: 100%;
-    }
-    .start-item:hover { 
-      background: rgba(255,255,255,0.12);
-      transform: translateX(4px);
-    }
-    .start-item:active {
-      transform: translateX(2px) scale(0.98);
-    }
-    .start-item:focus {
-      outline: 2px solid rgba(112,160,255,0.6);
-      outline-offset: -2px;
-      background: rgba(255,255,255,0.15);
-    }
-    .start-item-icon {
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #9ec5ff;
-      flex-shrink: 0;
-    }
-    .start-item-text {
-      flex: 1;
-      font-weight: 500;
-    }
-    .start-item-shortcut {
-      font-size: 11px;
-      color: rgba(255,255,255,0.5);
-      background: rgba(255,255,255,0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-    }
-    .start-divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-      margin: 8px 4px;
-    }
-    
-    .start-search {
-      margin-bottom: 12px;
-      padding: 0 4px;
-    }
-    .start-search input {
-      width: 100%;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: #fff;
-      padding: 10px 12px;
-      border-radius: 8px;
-      outline: none;
-      transition: all 200ms ease;
-      font-family: inherit;
-      font-size: 14px;
-    }
-    .start-search input:focus {
-      border-color: rgba(112,160,255,0.6);
-      box-shadow: 0 0 0 2px rgba(112,160,255,0.2);
-      background: rgba(255,255,255,0.12);
-    }
-    .start-search input::placeholder {
-      color: rgba(255,255,255,0.5);
-    }
-    
-    .start-item.hidden {
-      display: none;
-    }
-    
-    /* --- Context menu --- */
-    .context-menu { 
-      position: absolute; 
-      min-width: 200px; 
-      background: linear-gradient(180deg, rgba(20,20,26,0.98), rgba(16,16,22,0.96)); 
-      border: 1px solid rgba(255,255,255,0.16); 
-      border-radius: 10px; 
-      padding: 6px; 
-      display: none; 
-      z-index: 20000; 
-      backdrop-filter: blur(10px) saturate(130%); 
-      box-shadow: 0 12px 28px rgba(0,0,0,0.55); 
-    }
-    .context-menu.show { display: block; }
-    .ctx-item { 
-      padding: 8px 10px; 
-      border-radius: 6px; 
-      cursor: pointer; 
-      color: #eee; 
-      transition: background 140ms ease; 
-    }
-    .ctx-item:hover { background: rgba(255,255,255,0.12); }
-    
-    /* --- Resize handles --- */
-    .resize { position: absolute; }
-    .resize.n { top: -3px; left: 0; right: 0; height: 6px; cursor: n-resize; }
-    .resize.s { bottom: -3px; left: 0; right: 0; height: 6px; cursor: s-resize; }
-    .resize.e { right: -3px; top: 0; bottom: 0; width: 6px; cursor: e-resize; }
-    .resize.w { left: -3px; top: 0; bottom: 0; width: 6px; cursor: w-resize; }
-    .resize.ne { right: -3px; top: -3px; width: 10px; height: 10px; cursor: ne-resize; }
-    .resize.nw { left: -3px; top: -3px; width: 10px; height: 10px; cursor: nw-resize; }
-    .resize.se { right: -3px; bottom: -3px; width: 10px; height: 10px; cursor: se-resize; }
-    .resize.sw { left: -3px; bottom: -3px; width: 10px; height: 10px; cursor: sw-resize; }
-
-    /* --- File Manager --- */
-    .fm-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-    .fm-toolbar button {
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
-      border: 1px solid rgba(255,255,255,0.18);
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 140ms ease, box-shadow 140ms ease;
-    }
-    .fm-toolbar button:hover { background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08)); box-shadow: 0 6px 12px rgba(0,0,0,0.35); }
-    .fm-breadcrumb { margin-left: auto; color: #ddd; font-size: 13px; }
-    .fm-breadcrumb span { cursor: pointer; color: #9ec5ff; }
-    .fm-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 10px;
-      user-select: none;
-    }
-    .fm-item {
-      padding: 10px;
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
-      cursor: default;
-      text-align: center;
-      transition: transform 120ms ease, background 140ms ease, box-shadow 140ms ease;
-    }
-    .fm-item:hover { background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06)); box-shadow: 0 8px 16px rgba(0,0,0,0.35); transform: translateY(-1px); }
-    .fm-item.selected { outline: 2px solid #70a0ff; box-shadow: 0 0 0 1px rgba(112,160,255,0.35) inset; }
-    .fm-item img { width: 36px; height: 36px; display: block; margin: 4px auto 8px; }
-    .fm-name { font-size: 12px; color: #f2f2f2; word-break: break-word; }
-
-    /* --- Activation watermark --- */
-    .watermark {
-      position: absolute;
-      right: 16px;
-      bottom: 64px;
-      color: rgba(255,255,255,0.6);
-      text-align: right;
-      font-size: 14px;
-      line-height: 1.5;
-      pointer-events: none;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
-      padding: 8px 12px;
-      border-radius: 8px;
-      background: rgba(0,0,0,0.2);
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .watermark.hidden { display: none; }
-
-    /* --- Notification system --- */
-    #notification-container {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      z-index: 10000;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: none;
-    }
-    
-    .notification {
-      position: relative;
-      background: linear-gradient(180deg, rgba(32,32,40,0.95), rgba(20,20,28,0.92));
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 12px;
-      padding: 16px;
-      color: #fff;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
-      backdrop-filter: blur(12px);
-      transform: translateX(400px);
-      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
-      max-width: 300px;
-      pointer-events: auto;
-    }
-    .notification.show {
-      transform: translateX(0);
-    }
-    .notification.success {
-      border-left: 4px solid #28c840;
-    }
-    .notification.error {
-      border-left: 4px solid #ff5f57;
-    }
-    .notification.info {
-      border-left: 4px solid #2b76ff;
-    }
-
-    /* --- Loading spinner --- */
-    .loading {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s ease-in-out infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* --- Modern input styles --- */
-    input[type="text"], input[type="url"], textarea, select {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: #fff;
-      padding: 10px 12px;
-      border-radius: 8px;
-      outline: none;
-      transition: all 200ms ease;
-      font-family: inherit;
-    }
-    input[type="text"]:focus, input[type="url"]:focus, textarea:focus, select:focus {
-      border-color: rgba(112,160,255,0.6);
-      box-shadow: 0 0 0 2px rgba(112,160,255,0.2);
-      background: rgba(255,255,255,0.12);
-    }
-
-    /* --- Modern button styles --- */
-    button {
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
-      border: 1px solid rgba(255,255,255,0.18);
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-      font-family: inherit;
-      font-weight: 500;
-    }
-    button:hover {
-      background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    button:active {
-      transform: translateY(0px);
-    }
-    button.primary {
-      background: linear-gradient(180deg, #2b76ff, #1e5fd9);
-      border-color: #2b76ff;
-    }
-    button.primary:hover {
-      background: linear-gradient(180deg, #3b86ff, #2b76ff);
-      box-shadow: 0 4px 12px rgba(43,118,255,0.4);
-    }
-    button.success {
-      background: linear-gradient(180deg, #28c840, #1ea832);
-      border-color: #28c840;
-    }
-    button.danger {
-      background: linear-gradient(180deg, #ff5f57, #e54d45);
-      border-color: #ff5f57;
-    }
-
-    /* Override specific app button styles */
-    .notes-toolbar button,
-    .browser-bar button,
-    .fm-toolbar button {
-      background: linear-gradient(180deg, #2b76ff, #1e5fd9);
-      border-color: #2b76ff;
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-weight: 500;
-    }
-    .notes-toolbar button:hover,
-    .browser-bar button:hover,
-    .fm-toolbar button:hover {
-      background: linear-gradient(180deg, #3b86ff, #2b76ff);
-      box-shadow: 0 4px 12px rgba(43,118,255,0.4);
-    }
-
-    /* Navigation buttons for browser */
-    .nav-btn {
-      background: rgba(255,255,255,0.08) !important;
-      border: 1px solid rgba(255,255,255,0.18) !important;
-      color: #fff !important;
-      padding: 0 10px !important;
-      font-size: 1.2em !important;
-      border-radius: 6px !important;
-      min-width: 36px !important;
-    }
-    .nav-btn:hover {
-      background: rgba(255,255,255,0.12) !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-    }
-
-    /* --- Power overlay --- */
-    .power-overlay {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      color: #fff;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      z-index: 50000;
-    }
-    .power-overlay.show { display: flex; }
-    .power-overlay .msg { opacity: 0.9; font-size: 18px; margin-top: 8px; }
-
-    /* --- Calculator Window specific styles --- */
-    #win-calculator .calc-op {
-      background: #1e2c4a;
-      color: #9ec5ff;
-      font-weight: bold;
-    }
-    #win-calculator .calc-func {
-      background: #2b2b2b;
-      color: #ffb4b4;
-      font-weight: bold;
-    }
-    #win-calculator button {
-      font-size: 1.2em;
-      padding: 14px 0;
-      border-radius: 8px;
-      border: none;
-      background: rgba(255,255,255,0.08);
-      color: #fff;
-      cursor: pointer;
-      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-      font-family: inherit;
-    }
-    #win-calculator button:hover {
-      background: rgba(80,120,255,0.18);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    #win-calculator button:active {
-      background: rgba(80,120,255,0.28);
-      transform: translateY(0px);
-    }
-
-    .window.dragging {
-      opacity: 0.97;
-      box-shadow: 0 24px 60px rgba(80,120,255,0.25), 0 0 0 2px #70a0ff inset;
-      transition: none;
-    }
-  </style>
- </head>
- <body>
-  <div class="desktop" id="desktop">
-    <div class="desktop-icons">
-      <div class="icon" data-launch="notes">
-        <img alt="Notes" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E"/>
-        <div class="label">Notes</div>
-      </div>
-      <div class="icon" data-launch="browser">
-        <img alt="Browser" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2C6.477 2 2 6.477 2 12c0 5.522 4.477 10 10 10s10-4.478 10-10C22 6.477 17.523 2 12 2zm6.93 6H15.9a15.22 15.22 0 0 0-1.308-3.244A8.025 8.025 0 0 1 18.93 8zM12 4.06c.72.96 1.34 2.215 1.78 3.94H10.22C10.66 6.275 11.28 5.02 12 4.06zM4.07 8A8.025 8.025 0 0 1 9.408 4.756 15.22 15.22 0 0 0 8.1 8H4.07zM4.06 12c0-.68.05-1.34.146-1.98H8.06c-.04.645-.06 1.31-.06 1.98 0 .67.02 1.335.06 1.98H4.206A8.96 8.96 0 0 1 4.06 12zM5.07 16h3.03c.28 1.134.64 2.14 1.004 2.88A8.015 8.015 0 0 1 5.07 16zM10.22 16h3.56c-.44 1.725-1.06 2.98-1.78 3.94-.72-.96-1.34-2.215-1.78-3.94zM14.896 18.88c.364-.74.725-1.746 1.004-2.88h3.03a8.015 8.015 0 0 1-4.034 2.88zM19.794 13.98h-3.908c.04-.645.06-1.31.06-1.98 0-.67-.02-1.335-.06-1.98h3.908c.096.64.146 1.3.146 1.98 0 .68-.05 1.34-.146 1.98z'/%3E%3C/svg%3E"/>
-        <div class="label">Browser</div>
-      </div>
-      <div class="icon" data-launch="files">
-        <img alt="Files" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M10 4H4c-1.1 0-2 .9-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z'/%3E%3C/svg%3E"/>
-        <div class="label">Files</div>
-      </div>
-      <div class="icon" data-launch="imageviewer">
-        <img alt="Image Viewer" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zm-2 0H5V5h14zm-7-3l2.03 2.71a1 1 0 0 0 1.58 0L19 13.5V17H5v-1.5l4.5-6z'/%3E%3C/svg%3E"/>
-        <div class="label">Image Viewer</div>
-      </div>
-      <div class="icon" data-launch="calculator">
-        <img alt="Calculator" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Crect x='4' y='2' width='16' height='20' rx='3'/%3E%3Crect x='7' y='6' width='10' height='2' rx='1' fill='black'/%3E%3Ccircle cx='8.5' cy='11.5' r='1.5' fill='black'/%3E%3Ccircle cx='12' cy='11.5' r='1.5' fill='black'/%3E%3Ccircle cx='15.5' cy='11.5' r='1.5' fill='black'/%3E%3Ccircle cx='8.5' cy='15.5' r='1.5' fill='black'/%3E%3Ccircle cx='12' cy='15.5' r='1.5' fill='black'/%3E%3Ccircle cx='15.5' cy='15.5' r='1.5' fill='black'/%3E%3C/svg%3E"/>
-        <div class="label">Calculator</div>
-      </div>
-      <div class="icon" data-launch="bin">
-        <img alt="Bin" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M3 6h18v2H3V6zm2 3h14l-1.5 12.5a2 2 0 01-2 1.5H8.5a2 2 0 01-2-1.5L5 9zm5 2v7h2v-7h-2zm4 0v7h2v-7h-2z'/%3E%3C/svg%3E"/>
-        <div class="label">Recycle Bin</div>
-      </div>
-      <div class="icon" data-launch="aichat">
-        <img alt="AI Chat" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'/%3E%3Ccircle cx='8.5' cy='10.5' r='1.5'/%3E%3Ccircle cx='15.5' cy='10.5' r='1.5'/%3E%3Cpath d='M16 14c-1.1 1-2.5 1.5-4 1.5s-2.9-.5-4-1.5'/%3E%3C/svg%3E" style="background:#fff;border-radius:50%;padding:2px;"/>
-        <div class="label">AI Chat</div>
-      </div>
+    <!-- ===== BOOT SCREEN ===== -->
+    <div id="boot-screen">
+        <div class="boot-logo">
+            <div class="boot-spinner"></div>
+            <span class="boot-text">Web OS</span>
+        </div>
     </div>
 
-    <!-- Notes Window -->
-    <div class="window hidden" id="win-notes" style="left: 60px; top: 80px; width: 560px; height: 380px;" data-app="notes">
-      <div class="titlebar" data-drag-handle>
-        <div class="traffic">
-          <span class="btn btn-close" data-action="close"></span>
-          <span class="btn btn-min" data-action="minimize"></span>
-          <span class="btn btn-max" data-action="maximize"></span>
+    <!-- ===== LOCK SCREEN ===== -->
+    <div id="lock-screen" class="hidden">
+        <div class="lock-overlay-content">
+            <div class="lock-time" id="lock-time">12:00</div>
+            <div class="lock-date" id="lock-date">Friday, February 20</div>
+
+            <div class="lock-login-box" id="lock-login-box">
+                <div class="lock-users-list" id="lock-users-list">
+                    <!-- Dynamic users will be added here -->
+                    <div class="lock-user-item active" onclick="selectUser('user')">
+                        <div class="lock-avatar"><span class="material-icons-round">account_circle</span></div>
+                        <span>User</span>
+                    </div>
+                </div>
+
+                <div class="lock-input-group">
+                    <input type="password" id="lock-password" placeholder="Password" autocomplete="off">
+                    <button id="lock-unlock-btn" onclick="unlockOS()">
+                        <span class="material-icons-round">arrow_forward</span>
+                    </button>
+                </div>
+
+                <div class="lock-extra-actions">
+                    <span class="lock-link" onclick="showRecoveryInput()">Forgot password?</span>
+                </div>
+            </div>
+
+            <div id="lock-recovery-box" class="lock-login-box hidden">
+                <div class="lock-username">Recovery Mode</div>
+                <div class="lock-hint">Enter your 16-character recovery key</div>
+                <div class="lock-input-group">
+                    <input type="text" id="lock-recovery-key" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="19">
+                    <button id="lock-recovery-btn" onclick="unlockWithRecovery()">
+                        <span class="material-icons-round">vpn_key</span>
+                    </button>
+                </div>
+                <div class="lock-extra-actions">
+                    <span class="lock-link" onclick="hideRecoveryInput()">Back to login</span>
+                </div>
+            </div>
+
+            <div class="lock-hint" id="lock-hint">Click or press any key to unlock</div>
         </div>
-        <div class="title">Notes</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="content">
-        <div class="notes-toolbar">
-          <input id="notes-title" type="text" placeholder="Note title..."/>
-          <button id="notes-save" class="primary">Save</button>
-          <span id="notes-file-indicator" style="margin-left:auto; color:#9ec5ff; display:none;"></span>
-          <button id="notes-save-file" class="success" style="display:none;">Save to file</button>
-        </div>
-        <textarea id="notes-body" class="notes-textarea" placeholder="Write your note here..."></textarea>
-      </div>
     </div>
 
-    <!-- Browser Window -->
-    <div class="window hidden" id="win-browser" style="left: 200px; top: 140px; width: 900px; height: 600px;" data-app="browser">
-      <div class="titlebar" data-drag-handle>
-        <div class="traffic">
-          <span class="btn btn-close" data-action="close"></span>
-          <span class="btn btn-min" data-action="minimize"></span>
-          <span class="btn btn-max" data-action="maximize"></span>
+    <!-- ===== DESKTOP ===== -->
+    <div id="desktop">
+        <!-- Desktop Icons -->
+        <div id="desktop-icons">
+            <div class="desktop-icon" data-app="file-manager" ondblclick="openApp('file-manager')">
+                <div class="icon-img"><span class="material-icons-round">folder</span></div>
+                <span class="icon-label">Files</span>
+            </div>
+            <div class="desktop-icon" data-app="terminal" ondblclick="openApp('terminal')">
+                <div class="icon-img"><span class="material-icons-round">terminal</span></div>
+                <span class="icon-label">Terminal</span>
+            </div>
+            <div class="desktop-icon" data-app="text-editor" ondblclick="openApp('text-editor')">
+                <div class="icon-img"><span class="material-icons-round">edit_note</span></div>
+                <span class="icon-label">Editor</span>
+            </div>
+            <div class="desktop-icon" data-app="browser" ondblclick="openApp('browser')">
+                <div class="icon-img"><span class="material-icons-round">public</span></div>
+                <span class="icon-label">Browser</span>
+            </div>
+            <div class="desktop-icon" data-app="calculator" ondblclick="openApp('calculator')">
+                <div class="icon-img"><span class="material-icons-round">calculate</span></div>
+                <span class="icon-label">Calculator</span>
+            </div>
+            <div class="desktop-icon" data-app="settings" ondblclick="openApp('settings')">
+                <div class="icon-img"><span class="material-icons-round">settings</span></div>
+                <span class="icon-label">Settings</span>
+            </div>
+            <div class="desktop-icon" data-app="image-viewer" ondblclick="openApp('image-viewer')">
+                <div class="icon-img"><span class="material-icons-round">image</span></div>
+                <span class="icon-label">Photos</span>
+            </div>
+            <div class="desktop-icon" data-app="music-player" ondblclick="openApp('music-player')">
+                <div class="icon-img"><span class="material-icons-round">headphones</span></div>
+                <span class="icon-label">Music</span>
+            </div>
+            <div class="desktop-icon" data-app="chat-ai" ondblclick="openApp('chat-ai')">
+                <div class="icon-img" style="background: linear-gradient(135deg, #4285f4, #34a853)"><span
+                        class="material-icons-round" style="color: white">psychology</span></div>
+                <span class="icon-label">Chat AI</span>
+            </div>
+            <div class="desktop-icon" data-app="video-player" ondblclick="openApp('video-player')">
+                <div class="icon-img"><span class="material-icons-round">movie</span></div>
+                <span class="icon-label">Videos</span>
+            </div>
         </div>
-        <div class="title">Browser</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="content" style="display:flex; flex-direction:column; height:calc(100% - 38px); padding:0;">
-        <div class="browser-bar" style="display:flex; gap:8px; padding:10px;">
-          <button id="browser-back" title="Quay lại" class="nav-btn">←</button>
-          <button id="browser-forward" title="Tiến" class="nav-btn">→</button>
-          <input id="browser-url" type="text" placeholder="Nhập URL hoặc tìm kiếm..." style="flex:1;">
-          <button id="browser-go" class="primary">Đi</button>
-          <button id="browser-refresh" title="Tải lại" class="nav-btn">⟳</button>
-          <button id="browser-external" title="Mở trong tab mới" class="nav-btn">↗</button>
+
+        <!-- Windows Container -->
+        <div id="windows-container"></div>
+
+        <!-- Context Menu -->
+        <div id="context-menu" class="hidden">
+            <div class="ctx-item" onclick="ctxRefresh()"><span class="material-icons-round">refresh</span> Refresh</div>
+            <div class="ctx-separator"></div>
+            <div class="ctx-item" onclick="ctxNewFolder()"><span class="material-icons-round">create_new_folder</span>
+                New Folder</div>
+            <div class="ctx-item" onclick="openApp('settings')"><span
+                    class="material-icons-round">display_settings</span> Display Settings</div>
+            <div class="ctx-separator"></div>
+            <div class="ctx-item" onclick="openApp('about')"><span class="material-icons-round">info</span> About Web OS
+            </div>
         </div>
-        <iframe id="browser-frame" class="browser-frame" src="about:blank" referrerpolicy="no-referrer" sandbox="allow-scripts" style="flex:1; border:0; border-radius:0 0 10px 10px; background:#0e0e12;"></iframe>
-        <div id="browser-error" style="display:none; flex:1; align-items:center; justify-content:center; color:#ffb4b4; font-size:1.2em; text-align:center; background:#18181c; border-radius:0 0 10px 10px; position:absolute; left:0; right:0; bottom:0; top:68px; z-index:10;">
-          Không thể tải trang này trong trình duyệt web OS.<br>
-          Nhiều trang web hiện đại chặn nhúng trong iframe.<br>
-          Hãy thử một trang web khác hoặc tìm kiếm với DuckDuckGo Lite.
-        </div>
-      </div>
     </div>
 
-    <!-- Image Viewer Window -->
-    <div class="window hidden" id="win-imageviewer" style="left: 180px; top: 100px; width: 520px; height: 400px;" data-app="imageviewer">
-      <div class="titlebar" data-drag-handle>
-        <div class="traffic">
-          <span class="btn btn-close" data-action="close"></span>
-          <span class="btn btn-min" data-action="minimize"></span>
-          <span class="btn btn-max" data-action="maximize"></span>
+    <!-- ===== START MENU ===== -->
+    <div id="start-menu" class="hidden">
+        <div class="start-header">
+            <input type="text" id="start-search" placeholder="Search apps..." autocomplete="off">
         </div>
-        <div class="title">Image Viewer</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:calc(100% - 38px);">
-        <input type="file" id="imgv-upload" accept="image/*" style="margin-bottom:12px;">
-        <img id="imgv-img" src="" alt="Chưa có ảnh" style="max-width:100%; max-height:300px; border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,0.4); display:none;">
-        <div id="imgv-filename" style="margin-top:8px; color:#9ec5ff;"></div>
-      </div>
+        <div class="start-apps" id="start-apps">
+            <div class="start-app-item" data-app="file-manager" onclick="openApp('file-manager')">
+                <span class="material-icons-round">folder</span><span>Files</span>
+            </div>
+            <div class="start-app-item" data-app="terminal" onclick="openApp('terminal')">
+                <span class="material-icons-round">terminal</span><span>Terminal</span>
+            </div>
+            <div class="start-app-item" data-app="text-editor" onclick="openApp('text-editor')">
+                <span class="material-icons-round">edit_note</span><span>Text Editor</span>
+            </div>
+            <div class="start-app-item" data-app="browser" onclick="openApp('browser')">
+                <span class="material-icons-round">public</span><span>Browser</span>
+            </div>
+            <div class="start-app-item" data-app="calculator" onclick="openApp('calculator')">
+                <span class="material-icons-round">calculate</span><span>Calculator</span>
+            </div>
+            <div class="start-app-item" data-app="settings" onclick="openApp('settings')">
+                <span class="material-icons-round">settings</span><span>Settings</span>
+            </div>
+            <div class="start-app-item" data-app="image-viewer" onclick="openApp('image-viewer')">
+                <span class="material-icons-round">image</span><span>Photos</span>
+            </div>
+            <div class="start-app-item" data-app="music-player" onclick="openApp('music-player')">
+                <span class="material-icons-round">headphones</span><span>Music Player</span>
+            </div>
+            <div class="start-app-item" data-app="chat-ai" onclick="openApp('chat-ai')">
+                <span class="material-icons-round" style="color: #4285f4">psychology</span><span>Chat AI</span>
+            </div>
+            <div class="start-app-item" data-app="video-player" onclick="openApp('video-player')">
+                <span class="material-icons-round">movie</span><span>Video Player</span>
+            </div>
+            <div class="start-app-item" data-app="about" onclick="openApp('about')">
+                <span class="material-icons-round">info</span><span>About</span>
+            </div>
+        </div>
+        <div class="start-footer">
+            <div class="start-user" onclick="switchUser()" title="Switch User" style="cursor: pointer;">
+                <span class="material-icons-round">account_circle</span>
+                <span id="start-user-name">User</span>
+            </div>
+            <div class="start-power">
+                <div class="start-power-btn" onclick="lockOS()" title="Lock">
+                    <span class="material-icons-round">lock</span>
+                </div>
+                <div class="start-power-btn" onclick="showShutdownDialog()" title="Power">
+                    <span class="material-icons-round">power_settings_new</span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Calculator Window -->
-    <div class="window hidden" id="win-calculator" style="left: 320px; top: 160px; width: 340px; height: 480px;" data-app="calculator">
-      <div class="titlebar" data-drag-handle>
-        <div class="traffic">
-          <span class="btn btn-close" data-action="close"></span>
-          <span class="btn btn-min" data-action="minimize"></span>
-          <span class="btn btn-max" data-action="maximize"></span>
+    <!-- ===== TASKBAR ===== -->
+    <div id="taskbar">
+        <button id="start-btn" onclick="toggleStartMenu()">
+            <span class="material-icons-round">apps</span>
+        </button>
+        <div id="taskbar-apps"></div>
+        <div id="system-tray">
+            <div class="tray-icon" id="tray-wifi" title="Wi-Fi">
+                <span class="material-icons-round">wifi</span>
+            </div>
+            <div class="tray-icon" id="tray-volume" title="Volume" onclick="toggleVolume()">
+                <span class="material-icons-round">volume_up</span>
+            </div>
+            <div class="tray-icon" id="tray-battery" title="Battery">
+                <span class="material-icons-round">battery_full</span>
+            </div>
+            <div id="taskbar-clock" onclick="toggleCalendar()">
+                <div class="clock-time" id="clock-time">12:00</div>
+                <div class="clock-date" id="clock-date">2/20/2026</div>
+            </div>
         </div>
-        <div class="title">Calculator</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="content" style="display:flex; flex-direction:column; align-items:center; justify-content:flex-start; height:calc(100% - 38px); padding:18px 10px 10px 10px;">
-        <input id="calc-display" type="text" readonly style="width:100%; font-size:2.2em; text-align:right; margin-bottom:18px; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.18); color:#fff; padding:16px 12px; border-radius:10px; font-family: inherit;">
-        <div id="calc-buttons" style="width:100%; display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
-          <button data-calc="C" class="calc-func">C</button>
-          <button data-calc="(">(</button>
-          <button data-calc=")">)</button>
-          <button data-calc="/" class="calc-op">÷</button>
-          <button data-calc="7">7</button>
-          <button data-calc="8">8</button>
-          <button data-calc="9">9</button>
-          <button data-calc="*" class="calc-op">×</button>
-          <button data-calc="4">4</button>
-          <button data-calc="5">5</button>
-          <button data-calc="6">6</button>
-          <button data-calc="-" class="calc-op">−</button>
-          <button data-calc="1">1</button>
-          <button data-calc="2">2</button>
-          <button data-calc="3">3</button>
-          <button data-calc="+" class="calc-op">+</button>
-          <button data-calc="0" style="grid-column:span 2;">0</button>
-          <button data-calc=".">.</button>
-          <button data-calc="=" style="background:#2b76ff; color:#fff; font-weight:bold;">=</button>
-        </div>
-      </div>
     </div>
 
-    <!-- Bin Window -->
-    <div class="window hidden" id="win-bin" style="left: 180px; top: 120px; width: 420px; height: 340px;" data-app="bin">
-      <div class="titlebar" data-drag-handle>
-        <div class="traffic">
-          <span class="btn btn-close" data-action="close"></span>
-          <span class="btn btn-min" data-action="minimize"></span>
-          <span class="btn btn-max" data-action="maximize"></span>
+    <!-- ===== NOTIFICATION CENTER ===== -->
+    <div id="notification-center" class="hidden">
+        <div class="notif-header">Notifications</div>
+        <div class="notif-list" id="notif-list">
+            <div class="notif-empty">No new notifications</div>
         </div>
-        <div class="title">Thùng rác</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="content" id="bin-content" style="padding:18px;">
-        <div id="bin-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px;"></div>
-        <button id="bin-empty" class="danger" style="margin-top:18px;">Dọn sạch thùng rác</button>
-      </div>
     </div>
 
-    <!-- AI Chat Window -->
-    <div class="window hidden" id="win-aichat" style="left: 220px; top: 120px; width: 480px; height: 500px;" data-app="aichat">
-      <div class="titlebar" data-drag-handle>
-        <div class="traffic">
-          <span class="btn btn-close" data-action="close"></span>
-          <span class="btn btn-min" data-action="minimize"></span>
-          <span class="btn btn-max" data-action="maximize"></span>
-        </div>
-        <div class="title">AI Chat</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="content" style="display:flex; flex-direction:column; height:calc(100% - 38px);">
-        <div id="aichat-messages" style="flex:1; overflow:auto; background:rgba(255,255,255,0.03); border-radius:8px; margin-bottom:10px; padding:8px 4px; font-size:15px;">
-          <div style="margin:8px 0; color:#9ec5ff;">
-            <b>AI:</b> Xin chào! Tôi là trợ lý AI. Bạn có câu hỏi gì không?
-          </div>
-        </div>
-        <form id="aichat-form" style="display:flex; gap:8px;">
-          <input id="aichat-input" type="text" placeholder="Nhập câu hỏi..." autocomplete="off" style="flex:1;">
-          <button class="primary">Gửi</button>
-        </form>
-      </div>
+    <!-- ===== CALENDAR POPUP ===== -->
+    <div id="calendar-popup" class="hidden">
+        <div class="cal-month" id="cal-month">February 2026</div>
+        <div class="cal-grid" id="cal-grid"></div>
     </div>
 
-    <!-- File Manager Window -->
-    <div class="window hidden" id="win-files" style="left: 260px; top: 120px; width: 720px; height: 460px;" data-app="files">
-      <div class="titlebar" data-drag-handle>
-        <div class="traffic">
-          <span class="btn btn-close" data-action="close"></span>
-          <span class="btn btn-min" data-action="minimize"></span>
-          <span class="btn btn-max" data-action="maximize"></span>
+    <!-- ===== SHUTDOWN DIALOG ===== -->
+    <div id="shutdown-overlay" class="hidden">
+        <div class="shutdown-dialog">
+            <h3>Power</h3>
+            <div class="shutdown-options">
+                <button onclick="doShutdown('sleep')"><span class="material-icons-round">nightlight</span>Sleep</button>
+                <button onclick="doShutdown('restart')"><span
+                        class="material-icons-round">restart_alt</span>Restart</button>
+                <button onclick="doShutdown('shutdown')"><span
+                        class="material-icons-round">power_settings_new</span>Shut Down</button>
+            </div>
+            <button class="shutdown-cancel" onclick="hideShutdownDialog()">Cancel</button>
         </div>
-        <div class="title">Trình quản lý tập tin</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="content" id="files-content">
-        <div class="fm-toolbar">
-          <button id="fm-up" class="primary">Lên</button>
-          <button id="fm-new-folder" class="success">Thư mục mới</button>
-          <button id="fm-new-file" class="primary">Tập tin mới</button>
-          <button id="fm-rename" class="primary">Đổi tên</button>
-          <button id="fm-delete" class="danger">Xóa</button>
-          <label style="margin-left:8px;">
-            <input type="file" id="fm-upload" multiple style="display:none;">
-            <button id="fm-upload-btn" class="primary">Tải lên</button>
-          </label>
-          <div class="fm-breadcrumb" id="fm-breadcrumb"></div>
-        </div>
-        <div class="fm-list" id="fm-list"></div>
-      </div>
-      <!-- File Manager Context Menu -->
-      <div class="context-menu" id="fm-ctx">
-        <div class="ctx-item" data-action="open">Mở</div>
-        <div class="ctx-item" data-action="rename">Đổi tên</div>
-        <div class="ctx-item" data-action="delete">Xóa</div>
-        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 4px 2px;">
-        <div class="ctx-item" data-action="new-folder">Thư mục mới</div>
-        <div class="ctx-item" data-action="new-file">Tập tin mới</div>
-        <div class="ctx-item" data-action="upload">Tải lên...</div>
-      </div>
-      <div class="resize n"></div><div class="resize s"></div><div class="resize e"></div><div class="resize w"></div>
-      <div class="resize ne"></div><div class="resize nw"></div><div class="resize se"></div><div class="resize sw"></div>
     </div>
 
-    <!-- Settings Window -->
-    <div class="window hidden" id="win-settings" style="left: 140px; top: 120px; width: 520px; height: 360px;" data-app="settings">
-      <div class="titlebar" data-drag-handle>
-        <div class="traffic">
-          <span class="btn btn-close" data-action="close"></span>
-          <span class="btn btn-min" data-action="minimize"></span>
-          <span class="btn btn-max" data-action="maximize"></span>
+    <!-- ===== WINDOW TEMPLATES (hidden, cloned by JS) ===== -->
+
+    <!-- File Manager -->
+    <template id="tmpl-file-manager">
+        <div class="app-file-manager">
+            <div class="fm-toolbar">
+                <div class="fm-toolbar-nav">
+                    <button onclick="fmNavigate('back')" title="Back"><span
+                            class="material-icons-round">arrow_back</span></button>
+                    <button onclick="fmNavigate('up')" title="Up"><span
+                            class="material-icons-round">arrow_upward</span></button>
+                </div>
+                <div class="fm-path" id="fm-path"></div>
+                <div class="fm-toolbar-actions">
+                    <div class="fm-search-box">
+                        <span class="material-icons-round">search</span>
+                        <input type="text" placeholder="Search..." oninput="fmSearch(this.value)">
+                    </div>
+                    <button onclick="fmNewFile()" title="New File"><span
+                            class="material-icons-round">note_add</span></button>
+                    <button onclick="fmNewFolder()" title="New Folder"><span
+                            class="material-icons-round">create_new_folder</span></button>
+                </div>
+            </div>
+            <div class="fm-body">
+                <div class="fm-sidebar">
+                    <div class="fm-nav-item active" onclick="fmGoTo('/home')"><span
+                            class="material-icons-round">home</span> Home</div>
+                    <div class="fm-nav-item" onclick="fmGoTo('/home/Documents')"><span
+                            class="material-icons-round">description</span> Documents</div>
+                    <div class="fm-nav-item" onclick="fmGoTo('/home/Pictures')"><span
+                            class="material-icons-round">image</span> Pictures</div>
+                    <div class="fm-nav-item" onclick="fmGoTo('/home/Music')"><span
+                            class="material-icons-round">headphones</span> Music</div>
+                    <div class="fm-nav-item" onclick="fmGoTo('/home/Downloads')"><span
+                            class="material-icons-round">download</span> Downloads</div>
+                </div>
+                <div class="fm-content" id="fm-content"></div>
+            </div>
         </div>
-        <div class="title">Cài đặt</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="content">
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          <label>Ảnh nền (URL):</label>
-          <div style="display:flex; gap:8px;">
-            <input id="bg-url" type="text" placeholder="https://..." style="flex:1;">
-            <button id="bg-apply" class="primary">Áp dụng</button>
-          </div>
-          <label>Định dạng đồng hồ:</label>
-          <select id="clock-format">
-            <option value="24">24 giờ</option>
-            <option value="12">12 giờ</option>
-          </select>
-          <div style="display:flex; gap:8px; margin-top:8px;">
-            <button id="clear-notes" class="danger">Xóa ghi chú</button>
-            <button id="arrange" class="success">Sắp xếp cửa sổ</button>
-          </div>
+    </template>
 
-          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 10px 0;">
-          <label>Google AI Studio API Key:</label>
-          <div style="display:flex; gap:8px;">
-            <input id="api-key" type="password" placeholder="Enter your API key..." style="flex:1;">
-            <button id="api-save" class="primary">Lưu</button>
-          </div>
-          <div style="font-size:12px; color:#9ec5ff; margin-top:4px;">
-            Get your API key from <a href="https://aistudio.google.com/" target="_blank" style="color:#70a0ff;">Google AI Studio</a>
-          </div>
-
-          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 10px 0;">
-          <label>Cập nhật hệ thống:</label>
-          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-            <div>Phiên bản hiện tại: <strong id="ver-current">1.0.0</strong></div>
-            <div>Phiên bản mới nhất: <strong id="ver-latest">1.0.0</strong></div>
-          </div>
-          <div id="up-msg" style="color:#ddd;"></div>
-          <div style="display:flex; gap:8px;">
-            <button id="up-check" class="primary">Kiểm tra</button>
-            <button id="up-install" class="success" style="display:none;">Cài đặt</button>
-          </div>
+    <!-- Terminal -->
+    <template id="tmpl-terminal">
+        <div class="app-terminal">
+            <div class="term-output" id="term-output">
+                <div class="term-line"><span class="term-green">user@webos</span>:<span class="term-blue">~</span>$
+                    Welcome to Web OS Terminal v1.2</div>
+                <div class="term-line">Type <span class="term-yellow">'help'</span> for available commands.</div>
+            </div>
+            <div class="term-input-line">
+                <span class="term-prompt"><span class="term-green">user@webos</span>:<span
+                        class="term-blue">~</span>$&nbsp;</span>
+                <input type="text" class="term-input" id="term-input" autocomplete="off" spellcheck="false" autofocus>
+            </div>
         </div>
-      </div>
-      <div class="resize n"></div><div class="resize s"></div><div class="resize e"></div><div class="resize w"></div>
-      <div class="resize ne"></div><div class="resize nw"></div><div class="resize se"></div><div class="resize sw"></div>
-    </div>
+    </template>
 
-    <!-- Activation Window -->
-    <div class="window hidden" id="win-activate" style="left: 220px; top: 140px; width: 480px; height: 260px;" data-app="activate">
-      <div class="titlebar" data-drag-handle>
-        <div class="traffic">
-          <span class="btn btn-close" data-action="close"></span>
-          <span class="btn btn-min" data-action="minimize"></span>
-          <span class="btn btn-max" data-action="maximize"></span>
+    <!-- Text Editor -->
+    <template id="tmpl-text-editor">
+        <div class="app-text-editor">
+            <div class="te-toolbar">
+                <button onclick="teNew()" title="New"><span class="material-icons-round">note_add</span></button>
+                <button onclick="teOpen()" title="Open"><span class="material-icons-round">folder_open</span></button>
+                <button onclick="teSave()" title="Save"><span class="material-icons-round">save</span></button>
+                <span class="te-separator"></span>
+                <button onclick="teUndo()" title="Undo"><span class="material-icons-round">undo</span></button>
+                <button onclick="teRedo()" title="Redo"><span class="material-icons-round">redo</span></button>
+                <span class="te-separator"></span>
+                <span class="te-filename" id="te-filename">Untitled</span>
+                <span class="te-wordcount" id="te-wordcount">Words: 0</span>
+            </div>
+            <textarea class="te-area" id="te-area" placeholder="Start typing..." spellcheck="false"></textarea>
         </div>
-        <div class="title">Kích hoạt Hyggshi OS</div>
-        <div class="spacer"></div>
-      </div>
-      <div class="content">
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          <div>Nhập khóa sản phẩm (định dạng: 0000-XXXX-XXXX):</div>
-                      <input id="act-key" type="text" placeholder="0000-ABCD-EFGH">
-          <button id="act-apply" class="success">Kích hoạt</button>
-          <div id="act-msg" style="color:#ffb4b4;"></div>
+    </template>
+
+    <!-- Browser -->
+    <template id="tmpl-browser">
+        <div class="app-browser">
+            <div class="br-toolbar">
+                <button onclick="brBack()" title="Back"><span class="material-icons-round">arrow_back</span></button>
+                <button onclick="brForward()" title="Forward"><span
+                        class="material-icons-round">arrow_forward</span></button>
+                <button onclick="brReload()" title="Reload"><span class="material-icons-round">refresh</span></button>
+                <input type="text" class="br-url" id="br-url" placeholder="Enter URL..."
+                    value="https://www.wikipedia.org">
+                <button onclick="brGo()" title="Go"><span
+                        class="material-icons-round">arrow_circle_right</span></button>
+            </div>
+            <iframe class="br-frame" id="br-frame" src="https://www.wikipedia.org"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
         </div>
-      </div>
-    </div>
+    </template>
 
-    <!-- Taskbar -->
-    <div class="taskbar">
-      <button class="start-btn" id="start-btn">
-        <svg viewBox="0 0 24 24">
-          <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>
-        </svg>
-      </button>
-      <div class="apps" id="taskbar-apps"></div>
-      <div class="clock" id="clock"></div>
-    </div>
-    
-    <!-- Start Menu (moved after taskbar for correct stacking) -->
-    <div class="start-menu" id="start-menu">
-      <div class="start-search">
-        <input type="text" id="start-search" placeholder="Search applications..." autocomplete="off">
-      </div>
-      <div class="start-section" id="start-apps-section">
-        <div class="start-section-title">Applications</div>
-        <div class="start-item" data-launch="notes">
-          <div class="start-item-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14l4-4h12c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-            </svg>
-          </div>
-          <div class="start-item-text">Notes</div>
-          <div class="start-item-shortcut">Ctrl+N</div>
+    <!-- Calculator -->
+    <template id="tmpl-calculator">
+        <div class="app-calculator">
+            <div class="calc-display">
+                <div class="calc-expression" id="calc-expr"></div>
+                <div class="calc-result" id="calc-result">0</div>
+            </div>
+            <div class="calc-buttons">
+                <button class="calc-btn func" onclick="calcAction('clear')">AC</button>
+                <button class="calc-btn func" onclick="calcAction('sign')">±</button>
+                <button class="calc-btn func" onclick="calcAction('percent')">%</button>
+                <button class="calc-btn op" onclick="calcAction('op', '/')">÷</button>
+
+                <button class="calc-btn" onclick="calcAction('num', '7')">7</button>
+                <button class="calc-btn" onclick="calcAction('num', '8')">8</button>
+                <button class="calc-btn" onclick="calcAction('num', '9')">9</button>
+                <button class="calc-btn op" onclick="calcAction('op', '*')">×</button>
+
+                <button class="calc-btn" onclick="calcAction('num', '4')">4</button>
+                <button class="calc-btn" onclick="calcAction('num', '5')">5</button>
+                <button class="calc-btn" onclick="calcAction('num', '6')">6</button>
+                <button class="calc-btn op" onclick="calcAction('op', '-')">−</button>
+
+                <button class="calc-btn" onclick="calcAction('num', '1')">1</button>
+                <button class="calc-btn" onclick="calcAction('num', '2')">2</button>
+                <button class="calc-btn" onclick="calcAction('num', '3')">3</button>
+                <button class="calc-btn op" onclick="calcAction('op', '+')">+</button>
+
+                <button class="calc-btn zero" onclick="calcAction('num', '0')">0</button>
+                <button class="calc-btn" onclick="calcAction('dot')">.</button>
+                <button class="calc-btn op eq" onclick="calcAction('eq')">=</button>
+            </div>
         </div>
-        <div class="start-item" data-launch="browser">
-          <div class="start-item-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.477 2 2 6.477 2 12c0 5.522 4.477 10 10 10s10-4.478 10-10C22 6.477 17.523 2 12 2zm6.93 6H15.9a15.22 15.22 0 0 0-1.308-3.244A8.025 8.025 0 0 1 18.93 8zM12 4.06c.72.96 1.34 2.215 1.78 3.94H10.22C10.66 6.275 11.28 5.02 12 4.06zM4.07 8A8.025 8.025 0 0 1 9.408 4.756 15.22 15.22 0 0 0 8.1 8H4.07zM4.06 12c0-.68.05-1.34.146-1.98H8.06c-.04.645-.06 1.31-.06 1.98 0 .67.02 1.335.06 1.98H4.206A8.96 8.96 0 0 1 4.06 12zM5.07 16h3.03c.28 1.134.64 2.14 1.004 2.88A8.015 8.015 0 0 1 5.07 16zM10.22 16h3.56c-.44 1.725-1.06 2.98-1.78 3.94-.72-.96-1.34-2.215-1.78-3.94zM14.896 18.88c.364-.74.725-1.746 1.004-2.88h3.03a8.015 8.015 0 0 1-4.034 2.88zM19.794 13.98h-3.908c.04-.645.06-1.31.06-1.98 0-.67-.02-1.335-.06-1.98h3.908c.096.64.146 1.3.146 1.98 0 .68-.05 1.34-.146 1.98z"/>
-            </svg>
-          </div>
-          <div class="start-item-text">Browser</div>
-          <div class="start-item-shortcut">Ctrl+B</div>
+    </template>
+
+    <!-- Settings -->
+    <template id="tmpl-settings">
+        <div class="app-settings">
+            <div class="set-sidebar">
+                <div class="set-nav active" onclick="setTab('appearance')"><span
+                        class="material-icons-round">palette</span> Appearance</div>
+                <div class="set-nav" onclick="setTab('display')"><span
+                        class="material-icons-round">display_settings</span> Display</div>
+                <div class="set-nav" onclick="setTab('about')"><span class="material-icons-round">info</span> About
+                </div>
+                <div class="set-nav" onclick="setTab('lock')"><span class="material-icons-round">lock</span> Lock Screen
+                </div>
+                <div class="set-nav" onclick="setTab('users')"><span class="material-icons-round">people</span> Users
+                </div>
+                <div class="set-nav" onclick="setTab('ai')"><span class="material-icons-round">smart_toy</span> AI
+                    Settings</div>
+            </div>
+            <div class="set-content" id="set-content">
+                <!-- Appearance (default) -->
+                <div class="set-panel" id="set-appearance">
+                    <h3>Appearance</h3>
+                    <div class="set-group">
+                        <label>Theme Mode</label>
+                        <div class="set-modes">
+                            <div class="set-mode-card active" id="mode-dark" onclick="setThemeMode('dark')">
+                                <span class="material-icons-round">dark_mode</span>
+                                <span>Dark</span>
+                            </div>
+                            <div class="set-mode-card" id="mode-light" onclick="setThemeMode('light')">
+                                <span class="material-icons-round">light_mode</span>
+                                <span>Light</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="set-group">
+                        <label>Accent Color</label>
+                        <div class="set-colors">
+                            <div class="set-color active" style="background:#6c5ce7" onclick="setAccent('#6c5ce7')">
+                            </div>
+                            <div class="set-color" style="background:#0984e3" onclick="setAccent('#0984e3')"></div>
+                            <div class="set-color" style="background:#00b894" onclick="setAccent('#00b894')"></div>
+                            <div class="set-color" style="background:#e17055" onclick="setAccent('#e17055')"></div>
+                            <div class="set-color" style="background:#fd79a8" onclick="setAccent('#fd79a8')"></div>
+                            <div class="set-color" style="background:#fdcb6e" onclick="setAccent('#fdcb6e')"></div>
+                        </div>
+                    </div>
+                    <div class="set-group">
+                        <label>UI Style</label>
+                        <div class="set-styles">
+                            <div class="set-style-card active" onclick="setUIStyle('glassmorphism')">
+                                <div class="style-preview glassmorphism-preview">
+                                    <div class="sp-bar"></div>
+                                    <div class="sp-win"></div>
+                                </div>
+                                <span>Standard Glass</span>
+                            </div>
+                            <div class="set-style-card" onclick="setUIStyle('liquid-glass')">
+                                <div class="style-preview liquid-preview">
+                                    <div class="sp-bar"></div>
+                                    <div class="sp-win"></div>
+                                </div>
+                                <span>Liquid Glass</span>
+                            </div>
+                            <div class="set-style-card" onclick="setUIStyle('neumorphism')">
+                                <div class="style-preview neumorphism-preview">
+                                    <div class="sp-bar"></div>
+                                    <div class="sp-win"></div>
+                                </div>
+                                <span>Neumorphic Glass</span>
+                            </div>
+                            <div class="set-style-card" onclick="setUIStyle('acrylic')">
+                                <div class="style-preview acrylic-preview">
+                                    <div class="sp-bar"></div>
+                                    <div class="sp-win"></div>
+                                </div>
+                                <span>Acrylic Glass</span>
+                            </div>
+                            <div class="set-style-card" onclick="setUIStyle('flat')">
+                                <div class="style-preview flat-preview">
+                                    <div class="sp-bar"></div>
+                                    <div class="sp-win"></div>
+                                </div>
+                                <span>Flat Glass</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="set-group">
+                        <label>Wallpaper</label>
+                        <div class="set-wallpapers">
+                            <div class="set-wp active" style="background:url('Resources/background.png') center/cover"
+                                onclick="setWallpaper('Resources/background.png')"></div>
+                            <div class="set-wp" style="background:linear-gradient(135deg,#0c0c1d,#1a1a3e,#2d1b69)"
+                                onclick="setWallpaper('gradient1')"></div>
+                            <div class="set-wp" style="background:linear-gradient(135deg,#0f2027,#203a43,#2c5364)"
+                                onclick="setWallpaper('gradient2')"></div>
+                            <div class="set-wp" style="background:linear-gradient(135deg,#1a0533,#3b1f5e,#6c2c91)"
+                                onclick="setWallpaper('gradient3')"></div>
+                            <div class="set-wp" style="background:linear-gradient(135deg,#141e30,#243b55)"
+                                onclick="setWallpaper('gradient4')"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="set-panel hidden" id="set-display">
+                    <h3>Display</h3>
+                    <div class="set-group">
+                        <label>UI Scale</label>
+                        <input type="range" min="80" max="120" value="100" id="set-scale"
+                            oninput="setScale(this.value)">
+                        <span id="set-scale-val">100%</span>
+                    </div>
+                </div>
+                <div class="set-panel hidden" id="set-lock">
+                    <h3>Lock Screen</h3>
+                    <div class="set-group">
+                        <label>Security</label>
+                        <div class="set-lock-password">
+                            <input type="password" id="set-lock-pwd" class="set-input-text"
+                                placeholder="Enter new password" onchange="saveLockPassword(this.value)">
+                            <p class="set-hint">Leave blank for no password (automatic unlock).</p>
+                        </div>
+                    </div>
+                    <div class="set-group">
+                        <label>Appearance</label>
+                        <div class="set-toggle-item">
+                            <span>Lock Screen Blur</span>
+                            <label class="switch">
+                                <input type="checkbox" id="set-lock-blur" onchange="setLockBlur(this.checked)">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="set-group">
+                        <label>Behavior</label>
+                        <div class="set-toggle-item">
+                            <span>Lock on Startup</span>
+                            <label class="switch">
+                                <input type="checkbox" id="set-lock-startup" onchange="setLockStartup(this.checked)">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="set-toggle-item">
+                            <span>Auto-Lock Timer</span>
+                            <select id="set-lock-timer" class="set-select" onchange="setAutoLockTimer(this.value)">
+                                <option value="0">Never</option>
+                                <option value="1">1 minute</option>
+                                <option value="5">5 minutes</option>
+                                <option value="15">15 minutes</option>
+                                <option value="30">30 minutes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="set-group">
+                        <label>Recovery</label>
+                        <div class="recovery-key-container">
+                            <span id="set-recovery-key-val">XXXX-XXXX-XXXX-XXXX</span>
+                            <button class="set-btn-small" onclick="copyRecoveryKey()">Copy</button>
+                        </div>
+                        <p class="set-hint">Save this key in a safe place. You'll need it if you forget your password.
+                        </p>
+                    </div>
+                    <div class="set-group">
+                        <label>Quick Actions</label>
+                        <button class="set-btn-primary" onclick="lockOS()">Lock Now</button>
+                    </div>
+                </div>
+
+                <div class="set-panel hidden" id="set-users">
+                    <h3>User Accounts</h3>
+                    <div class="users-list" id="set-users-list">
+                        <!-- User items -->
+                    </div>
+                    <button class="set-btn-primary" onclick="showAddUserDialog()">
+                        <span class="material-icons-round">person_add</span> Add User
+                    </button>
+                </div>
+                <div class="set-panel hidden" id="set-about">
+                    <div class="about-card">
+                        <div class="about-logo">
+                            <span class="material-icons-round">desktop_windows</span>
+                        </div>
+                        <div class="about-info">
+                            <h4>Web OS</h4>
+                            <p>Version 1.3.0 Beta 26 (Spring 2026 Update)</p>
+                            <p>A premium browser-based desktop environment designed for visual excellence and modular
+                                performance.</p>
+                            <p>Featuring an advanced security kernel, multi-user support, and integrated AI assistant.
+                            </p>
+                            <div class="about-copyright">
+                                &copy; 2026 Antigravity OS Project. All rights reserved.<br>
+                                Experience the future of the web.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="set-panel hidden" id="set-ai">
+                    <div class="ai-settings-panel">
+                        <h3>AI Engine</h3>
+                        <div class="set-group api-key-box">
+                            <label>Google AI Studio API Key</label>
+                            <div class="api-key-input-container">
+                                <input type="password" id="gemini-api-key" class="set-input-text"
+                                    placeholder="Paste your API key here..." onchange="saveGeminiKey(this.value)">
+                                <p class="set-hint">Enable multi-modal chat, image analysis, and intelligent automation
+                                    by
+                                    integrating your Gemini Pro key. Get one at <a
+                                        href="https://aistudio.google.com/app/apikey" target="_blank"
+                                        style="color:var(--accent)">Google AI Studio</a>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="start-item" data-launch="files">
-          <div class="start-item-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M10 4H4c-1.1 0-2 .9-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z"/>
-            </svg>
-          </div>
-          <div class="start-item-text">File Manager</div>
-          <div class="start-item-shortcut">Ctrl+F</div>
+    </template>
+
+    <!-- Image Viewer -->
+    <template id="tmpl-image-viewer">
+        <div class="app-image-viewer">
+            <div class="iv-toolbar">
+                <button onclick="ivOpen()" title="Open"><span class="material-icons-round">folder_open</span></button>
+                <span class="iv-separator"></span>
+                <button onclick="ivZoom('in')" title="Zoom In"><span
+                        class="material-icons-round">zoom_in</span></button>
+                <button onclick="ivZoom('out')" title="Zoom Out"><span
+                        class="material-icons-round">zoom_out</span></button>
+                <button onclick="ivZoom('fit')" title="Fit"><span
+                        class="material-icons-round">fit_screen</span></button>
+            </div>
+            <div class="iv-canvas" id="iv-canvas">
+                <div class="iv-placeholder">
+                    <span class="material-icons-round">add_photo_alternate</span>
+                    <p>Open an image to view</p>
+                </div>
+            </div>
         </div>
-        <div class="start-item" data-launch="calculator">
-          <div class="start-item-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="4" y="2" width="16" height="20" rx="3"/>
-              <rect x="7" y="6" width="10" height="2" rx="1" fill="black"/>
-              <circle cx="8.5" cy="11.5" r="1.5" fill="black"/>
-              <circle cx="12" cy="11.5" r="1.5" fill="black"/>
-              <circle cx="15.5" cy="11.5" r="1.5" fill="black"/>
-              <circle cx="8.5" cy="15.5" r="1.5" fill="black"/>
-              <circle cx="12" cy="15.5" r="1.5" fill="black"/>
-              <circle cx="15.5" cy="15.5" r="1.5" fill="black"/>
-            </svg>
-          </div>
-          <div class="start-item-text">Calculator</div>
-          <div class="start-item-shortcut">Ctrl+C</div>
+    </template>
+
+    <!-- Music Player -->
+    <template id="tmpl-music-player">
+        <div class="app-music-player">
+            <div class="mp-artwork">
+                <span class="material-icons-round">album</span>
+            </div>
+            <div class="mp-info">
+                <div class="mp-title">No Track Playing</div>
+                <div class="mp-artist">Unknown Artist</div>
+            </div>
+            <div class="mp-progress">
+                <div class="mp-bar">
+                    <div class="mp-bar-fill" id="mp-bar-fill"></div>
+                </div>
+                <div class="mp-times">
+                    <span>0:00</span><span>3:45</span>
+                </div>
+            </div>
+            <div class="mp-controls">
+                <button><span class="material-icons-round">shuffle</span></button>
+                <button><span class="material-icons-round">skip_previous</span></button>
+                <button class="mp-play" onclick="mpToggle()"><span
+                        class="material-icons-round">play_arrow</span></button>
+                <button><span class="material-icons-round">skip_next</span></button>
+                <button><span class="material-icons-round">repeat</span></button>
+            </div>
         </div>
-        <div class="start-item" data-launch="imageviewer">
-          <div class="start-item-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zm-2 0H5V5h14zm-7-3l2.03 2.71a1 1 0 0 0 1.58 0L19 13.5V17H5v-1.5l4.5-6z"/>
-            </svg>
-          </div>
-          <div class="start-item-text">Image Viewer</div>
+    </template>
+
+    <!-- About -->
+    <template id="tmpl-about">
+        <div class="app-about">
+            <div class="about-logo large">
+                <span class="material-icons-round">desktop_windows</span>
+            </div>
+            <h2>Web OS</h2>
+            <p class="about-version">Version 1.3.0 Beta 26</p>
+            <div class="about-details">
+                <p>A modern, browser-based desktop operating system</p>
+                <p>Built with HTML5, CSS3 & JavaScript</p>
+                <hr>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Window Management with drag, resize, minimize, maximize</li>
+                    <li>Built-in Apps: File Manager, Terminal, Text Editor, Browser, Calculator, Settings, Image Viewer,
+                        Music Player, Chat AI</li>
+                    <li>Glassmorphism UI with dark theme</li>
+                    <li>Virtual File System</li>
+                    <li>Customizable appearance</li>
+                </ul>
+            </div>
+            <p class="about-copy">© 2026 Web OS Project</p>
         </div>
-      </div>
-    </div>
+    </template>
+
+    <!-- Chat AI -->
+    <template id="tmpl-chat-ai">
+        <div class="app-chat-ai">
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    <button class="chat-new-btn" onclick="chatNewConversation()"><span
+                            class="material-icons-round">add</span> New Chat</button>
+                </div>
+                <div class="chat-history" id="chat-history-list">
+                    <!-- History items will be injected here -->
+                </div>
+            </div>
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div class="chat-model-selector-container">
+                        <select class="chat-model-select" id="chat-model-select" onchange="chatSetModel(this.value)">
+                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                            <option value="gemini-3-pro-preview">Gemini 3 Pro Preview</option>
+                            <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
+                            <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-msg ai">
+                        <div class="chat-msg-avatar"><span class="material-icons-round">psychology</span></div>
+                        <div class="chat-msg-content">Hello! I'm your AI assistant. How can I help you today?</div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <div class="chat-input-box">
+                        <div id="chat-image-preview" class="chat-image-preview"></div>
+                        <textarea id="chat-textarea" placeholder="Type a message..." rows="1"
+                            oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                        <div class="chat-input-toolbar">
+                            <div class="chat-input-actions">
+                                <span class="material-icons-round" title="Add Tool">add_circle_outline</span>
+                                <label for="chat-file-input">
+                                    <span class="material-icons-round" style="cursor:pointer"
+                                        title="Upload File">image</span>
+                                </label>
+                                <input type="file" id="chat-file-input" style="display:none"
+                                    onchange="chatHandleFileUpload(this)">
+                            </div>
+                            <button id="chat-send-btn" onclick="chatSendMessage()"><span
+                                    class="material-icons-round">send</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="js/vfs.js"></script>
+    <script src="js/wm.js"></script>
+    <script src="js/system.js"></script>
+    <script src="js/apps-core.js"></script>
+    <script src="js/apps-media.js"></script>
+    <script src="js/apps-chat.js"></script>
+    <script src="js/main.js"></script>
+    <!-- Video Player -->
+    <template id="tmpl-video-player">
+        <div class="app-video-player">
+            <div class="vp-container">
+                <video id="vp-video" src="" poster="Resources/background.png"></video>
+                <div class="vp-controls">
+                    <div class="vp-progress">
+                        <div class="vp-progress-bar" id="vp-progress-bar"></div>
+                    </div>
+                    <div class="vp-btns">
+                        <div class="vp-btns-left">
+                            <button onclick="vpTogglePlay()" id="vp-play-btn"><span
+                                    class="material-icons-round">play_arrow</span></button>
+                            <button onclick="vpStop()"><span class="material-icons-round">stop</span></button>
+                            <span class="vp-time" id="vp-time">0:00 / 0:00</span>
+                        </div>
+                        <div class="vp-btns-right">
+                            <button onclick="vpSelectVideo()" title="Open Video File"><span
+                                    class="material-icons-round">upload_file</span></button>
+                            <input type="file" id="vp-upload-input" accept="video/*" style="display:none"
+                                onchange="vpHandleUpload(this)">
+                            <button onclick="vpToggleMute()" id="vp-mute-btn"><span
+                                    class="material-icons-round">volume_up</span></button>
+                            <button onclick="vpFullscreen()"><span
+                                    class="material-icons-round">fullscreen</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</body>
 
-    <!-- Context Menu -->
-    <div class="context-menu" id="ctx">
-      <div class="ctx-item" id="ctx-new-note">Open Notes</div>
-      <div class="ctx-item" id="ctx-settings">Open Settings</div>
-      <div class="ctx-item" id="ctx-minimize-all">Minimize All</div>
-    </div>
-    
-    <div class="watermark" id="watermark">
-      <div>Activate Hyggshi OS</div>
-      <div>Go to Settings to activate Hyggshi OS</div>
-    </div>
-    
-    <div class="power-overlay" id="power-overlay">
-      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2v10" stroke="white" stroke-width="2" stroke-linecap="round"/>
-        <path d="M6.22 6.22a7.5 7.5 0 1 0 10.61 0" stroke="white" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-                                                                                   <div class="msg" id="power-msg"></div>
-                                                                                 </div>
-    </div>
-
-    <!-- Notification container -->
-    <div id="notification-container"></div>
-
-    <!-- System tray -->
-    
-  </div>
-
-  <script>
-    (function() {
-      const desktop = document.getElementById('desktop');
-      const zStack = { current: 10 };
-      const settingsKey = 'webos.settings';
-      const clock = document.getElementById('clock');
-
-      // Optimized Notification system with pooling
-      const notificationPool = [];
-      const maxNotifications = 3;
-      
-      function showNotification(message, type = 'info', duration = 4000) {
-        const container = document.getElementById('notification-container');
-        
-        // Remove oldest notification if we have too many
-        if (notificationPool.length >= maxNotifications) {
-          const oldest = notificationPool.shift();
-          if (oldest && oldest.parentNode) {
-            oldest.classList.remove('show');
-            setTimeout(() => oldest.remove(), 300);
-          }
-        }
-        
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span>${message}</span>
-            <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: #fff; cursor: pointer; padding: 0; margin-left: auto;">×</button>
-          </div>
-        `;
-        
-        container.appendChild(notification);
-        notificationPool.push(notification);
-        
-        // Use requestAnimationFrame for better performance
-        requestAnimationFrame(() => {
-          notification.classList.add('show');
-        });
-        
-        setTimeout(() => {
-          notification.classList.remove('show');
-          setTimeout(() => {
-            notification.remove();
-            const index = notificationPool.indexOf(notification);
-            if (index > -1) notificationPool.splice(index, 1);
-          }, 300);
-        }, duration);
-      }
-
-      // System tray functionality
-      const trayItems = document.querySelectorAll('.tray-item');
-      trayItems.forEach(item => {
-        item.addEventListener('click', () => {
-          const id = item.id;
-          switch(id) {
-            case 'tray-wifi':
-              showNotification('WiFi settings opened', 'info');
-              break;
-            case 'tray-battery':
-              showNotification('Battery: 85%', 'info');
-              break;
-            case 'tray-volume':
-              showNotification('Volume: 75%', 'info');
-              break;
-          }
-        });
-      });
-
-      // Debounced localStorage operations for better performance
-      const debouncedSave = (function() {
-        let timeout;
-        return function(key, value) {
-          clearTimeout(timeout);
-          timeout = setTimeout(() => {
-            try {
-              localStorage.setItem(key, JSON.stringify(value));
-            } catch (e) {
-              console.warn('Failed to save to localStorage:', e);
-            }
-          }, 100);
-        };
-      })();
-
-      const settings = loadSettings();
-      applySettings(settings);
-
-      // Welcome notification
-      setTimeout(() => {
-        showNotification('Welcome to Hyggshi OS! Press Ctrl+N for Notes, Ctrl+B for Browser', 'info', 6000);
-      }, 1000);
-
-      function bringToFront(win) {
-        zStack.current += 1;
-        win.style.zIndex = String(zStack.current);
-        document.querySelectorAll('.window').forEach(w => w.classList.remove('active'));
-        win.classList.add('active');
-      }
-
-      function showWindow(id) {
-        const win = document.getElementById(id);
-        if (!win) return;
-        win.classList.remove('hidden', 'minimized');
-        bringToFront(win);
-        updateTaskbarFor(win.dataset.app, { exists: true, active: true, minimized: false });
-      }
-
-      function hideWindow(id) {
-        const win = document.getElementById(id);
-        if (!win) return;
-        win.classList.add('hidden');
-        updateTaskbarFor(win.dataset.app, { exists: false });
-      }
-
-      function minimizeWindow(id) {
-        const win = document.getElementById(id);
-        if (!win) return;
-        win.classList.add('minimized');
-        updateTaskbarFor(win.dataset.app, { exists: true, minimized: true, active: false });
-      }
-
-      function toggleMinimize(app) {
-        const win = getWindowByApp(app);
-        if (!win) return;
-        if (win.classList.contains('minimized')) {
-          win.classList.remove('minimized');
-          bringToFront(win);
-          updateTaskbarFor(app, { exists: true, active: true, minimized: false });
-        } else {
-          win.classList.add('minimized');
-          updateTaskbarFor(app, { exists: true, minimized: true, active: false });
-        }
-      }
-
-      function getWindowByApp(app) {
-        const windowMap = {
-          'notes': 'win-notes',
-          'browser': 'win-browser',
-          'settings': 'win-settings',
-          'files': 'win-files',
-          'activate': 'win-activate',
-          'imageviewer': 'win-imageviewer',
-          'calculator': 'win-calculator',
-          'bin': 'win-bin',
-          'aichat': 'win-aichat'
-        };
-        return document.getElementById(windowMap[app]);
-      }
-
-      // Optimized Dragging with throttling
-      function makeDraggable(win) {
-        const handle = win.querySelector('.titlebar');
-        let startX = 0, startY = 0, origX = 0, origY = 0;
-        let dragging = false;
-        let lastMoveTime = 0;
-        const throttleDelay = 16; // ~60fps
-
-        handle.addEventListener('mousedown', (e) => {
-          if (e.button !== 0 || e.target.closest('.btn')) return;
-          
-          dragging = true;
-          win.classList.add('dragging');
-          bringToFront(win);
-          startX = e.clientX;
-          startY = e.clientY;
-          const rect = win.getBoundingClientRect();
-          origX = rect.left;
-          origY = rect.top;
-          document.body.style.userSelect = 'none';
-          document.addEventListener('mousemove', onMove, { passive: true });
-          document.addEventListener('mouseup', onUp, { once: true });
-        });
-
-        function onMove(e) {
-          if (!dragging) return;
-          
-          const now = Date.now();
-          if (now - lastMoveTime < throttleDelay) return;
-          lastMoveTime = now;
-          
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          let nextX = origX + dx;
-          let nextY = origY + dy;
-          const bounds = desktop.getBoundingClientRect();
-          const rect = win.getBoundingClientRect();
-          const maxX = bounds.width - Math.min(rect.width, bounds.width);
-          const maxY = bounds.height - 56;
-          nextX = Math.max(0, Math.min(nextX, maxX));
-          nextY = Math.max(0, Math.min(nextY, maxY));
-          
-          // Use transform for better performance
-          win.style.transform = `translate(${nextX - origX}px, ${nextY - origY}px)`;
-        }
-
-        function onUp() {
-          if (!dragging) return;
-          
-          const transform = win.style.transform;
-          const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
-          if (match) {
-            const dx = parseFloat(match[1]);
-            const dy = parseFloat(match[2]);
-            win.style.left = (origX + dx) + 'px';
-            win.style.top = (origY + dy) + 'px';
-          }
-          
-          win.style.transform = '';
-          dragging = false;
-          win.classList.remove('dragging');
-          document.body.style.userSelect = '';
-          document.removeEventListener('mousemove', onMove);
-          saveGeometry(win);
-        }
-      }
-
-      function makeResizable(win) {
-        const handles = ['n','s','e','w','ne','nw','se','sw'];
-        handles.forEach(dir => {
-          let el = win.querySelector('.resize.' + dir);
-          if (!el) {
-            el = document.createElement('div');
-            el.className = 'resize ' + dir;
-            win.appendChild(el);
-          }
-          
-          el.addEventListener('mousedown', function onDown(e) {
-            e.preventDefault();
-            bringToFront(win);
-            const rect = win.getBoundingClientRect();
-            const startX = e.clientX, startY = e.clientY;
-            const startW = rect.width, startH = rect.height, startL = rect.left, startT = rect.top;
-            let lastMoveTime = 0;
-            const throttleDelay = 16; // ~60fps
-            
-            function onMove(e) {
-              const now = Date.now();
-              if (now - lastMoveTime < throttleDelay) return;
-              lastMoveTime = now;
-              
-              const dx = e.clientX - startX;
-              const dy = e.clientY - startY;
-              let newW = startW, newH = startH, newL = startL, newT = startT;
-              
-              if (dir.includes('e')) newW = Math.max(360, startW + dx);
-              if (dir.includes('s')) newH = Math.max(260, startH + dy);
-              if (dir.includes('w')) { newW = Math.max(360, startW - dx); newL = startL + dx; }
-              if (dir.includes('n')) { newH = Math.max(260, startH - dy); newT = startT + dy; }
-              
-              const bounds = desktop.getBoundingClientRect();
-              newL = Math.max(0, Math.min(newL, bounds.width - newW));
-              newT = Math.max(0, Math.min(newT, bounds.height - 56 - newH));
-              
-              // Use transform for better performance during resize
-              win.style.transform = `translate(${newL - startL}px, ${newT - startT}px)`;
-              win.style.width = newW + 'px';
-              win.style.height = newH + 'px';
-            }
-            
-            function onUp() {
-              const transform = win.style.transform;
-              const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
-              if (match) {
-                const dx = parseFloat(match[1]);
-                const dy = parseFloat(match[2]);
-                win.style.left = (startL + dx) + 'px';
-                win.style.top = (startT + dy) + 'px';
-              }
-              win.style.transform = '';
-              document.removeEventListener('mousemove', onMove);
-              saveGeometry(win);
-            }
-            
-            document.addEventListener('mousemove', onMove, { passive: true });
-            document.addEventListener('mouseup', onUp, { once: true });
-          });
-        });
-      }
-
-      // Titlebar controls
-      function wireWindowControls(win) {
-        win.addEventListener('mousedown', () => bringToFront(win));
-        
-        win.querySelector('[data-action="close"]').addEventListener('click', (e) => {
-          e.stopPropagation();
-          hideWindow(win.id);
-        });
-        
-        win.querySelector('[data-action="minimize"]').addEventListener('click', (e) => {
-          e.stopPropagation();
-          minimizeWindow(win.id);
-        });
-        
-        win.querySelector('[data-action="maximize"]').addEventListener('click', (e) => {
-          e.stopPropagation();
-          toggleMaximize(win);
-        });
-      }
-
-      function toggleMaximize(win) {
-        const maximized = win.dataset.maximized === 'true';
-        if (!maximized) {
-          win.dataset.prevLeft = win.style.left;
-          win.dataset.prevTop = win.style.top;
-          win.dataset.prevWidth = win.style.width;
-          win.dataset.prevHeight = win.style.height;
-          win.style.left = '8px';
-          win.style.top = '8px';
-          win.style.width = 'calc(100% - 16px)';
-          win.style.height = 'calc(100% - 64px)';
-          win.dataset.maximized = 'true';
-        } else {
-          win.style.left = win.dataset.prevLeft || '60px';
-          win.style.top = win.dataset.prevTop || '80px';
-          win.style.width = win.dataset.prevWidth || '';
-          win.style.height = win.dataset.prevHeight || '';
-          win.dataset.maximized = 'false';
-        }
-        bringToFront(win);
-        saveGeometry(win);
-      }
-
-      // Taskbar management
-      const taskbar = document.getElementById('taskbar-apps');
-      function updateTaskbarFor(app, state) {
-        let btn = taskbar.querySelector(`[data-app="${app}"]`);
-        if (!state.exists) {
-          if (btn) btn.remove();
-          return;
-        }
-        if (!btn) {
-          btn = document.createElement('button');
-          btn.className = 'task-btn';
-          btn.dataset.app = app;
-          const appNames = {
-            'notes': 'Ghi chú',
-            'browser': 'Trình duyệt',
-            'settings': 'Cài đặt',
-            'files': 'Tập tin',
-            'activate': 'Kích hoạt',
-            'imageviewer': 'Xem ảnh',
-            'calculator': 'Máy tính',
-            'bin': 'Thùng rác',
-            'aichat': 'AI Chat'
-          };
-          btn.textContent = appNames[app] || app;
-          btn.addEventListener('click', () => toggleMinimize(app));
-          taskbar.appendChild(btn);
-        }
-        btn.classList.toggle('active', !!state.active);
-      }
-
-      // Desktop icons launcher
-      document.querySelectorAll('.icon').forEach(icon => {
-        icon.addEventListener('click', () => {
-          const app = icon.getAttribute('data-launch');
-          launchApp(app);
-        });
-      });
-
-      function launchApp(app) {
-        const windowMap = {
-          'notes': 'win-notes',
-          'browser': 'win-browser',
-          'settings': 'win-settings',
-          'files': 'win-files',
-          'activate': 'win-activate',
-          'imageviewer': 'win-imageviewer',
-          'calculator': 'win-calculator',
-          'bin': 'win-bin',
-          'aichat': 'win-aichat'
-        };
-        const windowId = windowMap[app];
-        if (windowId) {
-          showWindow(windowId);
-          showNotification(`${app.charAt(0).toUpperCase() + app.slice(1)} app launched`, 'success', 2000);
-        }
-      }
-
-      // Wire all windows
-      const allWindows = ['win-notes', 'win-browser', 'win-settings', 'win-files', 'win-activate', 'win-calculator', 'win-bin', 'win-aichat', 'win-imageviewer'];
-      allWindows.forEach(winId => {
-        const win = document.getElementById(winId);
-        if (win) {
-          makeDraggable(win);
-          makeResizable(win);
-          wireWindowControls(win);
-          restoreGeometry(win);
-        }
-      });
-
-      // AI Chat logic with Google AI Studio integration
-      const aichatForm = document.getElementById('aichat-form');
-      const aichatInput = document.getElementById('aichat-input');
-      const aichatMessages = document.getElementById('aichat-messages');
-      
-      // Google AI Studio configuration
-      const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-
-      function appendAIMessage(role, text) {
-        const div = document.createElement('div');
-        div.style.margin = '8px 0';
-        div.innerHTML = `<b style="color:${role==='user'?'#9ec5ff':'#3bb06b'}">${role==='user'?'Bạn':'AI'}:</b> ${text}`;
-        aichatMessages.appendChild(div);
-        aichatMessages.scrollTop = aichatMessages.scrollHeight;
-      }
-
-      async function callGeminiAPI(message, apiKey) {
-        try {
-          const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{
-                  text: message
-                }]
-              }],
-              generationConfig: {
-                temperature: 0.7,
-                topK: 1,
-                topP: 1,
-                maxOutputTokens: 2048,
-              },
-              safetySettings: [
-                {
-                  category: "HARM_CATEGORY_HARASSMENT",
-                  threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                  category: "HARM_CATEGORY_HATE_SPEECH",
-                  threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                  category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                  threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                },
-                {
-                  category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                  threshold: "BLOCK_MEDIUM_AND_ABOVE"
-                }
-              ]
-            })
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            if (response.status === 400 && errorData.error?.message?.includes('API_KEY_INVALID')) {
-              throw new Error('API key không hợp lệ. Vui lòng kiểm tra lại trong Cài đặt.');
-            }
-            throw new Error(`API request failed: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
-          }
-
-          const data = await response.json();
-          
-          if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-            return data.candidates[0].content.parts[0].text;
-          } else if (data.candidates && data.candidates[0] && data.candidates[0].finishReason === 'SAFETY') {
-            return 'Xin lỗi, tôi không thể trả lời câu hỏi này do chính sách an toàn. Hãy thử hỏi một cách khác.';
-          } else {
-            throw new Error('Unexpected API response format');
-          }
-        } catch (error) {
-          console.error('Gemini API Error:', error);
-          if (error.message.includes('API key không hợp lệ')) {
-            return error.message;
-          }
-          return 'Xin lỗi, đã có lỗi xảy ra khi kết nối với AI. Vui lòng kiểm tra kết nối mạng và thử lại.';
-        }
-      }
-
-      if (aichatForm) {
-        aichatForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const msg = aichatInput.value.trim();
-          if (!msg) return;
-          
-          appendAIMessage('user', msg);
-          aichatInput.value = '';
-          
-          // Show typing indicator
-          const typingDiv = document.createElement('div');
-          typingDiv.style.margin = '8px 0';
-          typingDiv.style.color = '#9ec5ff';
-          typingDiv.innerHTML = '<b>AI:</b> <i>Đang gõ...</i>';
-          aichatMessages.appendChild(typingDiv);
-          aichatMessages.scrollTop = aichatMessages.scrollHeight;
-          
-          try {
-            // Get current API key from settings
-            const currentSettings = loadSettings();
-            const currentApiKey = currentSettings.apiKey;
-            
-            // Check if API key is set
-            if (!currentApiKey || currentApiKey.trim() === '') {
-              // Fallback to mock responses if API key not configured
-              const responses = [
-                'Xin chào! Để sử dụng AI thật, vui lòng cấu hình Google AI Studio API key trong Cài đặt.',
-                'Tôi hiểu câu hỏi của bạn. Đây là phản hồi mẫu vì chưa cấu hình API.',
-                'Cảm ơn bạn đã sử dụng! Hãy mở Cài đặt và thêm API key để trải nghiệm AI thực sự.',
-                'Đây là phản hồi mẫu. Cấu hình Google AI Studio trong Cài đặt để có trải nghiệm tốt hơn.'
-              ];
-              
-              setTimeout(() => {
-                typingDiv.remove();
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                appendAIMessage('assistant', randomResponse);
-              }, 1000 + Math.random() * 1000);
-            } else {
-              // Call actual Gemini API with current API key
-              const aiResponse = await callGeminiAPI(msg, currentApiKey);
-              typingDiv.remove();
-              appendAIMessage('assistant', aiResponse);
-            }
-          } catch (error) {
-            typingDiv.remove();
-            appendAIMessage('assistant', 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.');
-            console.error('AI Chat Error:', error);
-          }
-        });
-      }
-
-      // Notes app logic
-      const NOTES_KEY = 'webos.notes';
-      const titleEl = document.getElementById('notes-title');
-      const bodyEl = document.getElementById('notes-body');
-      const saveBtn = document.getElementById('notes-save');
-      const notesSaveFileBtn = document.getElementById('notes-save-file');
-      const notesFileIndicator = document.getElementById('notes-file-indicator');
-      let currentNotePath = null;
-
-      function updateNotesBindingUI() {
-        const bound = !!currentNotePath;
-        if (notesFileIndicator) {
-          notesFileIndicator.style.display = bound ? 'inline' : 'none';
-          notesFileIndicator.textContent = bound ? `Đang chỉnh sửa: ${currentNotePath}` : '';
-        }
-        if (notesSaveFileBtn) notesSaveFileBtn.style.display = bound ? 'inline-block' : 'none';
-      }
-
-      function loadNotes() {
-        try {
-          const raw = localStorage.getItem(NOTES_KEY);
-          if (!raw) return;
-          const data = JSON.parse(raw);
-          if (typeof data.title === 'string') titleEl.value = data.title;
-          if (typeof data.body === 'string') bodyEl.value = data.body;
-        } catch {}
-      }
-
-      function saveNotes() {
-        const data = { title: titleEl.value || '', body: bodyEl.value || '' };
-        localStorage.setItem(NOTES_KEY, JSON.stringify(data));
-      }
-
-      if (saveBtn) saveBtn.addEventListener('click', saveNotes);
-      if (bodyEl) {
-        bodyEl.addEventListener('input', () => {
-          clearTimeout(bodyEl.__t);
-          bodyEl.__t = setTimeout(saveNotes, 500);
-        });
-      }
-      if (titleEl) {
-        titleEl.addEventListener('input', () => {
-          clearTimeout(titleEl.__t);
-          titleEl.__t = setTimeout(saveNotes, 500);
-        });
-      }
-      loadNotes();
-      updateNotesBindingUI();
-
-      // Browser app logic
-      const goBtn = document.getElementById('browser-go');
-      const urlInput = document.getElementById('browser-url');
-      const frame = document.getElementById('browser-frame');
-      const browserError = document.getElementById('browser-error');
-      const backBtn = document.getElementById('browser-back');
-      const forwardBtn = document.getElementById('browser-forward');
-      const refreshBtn = document.getElementById('browser-refresh');
-      const externalBtn = document.getElementById('browser-external');
-      let browserHistory = [];
-      let browserIndex = -1;
-
-      function isLikelyUrl(str) {
-        return /^https?:\/\//i.test(str) || /^[\w-]+\.[\w-]+/.test(str);
-      }
-
-      function normalizeUrl(u) {
-        if (!u) return '';
-        u = u.trim();
-        if (/^https?:\/\//i.test(u)) return u;
-        if (u.startsWith('www.')) return 'https://' + u;
-        if (isLikelyUrl(u)) return 'https://' + u;
-        return 'https://lite.duckduckgo.com/lite/?q=' + encodeURIComponent(u);
-      }
-
-      function navigate(url, addToHistory = true) {
-        const navUrl = normalizeUrl(url);
-        frame.src = navUrl;
-        urlInput.value = url;
-        if (browserError) browserError.style.display = 'none';
-
-        frame.onload = function() {
-          browserError.style.display = 'none';
-          try {
-            urlInput.value = frame.contentWindow.location.href;
-          } catch {}
-        };
-
-        frame.onerror = function() {
-          browserError.style.display = 'flex';
-        };
-
-        if (addToHistory) {
-          if (browserIndex < browserHistory.length - 1) {
-            browserHistory = browserHistory.slice(0, browserIndex + 1);
-          }
-          browserHistory.push(url);
-          browserIndex = browserHistory.length - 1;
-        }
-        updateNavButtons();
-      }
-
-      function updateNavButtons() {
-        if (backBtn) backBtn.disabled = browserIndex <= 0;
-        if (forwardBtn) forwardBtn.disabled = browserIndex >= browserHistory.length - 1;
-      }
-
-      if (goBtn) goBtn.addEventListener('click', () => navigate(urlInput.value));
-      if (urlInput) urlInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') navigate(urlInput.value); });
-      if (backBtn) backBtn.addEventListener('click', () => { if (browserIndex > 0) navigate(browserHistory[--browserIndex], false); });
-      if (forwardBtn) forwardBtn.addEventListener('click', () => { if (browserIndex < browserHistory.length - 1) navigate(browserHistory[++browserIndex], false); });
-      if (refreshBtn) refreshBtn.addEventListener('click', () => { frame.src = frame.src; });
-      if (externalBtn) {
-        externalBtn.addEventListener('click', () => {
-          let url = urlInput.value.trim();
-          if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-          window.open(url, '_blank');
-        });
-      }
-
-      // Image Viewer logic
-      const imgvUpload = document.getElementById('imgv-upload');
-      const imgvImg = document.getElementById('imgv-img');
-      const imgvFilename = document.getElementById('imgv-filename');
-      
-      if (imgvUpload) {
-        imgvUpload.addEventListener('change', (e) => {
-          const file = e.target.files && e.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = function(ev) {
-            imgvImg.src = ev.target.result;
-            imgvImg.style.display = 'block';
-            imgvFilename.textContent = file.name;
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-
-      // Calculator logic
-      const calcDisplay = document.getElementById('calc-display');
-      const calcButtons = document.getElementById('calc-buttons');
-      let calcExpr = '';
-
-      function updateCalcDisplay() {
-        if (calcDisplay) calcDisplay.value = calcExpr || '0';
-      }
-
-      function safeEval(expr) {
-        try {
-          if (!/^[\d+\-*/().\s]+$/.test(expr)) return 'Err';
-          const val = eval(expr);
-          if (typeof val === 'number' && isFinite(val)) return val;
-          return 'Err';
-        } catch { return 'Err'; }
-      }
-
-      function handleCalcInput(v) {
-        if (v === 'C') {
-          calcExpr = '';
-        } else if (v === '=') {
-          calcExpr = String(safeEval(calcExpr));
-        } else {
-          if (calcExpr === 'Err') calcExpr = '';
-          calcExpr += v;
-        }
-        updateCalcDisplay();
-      }
-
-      if (calcButtons) {
-        calcButtons.addEventListener('click', (e) => {
-          const btn = e.target.closest('button[data-calc]');
-          if (!btn) return;
-          handleCalcInput(btn.getAttribute('data-calc'));
-        });
-      }
-      updateCalcDisplay();
-
-      // Optimized Clock - update every 30 seconds instead of every second
-      function updateClock() {
-        const d = new Date();
-        const two = (n) => String(n).padStart(2, '0');
-        const settings = loadSettings();
-        
-        if (clock) {
-          if (settings.clock24h) {
-            clock.textContent = `${two(d.getHours())}:${two(d.getMinutes())}`;
-          } else {
-            const hours = d.getHours();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours % 12 || 12;
-            clock.textContent = `${displayHours}:${two(d.getMinutes())} ${ampm}`;
-          }
-        }
-      }
-      updateClock();
-      setInterval(updateClock, 30000); // Update every 30 seconds instead of every second
-
-      // Enhanced Start menu
-      const startBtn = document.getElementById('start-btn');
-      const startMenu = document.getElementById('start-menu');
-      let startMenuOpen = false;
-      
-      if (!startMenu) {
-        console.error('Start menu element not found!');
-      }
-      
-      if (startBtn) {
-        startBtn.addEventListener('click', (e) => { 
-          e.stopPropagation();
-          console.log('Start button clicked');
-          toggleStartMenu();
-        });
-      } else {
-        console.error('Start button not found!');
-      }
-      
-      function toggleStartMenu() {
-        console.log('toggleStartMenu called, current state:', startMenuOpen);
-        startMenuOpen = !startMenuOpen;
-        if (startMenuOpen) {
-          console.log('Opening start menu');
-          startMenu.classList.add('show');
-          startBtn.classList.add('active');
-          // Focus search input when menu opens
-          setTimeout(() => {
-            const searchInput = document.getElementById('start-search');
-            if (searchInput) {
-              searchInput.focus();
-              searchInput.select();
-            }
-          }, 100);
-        } else {
-          console.log('Closing start menu');
-          startMenu.classList.remove('show');
-          startBtn.classList.remove('active');
-          // Clear search when menu closes
-          const searchInput = document.getElementById('start-search');
-          if (searchInput) {
-            searchInput.value = '';
-            // Trigger input event to reset visibility
-            searchInput.dispatchEvent(new Event('input'));
-          }
-        }
-      }
-      
-      function closeStartMenu() {
-        startMenuOpen = false;
-        startMenu.classList.remove('show');
-        startBtn.classList.remove('active');
-      }
-      
-      // Close menu when clicking outside
-      desktop.addEventListener('click', (e) => {
-        if (startMenuOpen && !startMenu.contains(e.target) && e.target !== startBtn) {
-          closeStartMenu();
-        }
-      });
-      
-      // Close menu on Escape key
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && startMenuOpen) {
-          closeStartMenu();
-        }
-      });
-      
-      // Enhanced click handlers with animations
-      startMenu.querySelectorAll('[data-launch]').forEach(item => {
-        item.addEventListener('click', (e) => { 
-          e.preventDefault();
-          const app = item.getAttribute('data-launch');
-          
-          // Add click animation
-          item.style.transform = 'scale(0.95)';
-          setTimeout(() => {
-            item.style.transform = '';
-            launchApp(app);
-            closeStartMenu();
-            showNotification(`${app.charAt(0).toUpperCase() + app.slice(1)} launched from Start menu`, 'success', 2000);
-          }, 150);
-        });
-        
-        // Keyboard navigation
-        item.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            item.click();
-          }
-        });
-        
-        // Make items focusable
-        item.setAttribute('tabindex', '0');
-      });
-      
-      // Start menu search functionality
-      const startSearch = document.getElementById('start-search');
-      if (startSearch) {
-        startSearch.addEventListener('input', (e) => {
-          const query = e.target.value.toLowerCase().trim();
-          const items = startMenu.querySelectorAll('.start-item[data-launch]');
-          
-          items.forEach(item => {
-            const text = item.querySelector('.start-item-text').textContent.toLowerCase();
-            if (query === '' || text.includes(query)) {
-              item.classList.remove('hidden');
-            } else {
-              item.classList.add('hidden');
-            }
-          });
-          
-          // Show/hide section titles based on visible items
-          const sections = startMenu.querySelectorAll('.start-section');
-          sections.forEach(section => {
-            const visibleItems = section.querySelectorAll('.start-item:not(.hidden)');
-            const title = section.querySelector('.start-section-title');
-            if (title) {
-              title.style.display = visibleItems.length > 0 ? 'block' : 'none';
-            }
-          });
-        });
-        
-        // Focus search when menu opens
-        startMenu.addEventListener('show', () => {
-          setTimeout(() => {
-            startSearch.focus();
-          }, 100);
-        });
-      }
-
-      const powerOverlay = document.getElementById('power-overlay');
-      const powerMsg = document.getElementById('power-msg');
-      const startRestart = document.getElementById('start-restart');
-      const startShutdown = document.getElementById('start-shutdown');
-
-      function showPower(msg) {
-        if (powerMsg) powerMsg.textContent = msg || '';
-        powerOverlay.classList.add('show');
-      }
-
-      function hidePower() { 
-        powerOverlay.classList.remove('show'); 
-      }
-
-      function performRestart() {
-        showPower('Đang khởi động lại...');
-        setTimeout(() => { location.reload(); }, 1000);
-      }
-
-      function performShutdown() {
-        showPower('Đang tắt...');
-        document.querySelectorAll('.window').forEach(w => { 
-          if (!w.classList.contains('hidden')) w.classList.add('minimized'); 
-        });
-        setTimeout(() => { hidePower(); startMenu.classList.remove('show'); }, 1200);
-      }
-
-      if (startRestart) {
-        startRestart.addEventListener('click', (e) => { 
-          e.preventDefault();
-          startRestart.style.transform = 'scale(0.95)';
-          setTimeout(() => {
-            startRestart.style.transform = '';
-            closeStartMenu();
-            performRestart();
-          }, 150);
-        });
-        startRestart.setAttribute('tabindex', '0');
-      }
-      
-      if (startShutdown) {
-        startShutdown.addEventListener('click', (e) => { 
-          e.preventDefault();
-          startShutdown.style.transform = 'scale(0.95)';
-          setTimeout(() => {
-            startShutdown.style.transform = '';
-            closeStartMenu();
-            performShutdown();
-          }, 150);
-        });
-        startShutdown.setAttribute('tabindex', '0');
-      }
-
-      // Activation logic
-      const ACTIVATE_KEY = 'webos.activation';
-      const watermarkEl = document.getElementById('watermark');
-      const actInput = document.getElementById('act-key');
-      const actApply = document.getElementById('act-apply');
-      const actMsg = document.getElementById('act-msg');
-
-      function isActivated() { 
-        return localStorage.getItem(ACTIVATE_KEY) === '1'; 
-      }
-      
-      function setActivated(v) { 
-        if (v) localStorage.setItem(ACTIVATE_KEY,'1'); 
-        else localStorage.removeItem(ACTIVATE_KEY); 
-      }
-      
-      function updateWatermark() { 
-        if (watermarkEl) watermarkEl.classList.toggle('hidden', isActivated()); 
-      }
-
-      function validKey(k) {
-        const key = (k||'').trim().toUpperCase();
-        if (/^0000-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key)) return true;
-        const allowed = ['HSI2-21SA-NMIC-OPOW', 'HSIO-JKSA-MZQE-UIAS'];
-        return allowed.includes(key);
-      }
-
-      if (actApply) {
-        actApply.addEventListener('click', () => {
-          const k = actInput.value.trim().toUpperCase();
-          if (!validKey(k)) {
-            if (actMsg) {
-              actMsg.textContent = 'Khóa không hợp lệ. Định dạng: 0000-XXXX-XXXX';
-              actMsg.style.color = '#ffb4b4';
-            }
-            return;
-          }
-          setActivated(true);
-          updateWatermark();
-          if (actMsg) {
-            actMsg.style.color = '#9dffb0';
-            actMsg.textContent = 'Kích hoạt thành công!';
-          }
-          setTimeout(() => { hideWindow('win-activate'); }, 700);
-        });
-      }
-
-      updateWatermark();
-
-      // Keyboard shortcuts
-      document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey || e.metaKey) {
-          switch(e.key) {
-            case 'n':
-              e.preventDefault();
-              launchApp('notes');
-              break;
-            case 'b':
-              e.preventDefault();
-              launchApp('browser');
-              break;
-            case 'f':
-              e.preventDefault();
-              launchApp('files');
-              break;
-            case 'c':
-              e.preventDefault();
-              launchApp('calculator');
-              break;
-            case 's':
-              e.preventDefault();
-              launchApp('settings');
-              break;
-            case 'Escape':
-              e.preventDefault();
-              document.querySelectorAll('.window').forEach(w => {
-                if (!w.classList.contains('hidden')) w.classList.add('minimized');
-              });
-              break;
-          }
-        }
-      });
-
-      // Context menu on desktop
-      const ctx = document.getElementById('ctx');
-      desktop.addEventListener('contextmenu', (e) => {
-        if (e.target.closest('.window') || e.target.closest('.taskbar')) return;
-        e.preventDefault();
-        const bounds = desktop.getBoundingClientRect();
-        const x = Math.min(e.clientX, bounds.width - 210);
-        const y = Math.min(e.clientY, bounds.height - 120);
-        ctx.style.left = x + 'px';
-        ctx.style.top = y + 'px';
-        ctx.classList.add('show');
-      });
-
-      desktop.addEventListener('click', () => ctx.classList.remove('show'));
-
-      document.getElementById('ctx-new-note').addEventListener('click', () => { 
-        launchApp('notes'); 
-        ctx.classList.remove('show'); 
-      });
-      
-      document.getElementById('ctx-settings').addEventListener('click', () => { 
-        launchApp('settings'); 
-        ctx.classList.remove('show'); 
-      });
-      
-      document.getElementById('ctx-minimize-all').addEventListener('click', () => {
-        document.querySelectorAll('.window').forEach(w => { 
-          if (!w.classList.contains('hidden')) w.classList.add('minimized'); 
-        });
-        ctx.classList.remove('show');
-      });
-
-      // Settings behaviors
-      const bgInput = document.getElementById('bg-url');
-      const bgApply = document.getElementById('bg-apply');
-      const clockFormat = document.getElementById('clock-format');
-      const clearNotesBtn = document.getElementById('clear-notes');
-      const arrangeBtn = document.getElementById('arrange');
-      const apiKeyInput = document.getElementById('api-key');
-      const apiSaveBtn = document.getElementById('api-save');
-
-      if (bgInput) bgInput.value = settings.bgUrl || '';
-      if (clockFormat) clockFormat.value = settings.clock24h ? '24' : '12';
-      if (apiKeyInput) apiKeyInput.value = settings.apiKey || '';
-
-      if (bgApply) {
-        bgApply.addEventListener('click', () => {
-          const s = loadSettings();
-          s.bgUrl = (bgInput.value || '').trim();
-          saveSettings(s);
-          applySettings(s);
-          showNotification('Background applied successfully', 'success');
-        });
-      }
-
-      if (clockFormat) {
-        clockFormat.addEventListener('change', () => {
-          const s = loadSettings();
-          s.clock24h = clockFormat.value === '24';
-          saveSettings(s);
-          applySettings(s);
-        });
-      }
-
-      if (clearNotesBtn) {
-        clearNotesBtn.addEventListener('click', () => {
-          localStorage.removeItem('webos.notes');
-          if (titleEl) titleEl.value = '';
-          if (bodyEl) bodyEl.value = '';
-          showNotification('Notes cleared successfully', 'success');
-        });
-      }
-
-      if (arrangeBtn) {
-        arrangeBtn.addEventListener('click', () => {
-          const windows = Array.from(document.querySelectorAll('.window')).filter(w => !w.classList.contains('hidden'));
-          const bounds = desktop.getBoundingClientRect();
-          let x = 12, y = 12;
-          windows.forEach((w) => {
-            w.classList.remove('minimized');
-            w.style.left = x + 'px';
-            w.style.top = y + 'px';
-            bringToFront(w);
-            saveGeometry(w);
-            x += 32; y += 24;
-            if (x > bounds.width - 360) { x = 12; }
-            if (y > bounds.height - 260 - 56) { y = 12; }
-          });
-          showNotification('Windows arranged successfully', 'success');
-        });
-      }
-
-      if (apiSaveBtn) {
-        apiSaveBtn.addEventListener('click', () => {
-          const s = loadSettings();
-          s.apiKey = apiKeyInput.value.trim();
-          saveSettings(s);
-          showNotification('API key saved successfully', 'success');
-          if (apiKeyInput.value.trim()) {
-            showNotification('AI Chat is now ready to use!', 'info', 3000);
-          }
-        });
-      }
-
-      // Settings helpers
-      function loadSettings() {
-        try { 
-          return JSON.parse(localStorage.getItem(settingsKey)) || { clock24h: true, bgUrl: '', apiKey: '' }; 
-        } catch { 
-          return { clock24h: true, bgUrl: '', apiKey: '' }; 
-        }
-      }
-      
-      function saveSettings(s) { 
-        localStorage.setItem(settingsKey, JSON.stringify(s)); 
-      }
-      
-      function applySettings(s) {
-        if (s.bgUrl) {
-          desktop.style.background = `url('${s.bgUrl}') center/cover no-repeat fixed`;
-        }
-        updateClock();
-      }
-
-      // Geometry persistence
-      function saveGeometry(win) {
-        const app = win.dataset.app; 
-        if (!app) return;
-        const key = `webos.geometry.${app}`;
-        const maximized = win.dataset.maximized === 'true';
-        const rect = win.getBoundingClientRect();
-        const data = { 
-          left: win.style.left, 
-          top: win.style.top, 
-          width: win.style.width, 
-          height: win.style.height, 
-          maximized, 
-          rect: { w: rect.width, h: rect.height } 
-        };
-        debouncedSave(key, data);
-      }
-
-      function restoreGeometry(win) {
-        const app = win.dataset.app; 
-        if (!app) return;
-        const key = `webos.geometry.${app}`;
-        try {
-          const raw = localStorage.getItem(key); 
-          if (!raw) return;
-          const g = JSON.parse(raw);
-          if (g.left) win.style.left = g.left;
-          if (g.top) win.style.top = g.top;
-          if (g.width) win.style.width = g.width;
-          if (g.height) win.style.height = g.height;
-          if (g.maximized) toggleMaximize(win);
-        } catch {}
-      }
-
-      // --- File Explorer Logic ---
-      (function() {
-        // File system mock structure
-        const VFS_KEY = 'webos.vfs';
-        function vfsLoad() {
-          try { 
-            return JSON.parse(localStorage.getItem(VFS_KEY)) || { name:'/', type:'dir', children:[] }; 
-          } catch { 
-            return { name:'/', type:'dir', children:[] }; 
-          }
-        }
-        function vfsSave(tree) { 
-          localStorage.setItem(VFS_KEY, JSON.stringify(tree)); 
-        }
-
-        let vfs = vfsLoad();
-        let cwd = '/';
-        let selected = null;
-
-        // Find directory by path
-        function vfsFind(path, tree) {
-          if (path === '/' || !path) return tree;
-          const parts = path.split('/').filter(Boolean);
-          let node = tree;
-          for (const part of parts) {
-            if (!node.children) return null;
-            node = node.children.find(ch => ch.name === part);
-            if (!node) return null;
-          }
-          return node;
-        }
-
-        // Get full path for a file/folder
-        function vfsPathOf(path, name) {
-          return path === '/' ? `/${name}` : `${path}/${name}`;
-        }
-
-        // Render file list
-        function renderFM() {
-          const fmList = document.getElementById('fm-list');
-          const fmBreadcrumb = document.getElementById('fm-breadcrumb');
-          const dir = vfsFind(cwd, vfs);
-          if (!dir || dir.type !== 'dir') return;
-
-          // Breadcrumb
-          if (fmBreadcrumb) {
-            const parts = cwd.split('/').filter(Boolean);
-            let html = `<span data-path="/">Root</span>`;
-            let cur = '';
-            parts.forEach(part => {
-              cur += '/' + part;
-              html += ` / <span data-path="${cur}">${part}</span>`;
-            });
-            fmBreadcrumb.innerHTML = html;
-            fmBreadcrumb.querySelectorAll('span[data-path]').forEach(span => {
-              span.style.cursor = 'pointer';
-              span.addEventListener('click', () => {
-                cwd = span.getAttribute('data-path');
-                renderFM();
-              });
-            });
-          }
-
-          // File/folder list
-          if (fmList) {
-            fmList.innerHTML = '';
-            if (!dir.children || !dir.children.length) {
-              fmList.innerHTML = '<div style="grid-column:1/-1; color:#aaa; text-align:center;">Thư mục trống.</div>';
-              return;
-            }
-            dir.children.forEach(item => {
-              const div = document.createElement('div');
-              div.className = 'fm-item';
-              div.innerHTML = `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='${item.type==='dir'?'M10 4H4c-1.1 0-2 .9-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8h-8l-4-4z':'M6 2h9l5 5v15a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm8 7H7v2h7V9z'}'/%3E%3C/svg%3E"/><div class='fm-name'></div>`;
-              div.querySelector('.fm-name').textContent = item.name;
-              div.title = item.name;
-              div.addEventListener('dblclick', () => {
-                if (item.type === 'dir') {
-                  cwd = vfsPathOf(cwd, item.name);
-                  renderFM();
-                } else {
-                  showNotification(`Mở tập tin: ${item.name}`, 'info');
-                }
-              });
-              div.addEventListener('click', () => {
-                fmList.querySelectorAll('.fm-item').forEach(d => d.classList.remove('selected'));
-                div.classList.add('selected');
-                selected = item.name;
-              });
-              fmList.appendChild(div);
-            });
-          }
-        }
-
-        // Toolbar actions
-        document.getElementById('fm-up').addEventListener('click', () => {
-          if (cwd === '/' || cwd === '') return;
-          const parts = cwd.split('/').filter(Boolean);
-          parts.pop();
-          cwd = '/' + parts.join('/');
-          renderFM();
-        });
-
-        document.getElementById('fm-new-folder').addEventListener('click', () => {
-          const dir = vfsFind(cwd, vfs);
-          if (!dir || dir.type !== 'dir') return;
-          let name = prompt('Tên thư mục mới:');
-          if (!name) return;
-          if (dir.children.find(ch => ch.name === name)) {
-            showNotification('Tên đã tồn tại.', 'error');
-            return;
-          }
-          dir.children.push({ name, type: 'dir', children: [] });
-          vfsSave(vfs);
-          renderFM();
-        });
-
-        document.getElementById('fm-new-file').addEventListener('click', () => {
-          const dir = vfsFind(cwd, vfs);
-          if (!dir || dir.type !== 'dir') return;
-          let name = prompt('Tên tập tin mới:');
-          if (!name) return;
-          if (dir.children.find(ch => ch.name === name)) {
-            showNotification('Tên đã tồn tại.', 'error');
-            return;
-          }
-          dir.children.push({ name, type: 'file', content: '' });
-          vfsSave(vfs);
-          renderFM();
-        });
-
-        document.getElementById('fm-rename').addEventListener('click', () => {
-          if (!selected) return showNotification('Chọn một mục để đổi tên.', 'error');
-          const dir = vfsFind(cwd, vfs);
-          const item = dir.children.find(ch => ch.name === selected);
-          let newName = prompt('Tên mới:', item.name);
-          if (!newName || newName === item.name) return;
-          if (dir.children.find(ch => ch.name === newName)) {
-            showNotification('Tên đã tồn tại.', 'error');
-            return;
-          }
-          item.name = newName;
-          vfsSave(vfs);
-          renderFM();
-        });
-
-        document.getElementById('fm-delete').addEventListener('click', () => {
-          if (!selected) return showNotification('Chọn một mục để xóa.', 'error');
-          const dir = vfsFind(cwd, vfs);
-          const idx = dir.children.findIndex(ch => ch.name === selected);
-          if (idx < 0) return;
-          if (!confirm(`Xóa "${selected}"?`)) return;
-          dir.children.splice(idx, 1);
-          vfsSave(vfs);
-          selected = null;
-          renderFM();
-        });
-
-        // Upload files
-        document.getElementById('fm-upload-btn').addEventListener('click', () => {
-          document.getElementById('fm-upload').click();
-        });
-        document.getElementById('fm-upload').addEventListener('change', (e) => {
-          const dir = vfsFind(cwd, vfs);
-          if (!dir || dir.type !== 'dir') return;
-          Array.from(e.target.files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-              dir.children.push({ name: file.name, type: 'file', content: ev.target.result });
-              vfsSave(vfs);
-              renderFM();
-            };
-            reader.readAsDataURL(file);
-          });
-          e.target.value = '';
-        });
-
-        // Initial render
-        renderFM();
-
-        // Expose for debugging
-        window.vfs = vfs;
-      })();
-    })(); // Add this closing brace to properly close the IIFE
-    </script>
-  </body>
 </html>

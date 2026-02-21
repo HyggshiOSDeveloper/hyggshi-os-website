@@ -1,0 +1,41 @@
+/* ========================================
+   WEB OS — Premium Dark Glassmorphism Theme
+   ======================================== */
+
+/* === CSS Custom Properties === */
+:root {
+    --accent: #6c5ce7;
+    --accent-soft: rgba(108, 92, 231, 0.25);
+    --accent-glow: rgba(108, 92, 231, 0.5);
+
+    --bg-dark: #0a0a0f;
+    --bg-surface: rgba(20, 20, 35, 0.75);
+    --bg-glass: rgba(25, 25, 45, 0.65);
+    --bg-glass-heavy: rgba(15, 15, 30, 0.85);
+    --bg-hover: rgba(255, 255, 255, 0.06);
+    --bg-active: rgba(255, 255, 255, 0.1);
+
+    --text-primary: #e8e8f0;
+    --text-secondary: rgba(232, 232, 240, 0.6);
+    --text-muted: rgba(232, 232, 240, 0.35);
+
+    --border: rgba(255, 255, 255, 0.08);
+    --border-light: rgba(255, 255, 255, 0.12);
+    --border-focus: var(--accent);
+
+    --blur: 20px;
+    --blur-heavy: 40px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-sm: 8px;
+
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+    --shadow-window: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
+
+    --taskbar-height: 52px;
+    --titlebar-height: 38px;
+
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
