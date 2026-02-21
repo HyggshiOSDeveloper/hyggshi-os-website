@@ -286,3 +286,98 @@
     color: #eee;
     font-weight: 500;
 }
+
+/* === YouTube App === */
+.app-youtube {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+}
+
+.yt-header {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.yt-search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0 12px;
+    gap: 8px;
+    transition: all var(--transition);
+}
+
+.yt-search:focus-within {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.yt-search .material-icons-round {
+    color: var(--text-secondary);
+    font-size: 20px;
+}
+
+.yt-search input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    padding: 10px 0;
+    outline: none;
+}
+
+.yt-search input::placeholder {
+    color: var(--text-muted);
+}
+
+.yt-btn {
+    background: #ff0000;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.yt-btn:hover {
+    background: #cc0000;
+    transform: scale(1.05);
+}
+
+.yt-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+    /* Dark background for videos */
+}
+
+.yt-placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-surface);
+    /* Revert to surface when empty */
+    text-align: center;
+}

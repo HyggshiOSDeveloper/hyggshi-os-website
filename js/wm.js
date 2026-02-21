@@ -18,6 +18,8 @@ const appMeta = {
     'music-player': { title: 'Music Player', icon: 'headphones', w: 380, h: 480 },
     'chat-ai': { title: 'Chat AI', icon: 'psychology', w: 800, h: 600 },
     'video-player': { title: 'Video Player', icon: 'movie', w: 750, h: 520 },
+    'youtube': { title: 'YouTube', icon: 'smart_display', w: 850, h: 550 },
+    'weather': { title: 'Weather', icon: 'cloud', w: 700, h: 500 },
     'about': { title: 'About Web OS', icon: 'info', w: 420, h: 500 },
 };
 

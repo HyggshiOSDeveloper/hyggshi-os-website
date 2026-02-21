@@ -40,25 +40,100 @@ function ivZoom(dir) {
 
 /* ============ MUSIC PLAYER ============ */
 let mpPlaying = false;
-let mpProgress = 0;
 let mpInterval = null;
 
+function mpSelectAudio() {
+    document.getElementById('mp-upload-input').click();
+}
+
+function mpHandleUpload(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const audio = document.getElementById('mp-audio');
+
+        // Update UI
+        for (const [wid, w] of Object.entries(windows)) {
+            if (w.appId === 'music-player') {
+                w.el.querySelector('.mp-title').textContent = file.name.replace(/\.[^/.]+$/, "");
+                w.el.querySelector('.mp-artist').textContent = "Local File";
+                w.el.querySelector('.mp-times').innerHTML = `<span>0:00</span><span>--:--</span>`;
+                w.el.querySelector('.mp-bar-fill').style.width = '0%';
+                break;
+            }
+        }
+
+        const url = URL.createObjectURL(file);
+        audio.src = url;
+        audio.load();
+
+        // When metadata is loaded, update total time
+        audio.onloadedmetadata = () => {
+            for (const [wid, w] of Object.entries(windows)) {
+                if (w.appId === 'music-player') {
+                    w.el.querySelector('.mp-times').innerHTML = `<span>0:00</span><span>${formatTime(audio.duration)}</span>`;
+                    break;
+                }
+            }
+        };
+
+        // When time updates, update progress bar
+        audio.ontimeupdate = () => {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            for (const [wid, w] of Object.entries(windows)) {
+                if (w.appId === 'music-player') {
+                    const fill = w.el.querySelector('.mp-bar-fill');
+                    if (fill) fill.style.width = percent + '%';
+                    w.el.querySelector('.mp-times').innerHTML = `<span>${formatTime(audio.currentTime)}</span><span>${formatTime(audio.duration)}</span>`;
+                    break;
+                }
+            }
+        };
+
+        // When ended, reset button
+        audio.onended = () => {
+            mpPlaying = false;
+            for (const [wid, w] of Object.entries(windows)) {
+                if (w.appId === 'music-player') {
+                    const btn = w.el.querySelector('.mp-play .material-icons-round');
+                    btn.textContent = 'play_arrow';
+                    break;
+                }
+            }
+        };
+
+        // Auto play new file
+        mpPlaying = true;
+        audio.play().then(() => {
+            for (const [wid, w] of Object.entries(windows)) {
+                if (w.appId === 'music-player') {
+                    const btn = w.el.querySelector('.mp-play .material-icons-round');
+                    btn.textContent = 'pause';
+                    break;
+                }
+            }
+        }).catch(e => {
+            mpPlaying = false;
+            console.log("Auto-play blocked", e);
+        });
+    }
+}
+
 function mpToggle() {
+    const audio = document.getElementById('mp-audio');
+    if (!audio || !audio.src) return; // Ignore if no file loaded
+
     mpPlaying = !mpPlaying;
+
+    if (mpPlaying) {
+        audio.play();
+    } else {
+        audio.pause();
+    }
+
     for (const [wid, w] of Object.entries(windows)) {
         if (w.appId === 'music-player') {
             const btn = w.el.querySelector('.mp-play .material-icons-round');
             btn.textContent = mpPlaying ? 'pause' : 'play_arrow';
-
-            if (mpPlaying) {
-                mpInterval = setInterval(() => {
-                    mpProgress = (mpProgress + 0.5) % 100;
-                    const fill = w.el.querySelector('.mp-bar-fill');
-                    if (fill) fill.style.width = mpProgress + '%';
-                }, 200);
-            } else {
-                clearInterval(mpInterval);
-            }
             break;
         }
     }
@@ -164,4 +239,36 @@ function openVideoInPlayer(name, content) {
             }
         }
     }, 100);
+}
+
+/* ============ YOUTUBE PLAYER ============ */
+function ytLoadVideo(url) {
+    if (!url) return;
+
+    let videoId = '';
+
+    // Parse URL for ID
+    if (url.includes('youtube.com/watch?v=')) {
+        videoId = new URL(url).searchParams.get('v');
+    } else if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1].split('?')[0];
+    } else if (url.length === 11) {
+        // Assume direct ID input
+        videoId = url;
+    } else {
+        showNotification("YouTube", "Invalid YouTube URL format.");
+        return;
+    }
+
+    if (videoId) {
+        for (const [wid, w] of Object.entries(windows)) {
+            if (w.appId === 'youtube') {
+                const contentDiv = w.el.querySelector('#yt-content');
+                if (contentDiv) {
+                    contentDiv.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&origin=http://localhost" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="border-radius: var(--radius-md);"></iframe>`;
+                }
+                break;
+            }
+        }
+    }
 }

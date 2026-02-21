@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="css/apps-core.css">
     <link rel="stylesheet" href="css/apps-media.css">
     <link rel="stylesheet" href="css/apps-chat.css">
+    <link rel="stylesheet" href="css/apps-weather.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,6 +120,16 @@
                 <div class="icon-img"><span class="material-icons-round">movie</span></div>
                 <span class="icon-label">Videos</span>
             </div>
+            <div class="desktop-icon" data-app="youtube" ondblclick="openApp('youtube')">
+                <div class="icon-img" style="background: linear-gradient(135deg, #ff0000, #ff4c4c)"><span
+                        class="material-icons-round" style="color: white">smart_display</span></div>
+                <span class="icon-label">YouTube</span>
+            </div>
+            <div class="desktop-icon" data-app="weather" ondblclick="openApp('weather')">
+                <div class="icon-img" style="background: linear-gradient(135deg, #1e88e5, #64b5f6)"><span
+                        class="material-icons-round" style="color: white">cloud</span></div>
+                <span class="icon-label">Weather</span>
+            </div>
         </div>
 
         <!-- Windows Container -->
@@ -173,6 +184,12 @@
             </div>
             <div class="start-app-item" data-app="video-player" onclick="openApp('video-player')">
                 <span class="material-icons-round">movie</span><span>Video Player</span>
+            </div>
+            <div class="start-app-item" data-app="youtube" onclick="openApp('youtube')">
+                <span class="material-icons-round" style="color: #ff0000">smart_display</span><span>YouTube</span>
+            </div>
+            <div class="start-app-item" data-app="weather" onclick="openApp('weather')">
+                <span class="material-icons-round" style="color: #64b5f6">cloud</span><span>Weather</span>
             </div>
             <div class="start-app-item" data-app="about" onclick="openApp('about')">
                 <span class="material-icons-round">info</span><span>About</span>
@@ -631,12 +648,44 @@
                 </div>
             </div>
             <div class="mp-controls">
-                <button><span class="material-icons-round">shuffle</span></button>
+                <button onclick="mpSelectAudio()" title="Open .mp3"><span
+                        class="material-icons-round">folder_open</span></button>
                 <button><span class="material-icons-round">skip_previous</span></button>
-                <button class="mp-play" onclick="mpToggle()"><span
+                <button class="mp-play" onclick="mpToggle()" id="mp-play-btn"><span
                         class="material-icons-round">play_arrow</span></button>
                 <button><span class="material-icons-round">skip_next</span></button>
                 <button><span class="material-icons-round">repeat</span></button>
+
+                <!-- Hidden input for file selection -->
+                <input type="file" id="mp-upload-input" accept="audio/mpeg, audio/mp3, audio/wav, audio/ogg"
+                    style="display: none;" onchange="mpHandleUpload(this)">
+                <!-- Hidden audio element for playback -->
+                <audio id="mp-audio" style="display: none;"></audio>
+            </div>
+        </div>
+    </template>
+
+    <!-- YouTube App -->
+    <template id="tmpl-youtube">
+        <div class="app-youtube">
+            <div class="yt-header">
+                <div class="yt-search">
+                    <span class="material-icons-round">link</span>
+                    <input type="text" id="yt-input" placeholder="Paste YouTube URL or Search..."
+                        onkeydown="if(event.key==='Enter') ytLoadVideo(this.value)">
+                </div>
+                <button onclick="ytLoadVideo(document.getElementById('yt-input').value)" class="yt-btn">
+                    <span class="material-icons-round">play_arrow</span>
+                </button>
+            </div>
+            <div class="yt-content" id="yt-content">
+                <div class="yt-placeholder">
+                    <span class="material-icons-round"
+                        style="font-size: 64px; color: #ff0000; margin-bottom: 16px;">smart_display</span>
+                    <h3>YouTube Player</h3>
+                    <p style="color: var(--text-secondary); margin-top: 8px;">Paste a YouTube link above to start
+                        watching</p>
+                </div>
             </div>
         </div>
     </template>
@@ -721,12 +770,36 @@
         </div>
     </template>
 
+    <!-- Weather -->
+    <template id="tmpl-weather">
+        <div class="app-weather">
+            <div class="weather-header">
+                <div class="weather-search-box">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" id="weather-search-input" placeholder="Search city... (e.g. London, Tokyo)"
+                        onkeydown="if(event.key==='Enter') weatherSearchCity(this.value)">
+                </div>
+                <button class="weather-location-btn" onclick="weatherUseCurrentLocation()" title="Use Current Location">
+                    <span class="material-icons-round">my_location</span>
+                </button>
+            </div>
+            <div class="weather-main" id="weather-main-display">
+                <!-- Data will be injected here -->
+                <div class="weather-loading">
+                    <span class="material-icons-round shake">cloud_download</span>
+                    <p>Fetching weather data...</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
     <script src="js/vfs.js"></script>
     <script src="js/wm.js"></script>
     <script src="js/system.js"></script>
     <script src="js/apps-core.js"></script>
     <script src="js/apps-media.js"></script>
     <script src="js/apps-chat.js"></script>
+    <script src="js/apps-weather.js"></script>
     <script src="js/main.js"></script>
     <!-- Video Player -->
     <template id="tmpl-video-player">
