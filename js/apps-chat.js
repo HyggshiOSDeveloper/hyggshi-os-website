@@ -868,7 +868,8 @@ async function chatSendMessage() {
         session.messages.push({
             role: 'user',
             text,
-            images: uploadedImages.length > 0 ? uploadedImages : null
+            images: uploadedImages.length > 0 ? uploadedImages : null,
+            timestamp: Date.now()
         });
         chatSaveToDisk();
         chatRenderHistory();
@@ -934,7 +935,7 @@ async function chatCallGemini(winEl, apiKey, prompt, images = [], sessionId = cu
 
     const session = chatSessions.find(s => s.id === sessionId);
     if (session) {
-        session.messages.push({ role: 'ai', text: aiText });
+        session.messages.push({ role: 'ai', text: aiText, timestamp: Date.now() });
         chatSaveToDisk();
     }
 
