@@ -847,8 +847,11 @@ function gcEscape(text) {
 function gcFormatMessageTime(value) {
     if (!value) return '';
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    if (isNaN(date.getTime())) return '';
+    // Consistent 24-hour time format (HH:MM)
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
 }
 
 function gcOpenExternalMedia(url) {
