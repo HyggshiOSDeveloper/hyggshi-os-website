@@ -22,10 +22,16 @@ let gcSubscription = null;
 let gcRoomsSubscription = null;
 let gcSetupErrorShown = false;
 let gcRoomCache = [];
+let gcKnownMessageIds = new Set();
+let gcPendingMessages = new Map();
+let gcPendingAttachment = null;
 
 /* ===== INIT ===== */
 function initMessage(win) {
     gcWin = win;
+    gcKnownMessageIds = new Set();
+    gcPendingMessages = new Map();
+    gcPendingAttachment = null;
 
     let cleanUrl = SB_URL.trim();
     try {
@@ -55,6 +61,9 @@ function initMessage(win) {
         showNotification('Global Chat', 'Cannot connect to Supabase.');
         return;
     }
+
+    gcApplyEnglishCopy(win);
+    gcBindComposer(win);
 
     const userName = localStorage.getItem('webos-gc-username');
     const userId = localStorage.getItem('webos-gc-userid');
@@ -174,7 +183,7 @@ async function gcRegister() {
 
     if (!username || !password) return;
     if (username.length < 3 || password.length < 6) {
-        showNotification('Global Chat', 'Username must be at least 3 chars and password at least 6 chars.');
+        showNotification('Global Chat', 'Username must be at least 3 characters and password at least 6 characters.');
         return;
     }
     if (password !== confirmation) {
@@ -207,7 +216,7 @@ async function gcRegister() {
         gcStartApp(gcWin);
     } catch (error) {
         console.error('Register error:', error);
-        showNotification('Global Chat', 'System error while creating account.');
+        showNotification('Global Chat', 'System error while creating the account.');
     }
 }
 
@@ -278,9 +287,10 @@ function gcRenderRoomList(win, rooms) {
 
         const icon = room.type === 'global' ? 'public' : 'group';
         const preview = room.type === 'global'
-            ? 'Phòng chat chung của mọi người'
-            : 'Nhóm trò chuyện';
-        const meta = room.id === gcCurrentRoom ? 'Đang mở' : 'Hôm nay';
+            ? 'Shared conversation for everyone'
+            : 'Group conversation';
+        const meta = room.id === gcCurrentRoom ? 'Open now' : 'Today';
+
         div.innerHTML = `
             <div class="gc-room-icon ${room.type}"><span class="material-icons-round">${icon}</span></div>
             <div class="gc-room-info">
@@ -304,6 +314,8 @@ async function gcSwitchRoom(roomId) {
     }
 
     gcCurrentRoom = roomId;
+    gcKnownMessageIds = new Set();
+    gcPendingMessages.clear();
 
     const msgContainer = gcWin?.querySelector('.gc-messages');
     if (!msgContainer) return;
@@ -323,7 +335,10 @@ async function gcSwitchRoom(roomId) {
     }
 
     gcRenderRoomList(gcWin, gcRoomCache);
-    (messages || []).forEach(msg => gcAppendMessage(msgContainer, msg));
+    (messages || []).forEach(msg => {
+        if (msg.id) gcKnownMessageIds.add(msg.id);
+        gcAppendMessage(msgContainer, msg);
+    });
     msgContainer.scrollTop = msgContainer.scrollHeight;
 
     gcSubscription = sbClient.channel(`room:${roomId}`)
@@ -333,8 +348,7 @@ async function gcSwitchRoom(roomId) {
             table: GC_TABLES.messages,
             filter: `room_id=eq.${roomId}`
         }, payload => {
-            gcAppendMessage(msgContainer, payload.new);
-            msgContainer.scrollTop = msgContainer.scrollHeight;
+            gcHandleIncomingMessage(payload.new);
         })
         .subscribe();
 
@@ -354,21 +368,24 @@ function gcUpdateHeader(roomId) {
     if (headerName) headerName.textContent = room.name;
     if (headerStatus) {
         headerStatus.textContent = room.type === 'global'
-            ? 'Cộng đồng đang trò chuyện'
-            : 'Nhóm đang hoạt động';
+            ? 'The community is chatting now'
+            : 'This group is active';
     }
     if (headerIcon) {
         headerIcon.innerHTML = `<span class="material-icons-round">${room.type === 'global' ? 'forum' : 'groups'}</span>`;
     }
 }
 
-function gcAppendMessage(container, msg) {
-    const isSent = msg.sender_id === gcUserId;
+function gcAppendMessage(container, msg, options = {}) {
+    const isSent = msg.sender_id === gcUserId || options.forceSent;
     const div = document.createElement('div');
-    div.className = `gc-msg${isSent ? ' sent' : ''}`;
+    div.className = `gc-msg${isSent ? ' sent' : ''}${options.pending ? ' pending' : ''}`;
+    if (options.tempId) div.dataset.tempId = options.tempId;
+    if (msg.id) div.dataset.messageId = msg.id;
 
     const initials = (msg.sender_name || '?')[0].toUpperCase();
     const color = msg.sender_color || '#6c5ce7';
+    const timeText = options.statusText || gcFormatMessageTime(msg.created_at);
 
     let contentHtml = '';
     if (msg.type === 'image') {
@@ -380,92 +397,410 @@ function gcAppendMessage(container, msg) {
         contentHtml = `<div class="gc-msg-bubble">${gcEscape(msg.text || '')}</div>`;
     }
 
+    const progressHtml = options.progress === true ? `
+        <div class="gc-upload-progress">
+            <div class="gc-upload-progress-bar" style="width:${Math.max(0, Math.min(100, options.progressValue || 0))}%"></div>
+        </div>
+    ` : '';
+
     div.innerHTML = `
         <div class="gc-msg-avatar" style="background:${color}">${initials}</div>
         <div class="gc-msg-body">
             <div class="gc-msg-sender" style="color:${color}">${gcEscape(msg.sender_name || 'Unknown')}</div>
             ${contentHtml}
-            <div class="gc-msg-time">${gcFormatMessageTime(msg.created_at)}</div>
+            ${progressHtml}
+            <div class="gc-msg-time">${timeText}</div>
         </div>
     `;
 
     container.appendChild(div);
+    return div;
+}
+
+function gcHandleIncomingMessage(msg) {
+    if (!msg || msg.room_id !== gcCurrentRoom) return;
+    if (msg.id && gcKnownMessageIds.has(msg.id)) return;
+
+    const pendingMatch = gcFindPendingMessageMatch(msg);
+    if (pendingMatch) {
+        const pendingEl = gcPendingMessages.get(pendingMatch);
+        if (pendingEl) gcReplacePendingMessage(pendingEl, msg);
+        gcPendingMessages.delete(pendingMatch);
+    } else {
+        const msgContainer = gcWin?.querySelector('.gc-messages');
+        if (!msgContainer) return;
+        gcAppendMessage(msgContainer, msg);
+    }
+
+    if (msg.id) gcKnownMessageIds.add(msg.id);
+
+    const msgContainer = gcWin?.querySelector('.gc-messages');
+    if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+}
+
+function gcFindPendingMessageMatch(msg) {
+    for (const [tempId, element] of gcPendingMessages.entries()) {
+        const type = element.dataset.messageType;
+        const text = element.dataset.messageText || '';
+        const fileUrl = element.dataset.fileUrl || '';
+
+        if (type !== msg.type) continue;
+        if (type === 'text' && text === (msg.text || '')) return tempId;
+        if ((type === 'image' || type === 'video') && fileUrl && fileUrl === (msg.file_url || '')) return tempId;
+    }
+    return null;
+}
+
+function gcReplacePendingMessage(element, msg) {
+    const replacement = gcAppendMessage(document.createElement('div'), msg, { forceSent: true }).firstElementChild;
+    if (!replacement) return;
+    element.replaceWith(replacement);
 }
 
 /* ===== SEND & UPLOAD ===== */
 async function gcSendMessage() {
-    if (!sbClient) return;
+    if (!sbClient || !gcWin) return;
 
-    const textarea = gcWin?.querySelector('.gc-input-box textarea');
-    const text = textarea?.value.trim();
+    const textarea = gcWin.querySelector('.gc-input-box textarea');
+    const text = textarea?.value.trim() || '';
+    const attachment = gcPendingAttachment;
+
+    if (!text && !attachment) return;
+
+    if (attachment) {
+        await gcSendAttachment(attachment, text);
+        return;
+    }
+
     if (!textarea || !text) return;
 
     textarea.value = '';
+    gcResizeTextarea(textarea);
 
-    const { error } = await sbClient.from(GC_TABLES.messages).insert([{
+    const optimistic = {
         room_id: gcCurrentRoom,
         text,
         sender_id: gcUserId,
         sender_name: gcUserName,
         sender_color: gcUserColor,
-        type: 'text'
-    }]);
+        type: 'text',
+        created_at: new Date().toISOString()
+    };
+
+    const tempId = gcCreateTempId('text');
+    const msgContainer = gcWin.querySelector('.gc-messages');
+    const pendingEl = gcAppendMessage(msgContainer, optimistic, {
+        forceSent: true,
+        pending: true,
+        tempId,
+        statusText: 'Sending...'
+    });
+    pendingEl.dataset.messageType = 'text';
+    pendingEl.dataset.messageText = text;
+    gcPendingMessages.set(tempId, pendingEl);
+    msgContainer.scrollTop = msgContainer.scrollHeight;
+
+    const { data, error } = await sbClient
+        .from(GC_TABLES.messages)
+        .insert([optimistic])
+        .select()
+        .single();
 
     if (error) {
         console.error('Supabase SQL Error:', error);
         showNotification('Global Chat', gcFormatSupabaseError(error, GC_TABLES.messages));
+        pendingEl.remove();
+        gcPendingMessages.delete(tempId);
         textarea.value = text;
+        gcResizeTextarea(textarea);
+        return;
     }
+
+    gcPendingMessages.delete(tempId);
+    if (data?.id) gcKnownMessageIds.add(data.id);
+    gcReplacePendingMessage(pendingEl, data || optimistic);
 }
 
 async function gcHandleFileSelect(input) {
-    if (!sbClient) return;
-
     const file = input?.files?.[0];
     if (!file) return;
+    gcPrepareAttachment(file);
+    input.value = '';
+}
+
+async function gcSendAttachment(attachment, extraText = '') {
+    if (!sbClient || !gcWin || !attachment?.file) return;
+
+    const file = attachment.file;
+    const type = attachment.type;
+    const previewUrl = attachment.previewUrl;
+    const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
+    const filePath = `${gcUserId}/${Date.now()}.${ext}`;
+    const tempId = gcCreateTempId(type);
+    const msgContainer = gcWin.querySelector('.gc-messages');
+
+    gcPendingAttachment = null;
+    gcWin.querySelector('.gc-attachment-preview')?.remove();
+
+    const optimistic = {
+        room_id: gcCurrentRoom,
+        file_url: previewUrl,
+        sender_id: gcUserId,
+        sender_name: gcUserName,
+        sender_color: gcUserColor,
+        type,
+        created_at: new Date().toISOString()
+    };
+
+    const pendingEl = gcAppendMessage(msgContainer, optimistic, {
+        forceSent: true,
+        pending: true,
+        tempId,
+        statusText: 'Uploading...',
+        progress: true,
+        progressValue: 0
+    });
+    pendingEl.dataset.messageType = type;
+    pendingEl.dataset.fileUrl = previewUrl;
+    gcPendingMessages.set(tempId, pendingEl);
+    msgContainer.scrollTop = msgContainer.scrollHeight;
+
+    try {
+        await gcUploadFileWithProgress(file, filePath, percent => {
+            const bar = pendingEl.querySelector('.gc-upload-progress-bar');
+            if (bar) bar.style.width = `${percent}%`;
+        });
+
+        const { data: urlData } = sbClient.storage
+            .from(GC_STORAGE_BUCKET)
+            .getPublicUrl(filePath);
+
+        pendingEl.dataset.fileUrl = urlData.publicUrl;
+
+        const payload = {
+            room_id: gcCurrentRoom,
+            file_url: urlData.publicUrl,
+            sender_id: gcUserId,
+            sender_name: gcUserName,
+            sender_color: gcUserColor,
+            type
+        };
+
+        const { data, error } = await sbClient
+            .from(GC_TABLES.messages)
+            .insert([payload])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        gcPendingMessages.delete(tempId);
+        if (data?.id) gcKnownMessageIds.add(data.id);
+        gcReplacePendingMessage(pendingEl, data || payload);
+        URL.revokeObjectURL(previewUrl);
+
+        const trimmedText = extraText.trim();
+        if (trimmedText) {
+            const textarea = gcWin.querySelector('.gc-input-box textarea');
+            if (textarea) {
+                textarea.value = trimmedText;
+                await gcSendMessage();
+            }
+        }
+    } catch (error) {
+        console.error('Attachment send error:', error);
+        showNotification('Global Chat', gcFormatSupabaseError(error, GC_TABLES.messages));
+        pendingEl.remove();
+        gcPendingMessages.delete(tempId);
+        URL.revokeObjectURL(previewUrl);
+        gcPrepareAttachment(file);
+        const textarea = gcWin.querySelector('.gc-input-box textarea');
+        if (textarea && extraText) {
+            textarea.value = extraText;
+            gcResizeTextarea(textarea);
+        }
+    }
+}
+
+function gcUploadFileWithProgress(file, filePath, onProgress) {
+    const endpoint = `${SB_URL}/storage/v1/object/${GC_STORAGE_BUCKET}/${filePath}`;
+
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', endpoint);
+        xhr.setRequestHeader('apikey', SB_KEY);
+        xhr.setRequestHeader('Authorization', `Bearer ${SB_KEY}`);
+        xhr.setRequestHeader('x-upsert', 'false');
+        xhr.setRequestHeader('cache-control', '3600');
+        xhr.setRequestHeader('content-type', file.type || 'application/octet-stream');
+
+        xhr.upload.addEventListener('progress', event => {
+            if (!event.lengthComputable) return;
+            const percent = Math.round((event.loaded / event.total) * 100);
+            if (typeof onProgress === 'function') onProgress(percent);
+        });
+
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                if (typeof onProgress === 'function') onProgress(100);
+                resolve(xhr.responseText);
+                return;
+            }
+
+            let errorMessage = xhr.responseText || `Upload failed with status ${xhr.status}`;
+            try {
+                const parsed = JSON.parse(xhr.responseText);
+                errorMessage = parsed.message || parsed.error || errorMessage;
+            } catch (parseError) {
+                void parseError;
+            }
+
+            reject(new Error(errorMessage));
+        });
+
+        xhr.addEventListener('error', () => reject(new Error('Upload failed.')));
+        xhr.send(file);
+    });
+}
+
+/* ===== COMPOSER ===== */
+function gcBindComposer(win) {
+    const textarea = win.querySelector('.gc-input-box textarea');
+    const inputArea = win.querySelector('.gc-input-area');
+    const fileInput = win.querySelector('#gc-file-input');
+    const imageTool = win.querySelector('.gc-tool-btn[data-role="image"]') || win.querySelector('.gc-composer-tools .gc-tool-btn');
+
+    if (textarea && !textarea.dataset.gcBound) {
+        textarea.dataset.gcBound = 'true';
+        textarea.addEventListener('input', () => gcResizeTextarea(textarea));
+        gcResizeTextarea(textarea);
+    }
+
+    if (inputArea && !inputArea.dataset.gcDropBound) {
+        inputArea.dataset.gcDropBound = 'true';
+        ['dragenter', 'dragover'].forEach(eventName => {
+            inputArea.addEventListener(eventName, event => {
+                event.preventDefault();
+                inputArea.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            inputArea.addEventListener(eventName, event => {
+                event.preventDefault();
+                if (eventName === 'drop') {
+                    const droppedFile = event.dataTransfer?.files?.[0];
+                    if (droppedFile) gcPrepareAttachment(droppedFile);
+                    inputArea.classList.remove('drag-over');
+                    return;
+                }
+                if (!event.relatedTarget || !inputArea.contains(event.relatedTarget)) {
+                    inputArea.classList.remove('drag-over');
+                }
+            });
+        });
+    }
+
+    if (imageTool && !imageTool.dataset.gcBound) {
+        imageTool.dataset.gcBound = 'true';
+        imageTool.addEventListener('click', () => fileInput?.click());
+    }
+}
+
+function gcResizeTextarea(textarea) {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`;
+}
+
+function gcPrepareAttachment(file) {
+    if (!gcWin) return;
 
     if (file.size > 5 * 1024 * 1024) {
         showNotification('Global Chat', 'Maximum file size is 5 MB.');
         return;
     }
 
-    const type = file.type.startsWith('image/') ? 'image' : 'video';
-    const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
-    const filePath = `${gcUserId}/${Date.now()}.${ext}`;
-
-    showNotification('Global Chat', 'Uploading file...');
-
-    const { error: uploadError } = await sbClient.storage
-        .from(GC_STORAGE_BUCKET)
-        .upload(filePath, file);
-
-    if (uploadError) {
-        console.error('Supabase Storage Error:', uploadError);
-        showNotification('Global Chat', `Upload failed. Create a public "${GC_STORAGE_BUCKET}" bucket first.`);
+    const type = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : null;
+    if (!type) {
+        showNotification('Global Chat', 'Only image and video files are supported.');
         return;
     }
 
-    const { data: urlData } = sbClient.storage
-        .from(GC_STORAGE_BUCKET)
-        .getPublicUrl(filePath);
+    gcClearAttachmentPreview();
 
-    const { error: insertError } = await sbClient.from(GC_TABLES.messages).insert([{
-        room_id: gcCurrentRoom,
-        file_url: urlData.publicUrl,
-        sender_id: gcUserId,
-        sender_name: gcUserName,
-        sender_color: gcUserColor,
-        type
-    }]);
+    const previewUrl = URL.createObjectURL(file);
+    gcPendingAttachment = { file, type, previewUrl };
 
-    if (insertError) {
-        console.error('Supabase SQL Error:', insertError);
-        showNotification('Global Chat', gcFormatSupabaseError(insertError, GC_TABLES.messages));
-        return;
+    const inputArea = gcWin.querySelector('.gc-input-area');
+    if (!inputArea) return;
+
+    const preview = document.createElement('div');
+    preview.className = 'gc-attachment-preview';
+    preview.innerHTML = `
+        <button class="gc-attachment-remove" type="button" aria-label="Remove attachment">
+            <span class="material-icons-round">close</span>
+        </button>
+        <div class="gc-attachment-preview-media">
+            ${type === 'image'
+                ? `<img src="${previewUrl}" alt="${gcEscape(file.name)}">`
+                : `<video src="${previewUrl}" muted></video>`}
+        </div>
+        <div class="gc-attachment-preview-info">
+            <div class="gc-attachment-preview-title">${gcEscape(file.name)}</div>
+            <div class="gc-attachment-preview-meta">${type === 'image' ? 'Image ready to send' : 'Video ready to send'}</div>
+        </div>
+    `;
+
+    preview.querySelector('.gc-attachment-remove')?.addEventListener('click', () => gcClearAttachmentPreview());
+    inputArea.insertBefore(preview, inputArea.firstChild);
+}
+
+function gcApplyEnglishCopy(win) {
+    const mappings = [
+        ['.gc-user-subtitle', 'Active now'],
+        ['.gc-rooms-label', 'Messages'],
+        ['.gc-chat-header-status', 'Choose a conversation to start chatting'],
+        ['.gc-members-title', 'Online Members']
+    ];
+
+    mappings.forEach(([selector, text]) => {
+        const element = win.querySelector(selector);
+        if (element) element.textContent = text;
+    });
+
+    const createBtn = win.querySelector('.gc-create-btn');
+    if (createBtn) createBtn.innerHTML = '<span class="material-icons-round">add_comment</span> Create group chat';
+
+    const searchInput = win.querySelector('.gc-sidebar-search input');
+    if (searchInput) searchInput.placeholder = 'Search conversations';
+
+    const searchBtn = win.querySelector('.gc-header-actions .gc-header-btn[title]');
+    if (searchBtn) searchBtn.title = 'Search in chat';
+
+    const headerButtons = win.querySelectorAll('.gc-header-actions .gc-header-btn');
+    if (headerButtons[1]) headerButtons[1].title = 'Pin conversation';
+    if (headerButtons[2]) headerButtons[2].title = 'Members';
+
+    const toolButtons = win.querySelectorAll('.gc-composer-tools .gc-tool-btn');
+    if (toolButtons[0]) toolButtons[0].title = 'Image';
+    if (toolButtons[1]) toolButtons[1].title = 'Sticker';
+    if (toolButtons[2]) toolButtons[2].title = 'Files';
+
+    const uploadBtn = win.querySelector('.gc-input-box .gc-header-btn');
+    if (uploadBtn) uploadBtn.title = 'Upload file';
+}
+
+function gcClearAttachmentPreview() {
+    if (gcPendingAttachment?.previewUrl) {
+        URL.revokeObjectURL(gcPendingAttachment.previewUrl);
     }
+    gcPendingAttachment = null;
+    gcWin?.querySelector('.gc-attachment-preview')?.remove();
+}
 
-    showNotification('Global Chat', 'File sent.');
-    input.value = '';
+function gcCreateTempId(prefix) {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /* ===== UTILS ===== */
