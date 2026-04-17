@@ -64,6 +64,7 @@ function renderFileManager(win, searchQuery = '') {
     for (const [name, item] of entries) {
         const el = document.createElement('div');
         el.className = 'fm-item ' + (item.type === 'dir' ? 'folder' : 'file');
+        const itemPath = fmCurrentPath === '/' ? '/' + name : fmCurrentPath + '/' + name;
 
         let icon = item.type === 'dir' ? 'folder' : 'description';
         if (item.type === 'file') {
@@ -95,6 +96,8 @@ function renderFileManager(win, searchQuery = '') {
                 const ext = name.split('.').pop().toLowerCase();
                 if (['mp4', 'webm', 'ogg'].includes(ext)) {
                     openVideoInPlayer(name, item.content);
+                } else if (isIdeFile(name)) {
+                    openFileInIde(itemPath);
                 } else {
                     openFileInEditor(name, item.content);
                 }
@@ -414,6 +417,13 @@ function executeCommand(cmd) {
 
 /* ============ TEXT EDITOR ============ */
 let teCurrentFile = 'Untitled';
+let ideState = {
+    openFiles: [],
+    activePath: null,
+    runtimeLogs: []
+};
+let ideBackgroundState = null;
+let desktopWallpaperState = null;
 
 function initTextEditor(win) {
     const area = win.querySelector('.te-area');
@@ -509,6 +519,353 @@ function openFileInEditor(name, content) {
         }
     }, 100);
 }
+
+/* ============ IDE CODE EDITOR ============ */
+function isIdeFile(name = '') {
+    return /\.(js|ts|jsx|tsx|json|css|scss|html|xml|py|java|c|cpp|cs|php|rb|go|rs|sh)$/i.test(name);
+}
+
+function ideCollectFiles(root = vfs['/home'], basePath = '/home', files = []) {
+    if (!root?.children) return files;
+    Object.entries(root.children).forEach(([name, item]) => {
+        const path = `${basePath}/${name}`;
+        if (item.type === 'dir') ideCollectFiles(item, path, files);
+        else if (item.type === 'file' && isIdeFile(name)) files.push({ name, path, content: item.content || '' });
+    });
+    return files;
+}
+
+function ideGetWindowEl() {
+    for (const [, w] of Object.entries(windows)) {
+        if (w.appId === 'ide-editor') return w.el;
+    }
+    return null;
+}
+
+function ideLerp(start, end, alpha) {
+    return start + (end - start) * alpha;
+}
+
+function wallpaperLerp(start, end, alpha) {
+    return start + (end - start) * alpha;
+}
+
+function initIdeEditor(win) {
+    const area = win.querySelector('#ide-editor-area');
+    if (area && !area.dataset.bound) {
+        area.dataset.bound = '1';
+        area.addEventListener('input', () => {
+            const active = ideState.openFiles.find(file => file.path === ideState.activePath);
+            if (!active) return;
+            active.content = area.value;
+            active.dirty = true;
+            ideRenderTabs(win);
+            ideUpdateStatus(win);
+        });
+        area.addEventListener('click', () => ideUpdateStatus(win));
+        area.addEventListener('keyup', () => ideUpdateStatus(win));
+    }
+    ideInitAnimatedBackground(win);
+    ideRenderExplorer(win);
+    ideRenderTabs(win);
+    ideUpdateEditor(win);
+    ideRenderRuntime(win);
+}
+
+function ideInitAnimatedBackground(win) {
+    const bg = win.querySelector('#ide-animated-bg');
+    if (!bg || bg.dataset.bound === '1') return;
+    bg.dataset.bound = '1';
+
+    const blobs = Array.from(bg.querySelectorAll('.ide-bg-blob'));
+    ideBackgroundState = {
+        win,
+        bg,
+        blobs: blobs.map((el, index) => ({
+            el,
+            currentX: 18 + index * 22,
+            currentY: 24 + index * 16,
+            targetX: 18 + index * 22,
+            targetY: 24 + index * 16,
+            amplitudeX: 8 + index * 4,
+            amplitudeY: 10 + index * 5,
+            speed: 0.00035 + index * 0.00014
+        })),
+        mouseX: 0.5,
+        mouseY: 0.5,
+        rafId: 0
+    };
+
+    const onPointerMove = (event) => {
+        const rect = bg.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        ideBackgroundState.mouseX = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+        ideBackgroundState.mouseY = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+    };
+
+    bg.addEventListener('pointermove', onPointerMove);
+    bg.addEventListener('pointerleave', () => {
+        if (!ideBackgroundState) return;
+        ideBackgroundState.mouseX = 0.5;
+        ideBackgroundState.mouseY = 0.5;
+    });
+
+    const tick = (time) => {
+        if (!ideBackgroundState || !ideBackgroundState.bg.isConnected) {
+            if (ideBackgroundState?.rafId) cancelAnimationFrame(ideBackgroundState.rafId);
+            ideBackgroundState = null;
+            return;
+        }
+
+        ideBackgroundState.blobs.forEach((blob, index) => {
+            const waveX = Math.sin(time * blob.speed + index * 1.6);
+            const waveY = Math.cos(time * (blob.speed * 0.78) + index * 2.1);
+            blob.targetX = 50 + waveX * blob.amplitudeX + (ideBackgroundState.mouseX - 0.5) * (8 + index * 4);
+            blob.targetY = 50 + waveY * blob.amplitudeY + (ideBackgroundState.mouseY - 0.5) * (10 + index * 3);
+            blob.currentX = ideLerp(blob.currentX, blob.targetX, 0.055);
+            blob.currentY = ideLerp(blob.currentY, blob.targetY, 0.055);
+            blob.el.style.transform = `translate(${blob.currentX - 50}%, ${blob.currentY - 50}%)`;
+        });
+
+        ideBackgroundState.rafId = requestAnimationFrame(tick);
+    };
+
+    ideBackgroundState.rafId = requestAnimationFrame(tick);
+}
+
+function ideRenderExplorer(win = ideGetWindowEl()) {
+    const tree = win?.querySelector('#ide-file-tree');
+    if (!tree) return;
+    const files = ideCollectFiles();
+    tree.innerHTML = '';
+    files.forEach(file => {
+        const item = document.createElement('button');
+        item.className = 'ide-file-item' + (file.path === ideState.activePath ? ' active' : '');
+        item.innerHTML = `<span class="material-icons-round">description</span><span class="ide-file-name">${file.name}</span><span class="ide-file-path">${file.path.replace('/home/', '')}</span>`;
+        item.onclick = () => openFileInIde(file.path);
+        tree.appendChild(item);
+    });
+}
+
+function ideRenderTabs(win = ideGetWindowEl()) {
+    const tabs = win?.querySelector('#ide-tabs');
+    if (!tabs) return;
+    tabs.innerHTML = '';
+    if (ideState.openFiles.length === 0) {
+        tabs.innerHTML = '<div class="ide-empty-tabs">No files open</div>';
+        return;
+    }
+    ideState.openFiles.forEach(file => {
+        const tab = document.createElement('button');
+        tab.className = 'ide-tab' + (file.path === ideState.activePath ? ' active' : '');
+        tab.innerHTML = `<span>${file.name}${file.dirty ? ' •' : ''}</span><span class="material-icons-round">close</span>`;
+        tab.onclick = () => ideSetActiveFile(file.path);
+        tab.querySelector('.material-icons-round').onclick = (event) => {
+            event.stopPropagation();
+            ideCloseTab(file.path);
+        };
+        tabs.appendChild(tab);
+    });
+}
+
+function ideUpdateEditor(win = ideGetWindowEl()) {
+    const area = win?.querySelector('#ide-editor-area');
+    const active = ideState.openFiles.find(file => file.path === ideState.activePath);
+    if (!area) return;
+    area.value = active ? active.content : '';
+    area.disabled = !active;
+    ideRenderExplorer(win);
+    ideRenderTabs(win);
+    ideUpdateStatus(win);
+    ideRenderRuntime(win);
+}
+
+function ideUpdateStatus(win = ideGetWindowEl()) {
+    const area = win?.querySelector('#ide-editor-area');
+    const pathEl = win?.querySelector('#ide-status-path');
+    const metaEl = win?.querySelector('#ide-status-meta');
+    const active = ideState.openFiles.find(file => file.path === ideState.activePath);
+    if (pathEl) pathEl.textContent = active ? active.path : 'No file selected';
+    if (!metaEl || !area) return;
+    const beforeCursor = area.value.slice(0, area.selectionStart);
+    const line = beforeCursor.split('\n').length;
+    const column = beforeCursor.length - beforeCursor.lastIndexOf('\n');
+    metaEl.textContent = active ? `Ln ${line}, Col ${column}` : 'Ln 1, Col 1';
+}
+
+function ideRenderRuntime(win = ideGetWindowEl()) {
+    const consoleEl = win?.querySelector('#ide-runtime-console');
+    if (!consoleEl) return;
+    const active = ideState.openFiles.find(file => file.path === ideState.activePath);
+    if (ideState.runtimeLogs.length === 0) {
+        consoleEl.innerHTML = `<div class="ide-runtime-empty">${active ? 'Press Run to execute the active file.' : 'Open a file to run code.'}</div>`;
+        return;
+    }
+    consoleEl.innerHTML = ideState.runtimeLogs.map(log => `<div class="ide-runtime-line ${log.type || 'info'}">${log.text}</div>`).join('');
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+function ideSetRuntimeLogs(logs) {
+    ideState.runtimeLogs = logs;
+    ideRenderRuntime();
+}
+
+function ideAppendRuntimeLog(text, type = 'info') {
+    ideState.runtimeLogs.push({ text, type });
+    ideRenderRuntime();
+}
+
+function ideClearOutput() {
+    ideState.runtimeLogs = [];
+    const frame = ideGetWindowEl()?.querySelector('#ide-runtime-frame');
+    if (frame) frame.srcdoc = '';
+    ideRenderRuntime();
+}
+
+function ideSetActiveFile(path) {
+    ideState.activePath = path;
+    ideUpdateEditor();
+}
+
+function openFileInIde(path) {
+    const node = getVfsNode(path);
+    if (!node || node.type !== 'file') return;
+    openApp('ide-editor');
+    setTimeout(() => {
+        const existing = ideState.openFiles.find(file => file.path === path);
+        if (!existing) {
+            ideState.openFiles.push({
+                path,
+                name: path.split('/').pop(),
+                content: node.content || '',
+                dirty: false
+            });
+        }
+        ideState.activePath = path;
+        ideUpdateEditor();
+        ideGetWindowEl()?.querySelector('#ide-editor-area')?.focus();
+    }, 100);
+}
+
+function ideSaveFile() {
+    const active = ideState.openFiles.find(file => file.path === ideState.activePath);
+    if (!active) return;
+    const node = getVfsNode(active.path);
+    if (!node || node.type !== 'file') return;
+    node.content = active.content;
+    active.dirty = false;
+    ideUpdateEditor();
+    renderFileManager();
+    showNotification('IDE', `${active.name} saved.`);
+}
+
+function ideRunFile() {
+    const win = ideGetWindowEl();
+    const frame = win?.querySelector('#ide-runtime-frame');
+    const active = ideState.openFiles.find(file => file.path === ideState.activePath);
+    if (!active || !frame) {
+        ideSetRuntimeLogs([{ text: 'No active file to run.', type: 'warn' }]);
+        return;
+    }
+
+    const ext = active.name.split('.').pop().toLowerCase();
+    ideState.runtimeLogs = [];
+
+    if (ext === 'html') {
+        frame.srcdoc = active.content;
+        ideSetRuntimeLogs([{ text: `Rendered ${active.name} in preview.`, type: 'success' }]);
+        return;
+    }
+
+    if (ext === 'js') {
+        const runtimeHtml = `<!doctype html>
+<html><body>
+<script>
+const send = (type, value) => parent.postMessage({ source: 'webos-ide-runtime', type, value }, '*');
+console.log = (...args) => send('log', args.map(String).join(' '));
+console.error = (...args) => send('error', args.map(String).join(' '));
+window.onerror = (msg, src, line, col) => send('error', msg + ' (' + line + ':' + col + ')');
+try {
+${active.content}
+send('success', 'Execution finished.');
+} catch (error) {
+send('error', error && error.stack ? error.stack : String(error));
+}
+</script>
+</body></html>`;
+        frame.srcdoc = runtimeHtml;
+        ideSetRuntimeLogs([{ text: `Running ${active.name}...`, type: 'info' }]);
+        return;
+    }
+
+    if (ext === 'css') {
+        frame.srcdoc = `<!doctype html><html><head><style>${active.content}</style></head><body><div style="padding:20px;font-family:sans-serif">CSS preview loaded. Styles apply to this preview page.</div></body></html>`;
+        ideSetRuntimeLogs([{ text: `Previewing stylesheet ${active.name}.`, type: 'success' }]);
+        return;
+    }
+
+    if (ext === 'json') {
+        try {
+            JSON.parse(active.content);
+            frame.srcdoc = '';
+            ideSetRuntimeLogs([{ text: `${active.name} is valid JSON.`, type: 'success' }]);
+        } catch (error) {
+            frame.srcdoc = '';
+            ideSetRuntimeLogs([{ text: error.message, type: 'error' }]);
+        }
+        return;
+    }
+
+    frame.srcdoc = '';
+    ideSetRuntimeLogs([{ text: `Run is not supported yet for .${ext} files.`, type: 'warn' }]);
+}
+
+function ideCloseTab(path) {
+    const index = ideState.openFiles.findIndex(file => file.path === path);
+    if (index === -1) return;
+    ideState.openFiles.splice(index, 1);
+    if (ideState.activePath === path) {
+        ideState.activePath = ideState.openFiles[Math.max(0, index - 1)]?.path || ideState.openFiles[0]?.path || null;
+    }
+    ideUpdateEditor();
+}
+
+function ideCloseActiveTab() {
+    if (ideState.activePath) ideCloseTab(ideState.activePath);
+}
+
+function ideOpenQuickPick() {
+    const files = ideCollectFiles();
+    if (files.length === 0) {
+        alert('No compatible code files found.');
+        return;
+    }
+    const choice = prompt('Open file in IDE:\n' + files.map((file, index) => `${index + 1}. ${file.path}`).join('\n') + '\n\nEnter number:');
+    const index = parseInt(choice, 10) - 1;
+    if (index >= 0 && index < files.length) openFileInIde(files[index].path);
+}
+
+function ideNewFile() {
+    const name = prompt('New code file name:', 'untitled.js');
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const parent = getVfsNode('/home/Downloads');
+    if (!parent?.children) return;
+    if (parent.children[trimmed]) {
+        alert('A file with this name already exists in Downloads.');
+        return;
+    }
+    parent.children[trimmed] = { type: 'file', content: '' };
+    ideRenderExplorer();
+    renderFileManager();
+    openFileInIde(`/home/Downloads/${trimmed}`);
+}
+
+window.addEventListener('message', (event) => {
+    if (event.data?.source !== 'webos-ide-runtime') return;
+    ideAppendRuntimeLog(event.data.value || '', event.data.type === 'success' ? 'success' : event.data.type);
+});
 
 /* ============ BROWSER ============ */
 function initBrowser(win) {
@@ -729,19 +1086,37 @@ function renderUsersList(win) {
 }
 
 function showAddUserDialog() {
-    const name = prompt('Enter new user name:');
+    showAddUserDialogWithOptions();
+}
+
+function showAddUserDialogWithOptions(options = {}) {
+    const promptText = options.promptText || 'Enter new user name:';
+    const successLabel = options.successLabel || 'User';
+    const switchDelay = typeof options.switchDelay === 'number' ? options.switchDelay : 1500;
+    const rawName = prompt(promptText);
+    const name = rawName ? rawName.trim() : '';
     if (name && !users.includes(name)) {
         users.push(name);
         localStorage.setItem('webos-users', JSON.stringify(users));
         renderUsersList(document.querySelector('.app-settings'));
-        showNotification('System', `User ${name} added. Switching to new account...`);
+        if (typeof renderLockUsers === 'function') renderLockUsers();
+        showNotification('System', `${successLabel} ${name} added. Switching to new account...`);
 
         // Switch to the newly created user after a brief delay
         setTimeout(() => {
             if (typeof selectUser === 'function') selectUser(name);
             if (typeof switchUser === 'function') switchUser();
-        }, 1500);
+        }, switchDelay);
+    } else if (name && users.includes(name)) {
+        showNotification('System', `Account ${name} already exists.`);
     }
+}
+
+function createChatAiAccount() {
+    showAddUserDialogWithOptions({
+        promptText: 'Enter new Chat AI account name:',
+        successLabel: 'Chat AI account'
+    });
 }
 
 function deleteUser(name) {
@@ -780,18 +1155,22 @@ function setAccent(color, silent) {
 
 function setWallpaper(wp, silent) {
     const desktop = document.getElementById('desktop');
-    if (wp.startsWith('gradient')) {
-        const gradients = {
-            'gradient1': 'linear-gradient(135deg, #0c0c1d, #1a1a3e, #2d1b69)',
-            'gradient2': 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)',
-            'gradient3': 'linear-gradient(135deg, #1a0533, #3b1f5e, #6c2c91)',
-            'gradient4': 'linear-gradient(135deg, #141e30, #243b55)',
-        };
-        desktop.style.background = gradients[wp] || gradients['gradient1'];
-    } else {
-        desktop.style.background = `url('${wp}') center/cover no-repeat`;
-        desktop.style.backgroundColor = '#0a0a1a';
+    const wallpaperImage = document.getElementById('desktop-wallpaper-image');
+    const gradients = {
+        'gradient1': 'linear-gradient(135deg, #0c0c1d, #1a1a3e, #2d1b69)',
+        'gradient2': 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)',
+        'gradient3': 'linear-gradient(135deg, #1a0533, #3b1f5e, #6c2c91)',
+        'gradient4': 'linear-gradient(135deg, #141e30, #243b55)',
+    };
+
+    if (wallpaperImage) {
+        if (wp.startsWith('gradient')) {
+            wallpaperImage.style.background = gradients[wp] || gradients['gradient1'];
+        } else {
+            wallpaperImage.style.background = `url('${wp}') center/cover no-repeat`;
+        }
     }
+    if (desktop) desktop.dataset.wallpaper = wp;
     localStorage.setItem('webos-wallpaper', wp);
     document.querySelectorAll('.set-wp').forEach(w => {
         const onclick = w.getAttribute('onclick') || '';
@@ -808,7 +1187,83 @@ function setScale(value) {
 
 function saveGeminiKey(key) {
     localStorage.setItem('webos-gemini-key', key);
+    localStorage.removeItem('webos-chat-preview-fallbacks');
     showNotification('AI Settings', 'Gemini API key saved.');
+}
+
+function initAnimatedWallpaper() {
+    const desktop = document.getElementById('desktop');
+    const wallpaper = document.getElementById('desktop-wallpaper');
+    if (!desktop || !wallpaper || wallpaper.dataset.bound === '1') return;
+    wallpaper.dataset.bound = '1';
+
+    const imageLayer = document.getElementById('desktop-wallpaper-image');
+    const blobs = Array.from(wallpaper.querySelectorAll('.desktop-wallpaper-blob'));
+
+    desktopWallpaperState = {
+        desktop,
+        wallpaper,
+        imageLayer,
+        mouseX: 0.5,
+        mouseY: 0.5,
+        rafId: 0,
+        blobs: blobs.map((el, index) => ({
+            el,
+            currentX: 50,
+            currentY: 50,
+            targetX: 50,
+            targetY: 50,
+            amplitudeX: 12 + index * 6,
+            amplitudeY: 10 + index * 7,
+            speed: 0.00018 + index * 0.00008
+        })),
+        imageOffsetX: 0,
+        imageOffsetY: 0
+    };
+
+    const onPointerMove = (event) => {
+        const rect = wallpaper.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        desktopWallpaperState.mouseX = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+        desktopWallpaperState.mouseY = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+    };
+
+    desktop.addEventListener('pointermove', onPointerMove);
+    desktop.addEventListener('pointerleave', () => {
+        if (!desktopWallpaperState) return;
+        desktopWallpaperState.mouseX = 0.5;
+        desktopWallpaperState.mouseY = 0.5;
+    });
+
+    const tick = (time) => {
+        if (!desktopWallpaperState || !desktopWallpaperState.wallpaper.isConnected) {
+            if (desktopWallpaperState?.rafId) cancelAnimationFrame(desktopWallpaperState.rafId);
+            desktopWallpaperState = null;
+            return;
+        }
+
+        desktopWallpaperState.blobs.forEach((blob, index) => {
+            const waveX = Math.sin(time * blob.speed + index * 1.7);
+            const waveY = Math.cos(time * blob.speed * 0.82 + index * 2.4);
+            blob.targetX = 50 + waveX * blob.amplitudeX + (desktopWallpaperState.mouseX - 0.5) * (10 + index * 4);
+            blob.targetY = 50 + waveY * blob.amplitudeY + (desktopWallpaperState.mouseY - 0.5) * (12 + index * 4);
+            blob.currentX = wallpaperLerp(blob.currentX, blob.targetX, 0.045);
+            blob.currentY = wallpaperLerp(blob.currentY, blob.targetY, 0.045);
+            blob.el.style.transform = `translate(${blob.currentX - 50}%, ${blob.currentY - 50}%)`;
+        });
+
+        if (desktopWallpaperState.imageLayer) {
+            const targetOffsetX = (desktopWallpaperState.mouseX - 0.5) * 16;
+            const targetOffsetY = (desktopWallpaperState.mouseY - 0.5) * 12;
+            desktopWallpaperState.imageOffsetX = wallpaperLerp(desktopWallpaperState.imageOffsetX, targetOffsetX, 0.035);
+            desktopWallpaperState.imageOffsetY = wallpaperLerp(desktopWallpaperState.imageOffsetY, targetOffsetY, 0.035);
+            desktopWallpaperState.imageLayer.style.transform = `translate(${desktopWallpaperState.imageOffsetX}px, ${desktopWallpaperState.imageOffsetY}px) scale(1.05)`;
+        }
+
+        desktopWallpaperState.rafId = requestAnimationFrame(tick);
+    };
+
+    desktopWallpaperState.rafId = requestAnimationFrame(tick);
 }
 
 function setThemeMode(mode, silent) {
@@ -821,17 +1276,36 @@ function setThemeMode(mode, silent) {
     if (!silent) showNotification('Theme Mode', `Switched to ${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode.`);
 }
 
-const uiStyles = ['glassmorphism', 'liquid-glass', 'neumorphism', 'acrylic', 'flat'];
+const uiStyles = ['glassmorphism', 'liquid-glass', 'neumorphism', 'acrylic', 'flat', 'hyggshi-os'];
 function setUIStyle(style, silent) {
     uiStyles.forEach(s => document.body.classList.remove('theme-' + s));
     if (style !== 'glassmorphism') document.body.classList.add('theme-' + style);
+    
+    // Set data attribute for advanced theme engine
+    const styleDataMap = {
+        'glassmorphism': 'glass',
+        'liquid-glass': 'liquid',
+        'neumorphism': 'neumorphic',
+        'acrylic': 'acrylic',
+        'flat': 'flat',
+        'hyggshi-os': 'hyggshi'
+    };
+    document.body.dataset.uiStyle = styleDataMap[style] || style;
+
     localStorage.setItem('webos-ui-style', style);
     document.querySelectorAll('.set-style-card').forEach(card => {
         const onclick = card.getAttribute('onclick') || '';
         card.classList.toggle('active', onclick.includes(style));
     });
     if (!silent) {
-        const names = { 'glassmorphism': 'Standard Glass', 'liquid-glass': 'Liquid Glass', 'neumorphism': 'Neumorphic Glass', 'acrylic': 'Acrylic Glass', 'flat': 'Flat Glass' };
+        const names = { 
+            'glassmorphism': 'Standard Glass', 
+            'liquid-glass': 'Liquid Glass', 
+            'neumorphism': 'Neumorphic Glass', 
+            'acrylic': 'Acrylic Glass', 
+            'flat': 'Flat Glass',
+            'hyggshi-os': 'Hyggshi OS'
+        };
         showNotification('UI Style', `Switched to ${names[style] || style}.`);
     }
 }

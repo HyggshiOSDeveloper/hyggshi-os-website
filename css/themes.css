@@ -297,7 +297,23 @@ body.light-mode .set-input-text:focus {
 
 .flat-preview .sp-win {
     background: #22222e;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Preview: Hyggshi OS */
+.hyggshi-os-preview {
+    background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+}
+
+.hyggshi-os-preview .sp-bar {
+    background: rgba(37, 37, 74, 0.6);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hyggshi-os-preview .sp-win {
+    background: rgba(0, 243, 255, 0.15);
+    border: 1px solid rgba(0, 243, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
 }
 
 /* ========================================

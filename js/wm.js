@@ -11,6 +11,7 @@ const appMeta = {
     'file-manager': { title: 'Files', icon: 'folder', w: 750, h: 480 },
     'terminal': { title: 'Terminal', icon: 'terminal', w: 650, h: 420 },
     'text-editor': { title: 'Text Editor', icon: 'edit_note', w: 650, h: 460 },
+    'ide-editor': { title: 'IDE Code Editor', icon: 'code', w: 980, h: 640 },
     'browser': { title: 'Browser', icon: 'public', w: 900, h: 580 },
     'calculator': { title: 'Calculator', icon: 'calculate', w: 320, h: 480 },
     'settings': { title: 'Settings', icon: 'settings', w: 680, h: 460 },
@@ -20,6 +21,7 @@ const appMeta = {
     'video-player': { title: 'Video Player', icon: 'movie', w: 750, h: 520 },
     'youtube': { title: 'YouTube', icon: 'smart_display', w: 850, h: 550 },
     'weather': { title: 'Weather', icon: 'cloud', w: 700, h: 500 },
+    'global-chat': { title: 'Global Chat', icon: 'public', w: 850, h: 600 },
     'about': { title: 'About Web OS', icon: 'info', w: 420, h: 500 },
 };
 
@@ -114,6 +116,8 @@ function closeWindow(wid) {
     if (!w) return;
     w.el.classList.add('closing');
     setTimeout(() => {
+        // Cleanup app-specific resources
+        destroyApp(w.appId, wid);
         w.el.remove();
         delete windows[wid];
         removeTaskbarApp(wid);
@@ -152,6 +156,7 @@ function maximizeWindow(wid) {
         };
         w.maximized = true;
         w.el.classList.add('maximized');
+        focusWindow(wid);
     }
 }
 
@@ -178,6 +183,30 @@ function makeDraggable(win, wid) {
     let startX, startY, origLeft, origTop;
     let rafId = null;
 
+    const onMouseMove = (e) => {
+        if (!dragging) return;
+        if (rafId) return;
+        rafId = requestAnimationFrame(() => {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            const newLeft = Math.max(-(win.offsetWidth / 2), Math.min(origLeft + dx, window.innerWidth - win.offsetWidth / 2));
+            const newTop = Math.max(0, Math.min(origTop + dy, window.innerHeight - 60));
+            win.style.left = newLeft + 'px';
+            win.style.top = newTop + 'px';
+            rafId = null;
+        });
+    };
+
+    const onMouseUp = () => {
+        if (dragging) {
+            dragging = false;
+            document.body.classList.remove('dragging-window');
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        }
+    };
+
     titlebar.addEventListener('mousedown', (e) => {
         if (e.target.closest('.win-controls')) return;
         const w = windows[wid];
@@ -192,29 +221,9 @@ function makeDraggable(win, wid) {
         document.body.classList.add('dragging-window');
         focusWindow(wid);
 
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
         e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        if (rafId) return;
-        rafId = requestAnimationFrame(() => {
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            const newLeft = Math.max(-(win.offsetWidth / 2), Math.min(origLeft + dx, window.innerWidth - win.offsetWidth / 2));
-            const newTop = Math.max(0, Math.min(origTop + dy, window.innerHeight - 60));
-            win.style.left = newLeft + 'px';
-            win.style.top = newTop + 'px';
-            rafId = null;
-        });
-    });
-
-    document.addEventListener('mouseup', () => {
-        if (dragging) {
-            dragging = false;
-            document.body.classList.remove('dragging-window');
-            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-        }
     });
 }
 
@@ -226,33 +235,7 @@ function makeResizable(win, wid) {
     let startX, startY, origW, origH, origLeft, origTop;
     let rafId = null;
 
-    handles.forEach(handle => {
-        handle.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            const w = windows[wid];
-            if (w && w.maximized) return;
-
-            resizing = true;
-            if (handle.classList.contains('rh-right')) resizeDir = 'right';
-            else if (handle.classList.contains('rh-bottom')) resizeDir = 'bottom';
-            else if (handle.classList.contains('rh-corner')) resizeDir = 'corner';
-            else if (handle.classList.contains('rh-left')) resizeDir = 'left';
-            else if (handle.classList.contains('rh-top')) resizeDir = 'top';
-
-            startX = e.clientX;
-            startY = e.clientY;
-            origW = win.offsetWidth;
-            origH = win.offsetHeight;
-            origLeft = win.offsetLeft;
-            origTop = win.offsetTop;
-
-            document.body.classList.add('resizing-window');
-            focusWindow(wid);
-        });
-    });
-
-    document.addEventListener('mousemove', (e) => {
+    const onMouseMove = (e) => {
         if (!resizing) return;
         if (rafId) return;
         rafId = requestAnimationFrame(() => {
@@ -279,14 +262,45 @@ function makeResizable(win, wid) {
             }
             rafId = null;
         });
-    });
+    };
 
-    document.addEventListener('mouseup', () => {
+    const onMouseUp = () => {
         if (resizing) {
             resizing = false;
             document.body.classList.remove('resizing-window');
             if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
         }
+    };
+
+    handles.forEach(handle => {
+        handle.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const w = windows[wid];
+            if (w && w.maximized) return;
+
+            resizing = true;
+            if (handle.classList.contains('rh-right')) resizeDir = 'right';
+            else if (handle.classList.contains('rh-bottom')) resizeDir = 'bottom';
+            else if (handle.classList.contains('rh-corner')) resizeDir = 'corner';
+            else if (handle.classList.contains('rh-left')) resizeDir = 'left';
+            else if (handle.classList.contains('rh-top')) resizeDir = 'top';
+
+            startX = e.clientX;
+            startY = e.clientY;
+            origW = win.offsetWidth;
+            origH = win.offsetHeight;
+            origLeft = win.offsetLeft;
+            origTop = win.offsetTop;
+
+            document.body.classList.add('resizing-window');
+            focusWindow(wid);
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
     });
 }
 
@@ -317,7 +331,7 @@ function removeTaskbarApp(wid) {
     if (el) el.remove();
 }
 
-/* ============ APP INITIALIZATION ============ */
+/* ============ APP INITIALIZATION & CLEANUP ============ */
 function initApp(appId, wid) {
     const win = windows[wid].el;
 
@@ -325,10 +339,22 @@ function initApp(appId, wid) {
         case 'file-manager': initFileManager(win); break;
         case 'terminal': initTerminal(win); break;
         case 'text-editor': initTextEditor(win); break;
+        case 'ide-editor': initIdeEditor(win); break;
         case 'browser': initBrowser(win); break;
         case 'calculator': initCalculator(win); break;
         case 'chat-ai': initChatAi(win); break;
         case 'settings': initSettings(win); break;
+        case 'music-player': mpInitWindow(win); break;
         case 'video-player': initVideoPlayer(win); break;
+        case 'global-chat': initMessage(win); break;
+    }
+}
+
+function destroyApp(appId, wid) {
+    // Custom cleanup for specific apps
+    switch (appId) {
+        case 'music-player': mpDestroyWindow(wid); break;
+        case 'video-player': vpDestroyWindow(wid); break;
+        case 'chat-ai': chatDestroyWindow(wid); break;
     }
 }

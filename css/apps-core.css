@@ -351,6 +351,352 @@
     color: var(--text-muted);
 }
 
+/* === IDE Code Editor === */
+.app-ide-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(10, 12, 24, 0.96), rgba(15, 18, 34, 0.98));
+    position: relative;
+    overflow: hidden;
+}
+
+.app-ide-editor > *:not(.ide-animated-bg) {
+    position: relative;
+    z-index: 1;
+}
+
+.ide-animated-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.ide-bg-blob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.22;
+    will-change: transform;
+}
+
+.ide-bg-blob.blob-a {
+    background: radial-gradient(circle, rgba(31, 139, 255, 0.78), rgba(31, 139, 255, 0));
+}
+
+.ide-bg-blob.blob-b {
+    width: 360px;
+    height: 360px;
+    background: radial-gradient(circle, rgba(0, 194, 168, 0.72), rgba(0, 194, 168, 0));
+}
+
+.ide-bg-blob.blob-c {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(137, 92, 246, 0.68), rgba(137, 92, 246, 0));
+}
+
+.ide-bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.8), transparent 78%);
+    opacity: 0.22;
+}
+
+.ide-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.ide-toolbar button {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition), color var(--transition);
+}
+
+.ide-toolbar button:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.ide-toolbar .material-icons-round {
+    font-size: 18px;
+}
+
+.ide-separator {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    margin: 0 4px;
+}
+
+.ide-toolbar-title {
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.ide-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 0;
+}
+
+.ide-sidebar {
+    border-right: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.025);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.ide-sidebar-title {
+    padding: 12px 14px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.ide-file-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 10px;
+}
+
+.ide-file-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-areas:
+        "icon name"
+        "icon path";
+    gap: 2px 10px;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+}
+
+.ide-file-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.ide-file-item.active {
+    background: rgba(31, 139, 255, 0.16);
+    color: var(--text-primary);
+}
+
+.ide-file-item .material-icons-round {
+    grid-area: icon;
+    font-size: 16px;
+    align-self: center;
+}
+
+.ide-file-name {
+    grid-area: name;
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ide-file-path {
+    grid-area: path;
+    font-size: 11px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ide-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.ide-tabs {
+    min-height: 42px;
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    padding: 4px 6px 0;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+    overflow-x: auto;
+}
+
+.ide-tab,
+.ide-empty-tabs {
+    height: 36px;
+    border: none;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    border-radius: 10px 10px 0 0;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ide-tab.active {
+    background: rgba(31, 139, 255, 0.18);
+    color: var(--text-primary);
+}
+
+.ide-tab .material-icons-round {
+    font-size: 15px;
+}
+
+.ide-empty-tabs {
+    cursor: default;
+    color: var(--text-muted);
+}
+
+.ide-editor-area {
+    flex: 1;
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 18px 20px;
+    background: rgba(7, 10, 18, 0.66);
+    color: #d8e2ff;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.65;
+    tab-size: 4;
+}
+
+.ide-editor-area:disabled {
+    opacity: 0.65;
+}
+
+.ide-runtime {
+    height: 210px;
+    border-top: 1px solid var(--border);
+    background: rgba(4, 7, 14, 0.92);
+    display: grid;
+    grid-template-rows: 34px 90px 1fr;
+    min-height: 0;
+}
+
+.ide-runtime-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ide-runtime-header button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.ide-runtime-header button:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.ide-runtime-console {
+    overflow: auto;
+    padding: 10px 12px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ide-runtime-empty {
+    color: var(--text-muted);
+}
+
+.ide-runtime-line {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.ide-runtime-line.info {
+    color: #bcd0ff;
+}
+
+.ide-runtime-line.success {
+    color: #86efac;
+}
+
+.ide-runtime-line.warn {
+    color: #fcd34d;
+}
+
+.ide-runtime-line.error {
+    color: #fca5a5;
+}
+
+.ide-runtime-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}
+
+.ide-statusbar {
+    height: 34px;
+    border-top: 1px solid var(--border);
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: rgba(31, 139, 255, 0.12);
+}
+
 /* === Browser === */
 .app-browser {
     display: flex;

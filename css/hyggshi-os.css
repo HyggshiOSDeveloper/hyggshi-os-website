@@ -1,0 +1,307 @@
+/* Hyggshi OS - Futuristic Web Operating System Stylesheet */
+/* Unique design language with glass effects, smooth animations, and distinctive UI */
+
+/* ==========================================================================
+   ROOT VARIABLES - Design Tokens
+   ========================================================================== */
+
+body.theme-hyggshi-os {
+  /* Color Palette - Futuristic with glassy depth */
+  --hygg-bg-primary: #0f0f23;          /* Deep space blue-black */
+  --hygg-bg-secondary: #1a1a2e;        /* Slightly lighter for panels */
+  --hygg-bg-tertiary: #25254a;         /* For elevated surfaces */
+  --hygg-bg-glass: rgba(37, 37, 74, 0.4); /* Glass effect */
+  --hygg-bg-glass-hover: rgba(45, 45, 80, 0.5);
+
+  --hygg-accent-primary: #00f3ff;      /* Electric cyan */
+  --hygg-accent-secondary: #7b00ff;    /* Vibrant purple */
+  --hygg-accent-tertiary: #ff006e;     /* Futuristic pink */
+
+  --hygg-text-primary: #e0e6ff;        /* Soft white-blue */
+  --hygg-text-secondary: #a8b2ff;      /* Muted for secondary text */
+  --hygg-text-muted: #6b73ff;          /* Even more muted */
+
+  --hygg-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --hygg-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --hygg-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --hygg-shadow-glass: 0 0 20px rgba(0, 243, 255, 0.15);
+
+  --hygg-radius-sm: 8px;
+  --hygg-radius-md: 12px;
+  --hygg-radius-lg: 16px;
+  --hygg-radius-pill: 50px;
+
+  --hygg-spacing-xs: 4px;
+  --hygg-spacing-sm: 8px;
+  --hygg-spacing-md: 16px;
+  --hygg-spacing-lg: 24px;
+  --hygg-spacing-xl: 32px;
+
+  --hygg-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --hygg-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --hygg-transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --hygg-font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --hygg-font-mono: 'JetBrains Mono', Consolas, monospace;
+
+  --hygg-border-glass: 1px solid rgba(255, 255, 255, 0.1);
+  --hygg-border-glass-hover: 1px solid rgba(255, 255, 255, 0.2);
+
+  /* Override standard variables */
+  --bg-dark: var(--hygg-bg-primary);
+  --bg-surface: var(--hygg-bg-secondary);
+  --bg-glass: var(--hygg-bg-glass);
+  --accent: var(--hygg-accent-primary);
+  --text-primary: var(--hygg-text-primary);
+  --text-secondary: var(--hygg-text-secondary);
+  --radius: var(--hygg-radius-md);
+  --transition: var(--hygg-transition-normal);
+}
+
+/* Light Mode Overrides for Hyggshi OS */
+body.theme-hyggshi-os.light-mode {
+  --hygg-bg-primary: #f0f2f9;
+  --hygg-bg-secondary: #ffffff;
+  --hygg-bg-tertiary: #e1e6f0;
+  --hygg-bg-glass: rgba(255, 255, 255, 0.6);
+  --hygg-bg-glass-hover: rgba(255, 255, 255, 0.85);
+
+  --hygg-accent-primary: #007685;      /* Darkened for better contrast on light */
+  --hygg-accent-secondary: #5100c2;    
+  --hygg-accent-tertiary: #c2185b;     
+
+  --hygg-text-primary: #0a0a1a;        /* Near black for maximum legibility */
+  --hygg-text-secondary: #2d2d44;      /* Dark gray-blue */
+  --hygg-text-muted: #5a62cc;          /* Stronger blue-gray for muted text */
+
+  --hygg-border-glass: 1px solid rgba(0, 0, 0, 0.12);
+  --hygg-border-glass-hover: 1px solid rgba(0, 0, 0, 0.2);
+  --hygg-shadow-glass: 0 0 15px rgba(0, 118, 133, 0.15);
+
+  /* Sync overrides */
+  --bg-dark: var(--hygg-bg-primary);
+  --bg-surface: var(--hygg-bg-secondary);
+  --bg-glass: var(--hygg-bg-glass);
+  --accent: var(--hygg-accent-primary);
+  --text-primary: var(--hygg-text-primary);
+  --text-secondary: var(--hygg-text-secondary);
+  --text-muted: var(--hygg-text-muted);
+}
+
+/* ==========================================================================
+   BASE STYLES
+   ========================================================================== */
+
+body.theme-hyggshi-os {
+  font-family: var(--hygg-font-sans);
+  background-color: var(--hygg-bg-primary);
+  color: var(--hygg-text-primary);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(0, 243, 255, 0.05) 0%, transparent 20%),
+    radial-gradient(circle at 80% 70%, rgba(123, 0, 255, 0.05) 0%, transparent 20%);
+  background-attachment: fixed;
+}
+
+body.theme-hyggshi-os.light-mode {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(0, 151, 167, 0.08) 0%, transparent 25%),
+    radial-gradient(circle at 80% 70%, rgba(98, 0, 234, 0.08) 0%, transparent 25%);
+}
+
+/* ==========================================================================
+   WINDOW SYSTEM
+   ========================================================================== */
+
+body.theme-hyggshi-os .window {
+  background: var(--hygg-bg-glass);
+  border: var(--hygg-border-glass);
+  border-radius: var(--hygg-radius-lg);
+  box-shadow: var(--hygg-shadow-lg), var(--hygg-shadow-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform var(--hygg-transition-normal),
+              box-shadow var(--hygg-transition-normal),
+              width var(--hygg-transition-normal),
+              height var(--hygg-transition-normal),
+              top var(--hygg-transition-normal),
+              left var(--hygg-transition-normal);
+}
+
+body.theme-hyggshi-os .window.focused {
+  box-shadow: var(--hygg-shadow-lg), var(--hygg-shadow-glass),
+              0 0 30px rgba(0, 243, 255, 0.25);
+  border-color: rgba(0, 243, 255, 0.4);
+}
+
+body.theme-hyggshi-os .window-titlebar {
+  height: 40px;
+  background: var(--hygg-bg-tertiary);
+  border-bottom: var(--hygg-border-glass);
+}
+
+body.theme-hyggshi-os .window-title {
+  font-weight: 600;
+  color: var(--hygg-text-secondary);
+}
+
+body.theme-hyggshi-os .window-btn {
+  border-radius: var(--hygg-radius-md);
+  transition: all var(--hygg-transition-fast);
+}
+
+body.theme-hyggshi-os .window-btn:hover {
+  background: var(--hygg-bg-glass-hover);
+  color: var(--hygg-text-primary);
+}
+
+/* ==========================================================================
+   TASKBAR / DOCK
+   ========================================================================== */
+
+body.theme-hyggshi-os #taskbar {
+  height: 56px;
+  background: var(--hygg-bg-glass);
+  border-top: var(--hygg-border-glass);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-hyggshi-os #start-btn {
+  border-radius: var(--hygg-radius-md);
+  background: var(--hygg-bg-tertiary);
+  border: var(--hygg-border-glass);
+  transition: all var(--hygg-transition-normal);
+}
+
+body.theme-hyggshi-os #start-btn:hover {
+  background: var(--hygg-bg-glass-hover);
+  transform: scale(1.05);
+}
+
+body.theme-hyggshi-os .taskbar-app {
+  border-radius: var(--hygg-radius-md);
+  background: var(--hygg-bg-tertiary);
+  border: var(--hygg-border-glass);
+  transition: all var(--hygg-transition-normal);
+}
+
+body.theme-hyggshi-os .taskbar-app:hover {
+  background: var(--hygg-bg-glass-hover);
+  transform: translateY(-2px);
+}
+
+body.theme-hyggshi-os .taskbar-app.active {
+  background: var(--hygg-accent-primary);
+  border-color: var(--hygg-accent-primary);
+  color: var(--hygg-bg-primary);
+  box-shadow: var(--hygg-shadow-glass);
+}
+
+@keyframes hygg-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 243, 255, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 243, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 243, 255, 0); }
+}
+
+body.theme-hyggshi-os .taskbar-app.active {
+  animation: hygg-pulse 2s infinite;
+}
+
+/* ==========================================================================
+   APP SPECIFIC OVERRIDES - Chat AI
+   ========================================================================== */
+
+body.theme-hyggshi-os .app-chat-ai {
+  background: var(--hygg-bg-primary);
+}
+
+body.theme-hyggshi-os .chat-sidebar {
+  background: var(--hygg-bg-glass);
+  border-right: var(--hygg-border-glass);
+  backdrop-filter: blur(10px);
+}
+
+body.theme-hyggshi-os .chat-header {
+  border-bottom: var(--hygg-border-glass);
+  background: var(--hygg-bg-tertiary);
+}
+
+body.theme-hyggshi-os .chat-new-btn {
+  background: var(--hygg-bg-tertiary);
+  border: var(--hygg-border-glass);
+  border-radius: var(--hygg-radius-pill);
+}
+
+body.theme-hyggshi-os .chat-new-btn:hover {
+  background: var(--hygg-bg-glass-hover);
+  border-color: var(--hygg-accent-primary);
+  box-shadow: var(--hygg-shadow-glass);
+}
+
+body.theme-hyggshi-os .chat-history-item:hover {
+  background: var(--hygg-bg-glass-hover);
+}
+
+body.theme-hyggshi-os .chat-history-item.active {
+  background: var(--hygg-accent-primary);
+  color: var(--hygg-bg-primary);
+  box-shadow: var(--hygg-shadow-glass);
+}
+
+body.theme-hyggshi-os .chat-msg-content {
+  background: var(--hygg-bg-tertiary);
+  border: var(--hygg-border-glass);
+  border-radius: var(--hygg-radius-lg);
+  box-shadow: var(--hygg-shadow-md);
+  color: var(--hygg-text-primary);
+}
+
+body.theme-hyggshi-os .chat-msg.ai .chat-msg-content {
+  background: var(--hygg-bg-tertiary);
+}
+
+body.theme-hyggshi-os .chat-msg.user .chat-msg-content {
+  background: rgba(0, 243, 255, 0.15);
+  border-color: var(--hygg-accent-primary);
+  box-shadow: var(--hygg-shadow-glass);
+}
+
+body.theme-hyggshi-os.light-mode .chat-msg.user .chat-msg-content {
+  background: rgba(0, 118, 133, 0.1);
+  border-color: var(--hygg-accent-primary);
+}
+
+body.theme-hyggshi-os .chat-input-box {
+  background: var(--hygg-bg-tertiary);
+  border: var(--hygg-border-glass);
+  border-radius: var(--hygg-radius-lg);
+  box-shadow: var(--hygg-shadow-lg);
+}
+
+body.theme-hyggshi-os .chat-input-box:focus-within {
+  border-color: var(--hygg-accent-primary);
+  box-shadow: var(--hygg-shadow-lg), var(--hygg-shadow-glass);
+}
+
+body.theme-hyggshi-os .chat-model-select {
+  background: var(--hygg-bg-tertiary);
+  border: var(--hygg-border-glass);
+  color: var(--hygg-text-primary);
+}
+
+body.theme-hyggshi-os .chat-msg-avatar {
+  background: linear-gradient(135deg, var(--hygg-accent-primary), var(--hygg-accent-secondary));
+  box-shadow: var(--hygg-shadow-glass);
+}
+
+body.theme-hyggshi-os .chat-create-account-btn {
+  background: var(--hygg-bg-tertiary);
+  border: var(--hygg-border-glass);
+  color: var(--hygg-text-primary);
+}
+
+body.theme-hyggshi-os .chat-create-account-btn:hover {
+  background: var(--hygg-bg-glass-hover);
+  border-color: var(--hygg-accent-primary);
+}

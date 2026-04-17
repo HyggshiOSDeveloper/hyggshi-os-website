@@ -40,106 +40,351 @@ function ivZoom(dir) {
 
 /* ============ MUSIC PLAYER ============ */
 let mpPlaying = false;
-let mpInterval = null;
+let mpAudioContext = null;
+let mpAnalyser = null;
+let mpFrequencyData = null;
+let mpSourceNode = null;
+let mpVisualizerFrame = null;
+let mpCanvasState = [];
+
+const MP_BAR_COUNT = 40;
+const MP_FFT_SIZE = 256;
+const MP_SMOOTHING = 0.72;
+const MP_VISUAL_GAIN = 1.7;
+
+function mpGetWindows() {
+    return Object.values(windows).filter(w => w.appId === 'music-player');
+}
+
+function mpGetAudio() {
+    return document.getElementById('mp-audio');
+}
+
+function mpGetCanvas(winEl) {
+    return winEl ? winEl.querySelector('.mp-visualizer-canvas') : null;
+}
+
+function mpResizeCanvas(canvas, forceReset = false) {
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(1, Math.floor(rect.width * dpr));
+    const height = Math.max(1, Math.floor(rect.height * dpr));
+
+    if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        if (forceReset || !mpCanvasState.length) {
+            mpCanvasState = new Array(MP_BAR_COUNT).fill(0.08);
+        }
+    }
+}
+
+function mpDrawIdle(canvas) {
+    if (!canvas) return;
+    mpResizeCanvas(canvas, true);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const gap = Math.max(2, Math.floor(w * 0.007));
+    const totalGap = gap * (MP_BAR_COUNT - 1);
+    const barWidth = Math.max(2, Math.floor((w - totalGap) / MP_BAR_COUNT));
+    const totalBarsWidth = barWidth * MP_BAR_COUNT + totalGap;
+    let x = Math.floor((w - totalBarsWidth) / 2);
+
+    ctx.fillStyle = 'rgba(162, 155, 254, 0.26)';
+    for (let i = 0; i < MP_BAR_COUNT; i++) {
+        const y = Math.floor(h * 0.84);
+        const barHeight = Math.max(3, Math.floor(h * 0.08));
+        ctx.fillRect(x, y, barWidth, barHeight);
+        x += barWidth + gap;
+    }
+}
+
+function mpUpdateProgressUI(audio) {
+    const percent = (audio.currentTime / (audio.duration || 1)) * 100;
+    for (const w of mpGetWindows()) {
+        const fill = w.el.querySelector('.mp-bar-fill');
+        if (fill) fill.style.width = percent + '%';
+        const times = w.el.querySelector('.mp-times');
+        if (times) {
+            times.innerHTML = `<span>${formatTime(audio.currentTime)}</span><span>${formatTime(audio.duration)}</span>`;
+        }
+    }
+}
+
+function mpSeekToFraction(fraction) {
+    const audio = mpGetAudio();
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const safe = Math.max(0, Math.min(1, fraction));
+    audio.currentTime = safe * audio.duration;
+    mpUpdateProgressUI(audio);
+}
+
+function mpSeekFromClientX(clientX, bar) {
+    const rect = bar.getBoundingClientRect();
+    if (!rect.width) return;
+    mpSeekToFraction((clientX - rect.left) / rect.width);
+}
+
+function mpBindSeekBar(winEl) {
+    const bar = winEl.querySelector('.mp-bar');
+    if (!bar || bar.dataset.seekBound === '1') return;
+    bar.dataset.seekBound = '1';
+
+    const stopDrag = () => {
+        bar.dataset.dragging = '0';
+    };
+
+    bar.addEventListener('pointerdown', (e) => {
+        bar.dataset.dragging = '1';
+        if (bar.setPointerCapture) bar.setPointerCapture(e.pointerId);
+        mpSeekFromClientX(e.clientX, bar);
+    });
+
+    bar.addEventListener('pointermove', (e) => {
+        if (bar.dataset.dragging === '1') mpSeekFromClientX(e.clientX, bar);
+    });
+
+    bar.addEventListener('pointerup', stopDrag);
+    bar.addEventListener('pointercancel', stopDrag);
+    bar.addEventListener('lostpointercapture', stopDrag);
+}
+
+function mpInitWindow(win) {
+    if (!win) return;
+    mpBindSeekBar(win);
+    mpDrawIdle(mpGetCanvas(win));
+}
+
+function mpSetupAudioAnalyzer(audio) {
+    if (!audio) return;
+
+    if (!mpAudioContext) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        mpAudioContext = new AudioCtx();
+    }
+
+    if (!mpSourceNode) {
+        mpSourceNode = mpAudioContext.createMediaElementSource(audio);
+        mpAnalyser = mpAudioContext.createAnalyser();
+        mpAnalyser.fftSize = MP_FFT_SIZE;
+        mpAnalyser.smoothingTimeConstant = MP_SMOOTHING;
+        mpSourceNode.connect(mpAnalyser);
+        mpAnalyser.connect(mpAudioContext.destination);
+        mpFrequencyData = new Uint8Array(mpAnalyser.frequencyBinCount);
+    }
+}
+
+function mpRenderVisualizerFrame() {
+    if (!mpAnalyser || !mpFrequencyData) return;
+    mpAnalyser.getByteFrequencyData(mpFrequencyData);
+
+    for (const w of mpGetWindows()) {
+        const canvas = mpGetCanvas(w.el);
+        if (!canvas) continue;
+
+        mpResizeCanvas(canvas);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) continue;
+
+        const width = canvas.width;
+        const height = canvas.height;
+        ctx.clearRect(0, 0, width, height);
+
+        const gradient = ctx.createLinearGradient(0, height, 0, 0);
+        gradient.addColorStop(0, 'rgba(108, 92, 231, 0.96)');
+        gradient.addColorStop(1, 'rgba(162, 155, 254, 0.98)');
+        ctx.fillStyle = gradient;
+
+        const gap = Math.max(2, Math.floor(width * 0.007));
+        const totalGap = gap * (MP_BAR_COUNT - 1);
+        const barWidth = Math.max(2, Math.floor((width - totalGap) / MP_BAR_COUNT));
+        const totalBarsWidth = barWidth * MP_BAR_COUNT + totalGap;
+        let x = Math.floor((width - totalBarsWidth) / 2);
+
+        if (!mpCanvasState.length || mpCanvasState.length !== MP_BAR_COUNT) {
+            mpCanvasState = new Array(MP_BAR_COUNT).fill(0.08);
+        }
+
+        for (let i = 0; i < MP_BAR_COUNT; i++) {
+            const freqIndex = Math.floor((i / MP_BAR_COUNT) * mpFrequencyData.length);
+            const raw = (mpFrequencyData[freqIndex] || 0) / 255;
+            const boosted = Math.min(1, raw * MP_VISUAL_GAIN);
+
+            const prev = mpCanvasState[i] || 0.08;
+            const next = boosted > prev
+                ? prev + (boosted - prev) * 0.62
+                : prev * 0.86 + boosted * 0.14;
+            mpCanvasState[i] = next;
+
+            const normalized = Math.pow(next, 0.72);
+            const barHeight = Math.max(3, Math.floor(normalized * height * 0.9));
+            const y = height - barHeight;
+            ctx.fillRect(x, y, barWidth, barHeight);
+            x += barWidth + gap;
+        }
+    }
+}
+
+function mpStartVisualizer() {
+    if (!mpAnalyser || mpVisualizerFrame) return;
+
+    const draw = () => {
+        if (!mpAnalyser || !mpFrequencyData) {
+            mpVisualizerFrame = null;
+            return;
+        }
+        mpRenderVisualizerFrame();
+        mpVisualizerFrame = requestAnimationFrame(draw);
+    };
+
+    mpVisualizerFrame = requestAnimationFrame(draw);
+}
+
+function mpStopVisualizer() {
+    if (mpVisualizerFrame) {
+        cancelAnimationFrame(mpVisualizerFrame);
+        mpVisualizerFrame = null;
+    }
+
+    mpCanvasState = new Array(MP_BAR_COUNT).fill(0.08);
+    for (const w of mpGetWindows()) {
+        mpDrawIdle(mpGetCanvas(w.el));
+    }
+}
 
 function mpSelectAudio() {
-    document.getElementById('mp-upload-input').click();
+    const input = document.getElementById('mp-upload-input');
+    if (input) input.click();
+}
+
+let mpAudioUrl = null;
+
+function mpLoadAudioFromBlob(blob, titleText = 'Generated Track', artistText = 'AI Generated') {
+    const audio = mpGetAudio();
+    if (!audio || !blob) return;
+
+    mpSetupAudioAnalyzer(audio);
+
+    for (const w of mpGetWindows()) {
+        const title = w.el.querySelector('.mp-title');
+        const artist = w.el.querySelector('.mp-artist');
+        const times = w.el.querySelector('.mp-times');
+        const fill = w.el.querySelector('.mp-bar-fill');
+
+        if (title) title.textContent = titleText;
+        if (artist) artist.textContent = artistText;
+        if (times) times.innerHTML = '<span>0:00</span><span>--:--</span>';
+        if (fill) fill.style.width = '0%';
+    }
+
+    // Revoke old URL to prevent memory leak
+    if (mpAudioUrl) {
+        URL.revokeObjectURL(mpAudioUrl);
+    }
+    
+    mpAudioUrl = URL.createObjectURL(blob);
+    audio.src = mpAudioUrl;
+    audio.load();
+
+    audio.onloadedmetadata = () => {
+        for (const w of mpGetWindows()) {
+            const times = w.el.querySelector('.mp-times');
+            if (times) times.innerHTML = `<span>0:00</span><span>${formatTime(audio.duration)}</span>`;
+        }
+    };
+
+    audio.ontimeupdate = () => {
+        mpUpdateProgressUI(audio);
+    };
+
+    audio.onended = () => {
+        mpPlaying = false;
+        mpStopVisualizer();
+        for (const w of mpGetWindows()) {
+            const btn = w.el.querySelector('.mp-play .material-icons-round');
+            if (btn) btn.textContent = 'play_arrow';
+        }
+    };
+
+    mpPlaying = true;
+    if (mpAudioContext && mpAudioContext.state === 'suspended') mpAudioContext.resume();
+
+    audio.play().then(() => {
+        mpStartVisualizer();
+        for (const w of mpGetWindows()) {
+            const btn = w.el.querySelector('.mp-play .material-icons-round');
+            if (btn) btn.textContent = 'pause';
+        }
+    }).catch(() => {
+        mpPlaying = false;
+        mpStopVisualizer();
+    });
+}
+
+function mpDestroyWindow(wid) {
+    // If this was the last music player window, we might want to stop the music,
+    // but usually in an OS, music continues. However, we MUST stop the visualizer
+    // loop if there are no more windows to draw to.
+    const remaining = mpGetWindows();
+    if (remaining.length === 0) {
+        mpStopVisualizer();
+        // Also clean up audio context if needed
+        if (mpAudioContext) {
+            // mpAudioContext.close(); // Optional: keeps audio playing in background
+        }
+    }
 }
 
 function mpHandleUpload(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const audio = document.getElementById('mp-audio');
+    if (!input.files || !input.files[0]) return;
 
-        // Update UI
-        for (const [wid, w] of Object.entries(windows)) {
-            if (w.appId === 'music-player') {
-                w.el.querySelector('.mp-title').textContent = file.name.replace(/\.[^/.]+$/, "");
-                w.el.querySelector('.mp-artist').textContent = "Local File";
-                w.el.querySelector('.mp-times').innerHTML = `<span>0:00</span><span>--:--</span>`;
-                w.el.querySelector('.mp-bar-fill').style.width = '0%';
-                break;
-            }
-        }
-
-        const url = URL.createObjectURL(file);
-        audio.src = url;
-        audio.load();
-
-        // When metadata is loaded, update total time
-        audio.onloadedmetadata = () => {
-            for (const [wid, w] of Object.entries(windows)) {
-                if (w.appId === 'music-player') {
-                    w.el.querySelector('.mp-times').innerHTML = `<span>0:00</span><span>${formatTime(audio.duration)}</span>`;
-                    break;
-                }
-            }
-        };
-
-        // When time updates, update progress bar
-        audio.ontimeupdate = () => {
-            const percent = (audio.currentTime / audio.duration) * 100;
-            for (const [wid, w] of Object.entries(windows)) {
-                if (w.appId === 'music-player') {
-                    const fill = w.el.querySelector('.mp-bar-fill');
-                    if (fill) fill.style.width = percent + '%';
-                    w.el.querySelector('.mp-times').innerHTML = `<span>${formatTime(audio.currentTime)}</span><span>${formatTime(audio.duration)}</span>`;
-                    break;
-                }
-            }
-        };
-
-        // When ended, reset button
-        audio.onended = () => {
-            mpPlaying = false;
-            for (const [wid, w] of Object.entries(windows)) {
-                if (w.appId === 'music-player') {
-                    const btn = w.el.querySelector('.mp-play .material-icons-round');
-                    btn.textContent = 'play_arrow';
-                    break;
-                }
-            }
-        };
-
-        // Auto play new file
-        mpPlaying = true;
-        audio.play().then(() => {
-            for (const [wid, w] of Object.entries(windows)) {
-                if (w.appId === 'music-player') {
-                    const btn = w.el.querySelector('.mp-play .material-icons-round');
-                    btn.textContent = 'pause';
-                    break;
-                }
-            }
-        }).catch(e => {
-            mpPlaying = false;
-            console.log("Auto-play blocked", e);
-        });
-    }
+    const file = input.files[0];
+    mpLoadAudioFromBlob(file, file.name.replace(/\.[^/.]+$/, ''), 'Local File');
 }
 
 function mpToggle() {
-    const audio = document.getElementById('mp-audio');
-    if (!audio || !audio.src) return; // Ignore if no file loaded
+    const audio = mpGetAudio();
+    if (!audio || !audio.src) return;
 
+    mpSetupAudioAnalyzer(audio);
     mpPlaying = !mpPlaying;
 
     if (mpPlaying) {
-        audio.play();
+        if (mpAudioContext && mpAudioContext.state === 'suspended') mpAudioContext.resume();
+        audio.play().then(() => {
+            mpStartVisualizer();
+            for (const w of mpGetWindows()) {
+                const btn = w.el.querySelector('.mp-play .material-icons-round');
+                if (btn) btn.textContent = 'pause';
+            }
+        }).catch(() => {
+            mpPlaying = false;
+            mpStopVisualizer();
+            for (const w of mpGetWindows()) {
+                const btn = w.el.querySelector('.mp-play .material-icons-round');
+                if (btn) btn.textContent = 'play_arrow';
+            }
+        });
     } else {
         audio.pause();
-    }
-
-    for (const [wid, w] of Object.entries(windows)) {
-        if (w.appId === 'music-player') {
+        mpStopVisualizer();
+        for (const w of mpGetWindows()) {
             const btn = w.el.querySelector('.mp-play .material-icons-round');
-            btn.textContent = mpPlaying ? 'pause' : 'play_arrow';
-            break;
+            if (btn) btn.textContent = 'play_arrow';
         }
     }
 }
 
 /* ============ VIDEO PLAYER ============ */
+let vpVideoUrl = null;
+
 function initVideoPlayer(win, videoPath = '') {
     const video = win.querySelector('#vp-video');
     const playBtn = win.querySelector('#vp-play-btn');
@@ -162,8 +407,24 @@ function initVideoPlayer(win, videoPath = '') {
     });
 
     video.addEventListener('ended', () => {
-        playBtn.querySelector('span').textContent = 'play_arrow';
+        const icon = playBtn.querySelector('span');
+        if (icon) icon.textContent = 'play_arrow';
     });
+}
+
+function vpDestroyWindow(wid) {
+    const win = document.getElementById(wid);
+    if (!win) return;
+    const video = win.querySelector('#vp-video');
+    if (video) {
+        video.pause();
+        video.src = '';
+        video.load();
+    }
+    if (vpVideoUrl) {
+        URL.revokeObjectURL(vpVideoUrl);
+        vpVideoUrl = null;
+    }
 }
 
 function vpTogglePlay() {
@@ -209,24 +470,28 @@ function vpHandleUpload(input) {
         const playBtn = document.getElementById('vp-play-btn').querySelector('span');
 
         video.pause();
-        const url = URL.createObjectURL(file);
-        video.src = url;
+        
+        // Revoke old URL
+        if (vpVideoUrl) URL.revokeObjectURL(vpVideoUrl);
+        
+        vpVideoUrl = URL.createObjectURL(file);
+        video.src = vpVideoUrl;
         video.currentTime = 0;
         playBtn.textContent = 'play_arrow';
 
         video.play().then(() => {
             playBtn.textContent = 'pause';
-        }).catch(err => {
-            console.log("Auto-play blocked, user must click play.");
+        }).catch(() => {
+            console.log('Auto-play blocked, user must click play.');
         });
     }
 }
 
 function formatTime(seconds) {
-    if (isNaN(seconds)) return "0:00";
+    if (isNaN(seconds)) return '0:00';
     const min = Math.floor(seconds / 60);
     const sec = Math.floor(seconds % 60);
-    return min + ":" + (sec < 10 ? "0" + sec : sec);
+    return min + ':' + (sec < 10 ? '0' + sec : sec);
 }
 
 function openVideoInPlayer(name, content) {
@@ -247,16 +512,14 @@ function ytLoadVideo(url) {
 
     let videoId = '';
 
-    // Parse URL for ID
     if (url.includes('youtube.com/watch?v=')) {
         videoId = new URL(url).searchParams.get('v');
     } else if (url.includes('youtu.be/')) {
         videoId = url.split('youtu.be/')[1].split('?')[0];
     } else if (url.length === 11) {
-        // Assume direct ID input
         videoId = url;
     } else {
-        showNotification("YouTube", "Invalid YouTube URL format.");
+        showNotification('YouTube', 'Invalid YouTube URL format.');
         return;
     }
 

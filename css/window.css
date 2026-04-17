@@ -50,11 +50,18 @@
 }
 
 .window.maximized {
+    position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
     height: calc(100% - var(--taskbar-height)) !important;
     border-radius: 0;
+    transform: none !important;
+    z-index: 4000 !important;
+}
+
+.window.maximized .resize-handle {
+    display: none !important;
 }
 
 /* Title Bar */

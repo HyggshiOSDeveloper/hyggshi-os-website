@@ -206,7 +206,8 @@ body {
     background: rgba(255, 255, 255, 0.15);
 }
 
-#lock-password, #lock-recovery-key {
+#lock-password,
+#lock-recovery-key {
     background: transparent;
     border: none;
     color: white;
@@ -216,11 +217,13 @@ body {
     width: 100%;
 }
 
-#lock-password::placeholder, #lock-recovery-key::placeholder {
+#lock-password::placeholder,
+#lock-recovery-key::placeholder {
     color: rgba(255, 255, 255, 0.4);
 }
 
-#lock-unlock-btn, #lock-recovery-btn {
+#lock-unlock-btn,
+#lock-recovery-btn {
     background: var(--accent);
     border: none;
     color: white;
@@ -234,12 +237,14 @@ body {
     transition: transform 0.2s, background 0.2s;
 }
 
-#lock-unlock-btn:hover, #lock-recovery-btn:hover {
+#lock-unlock-btn:hover,
+#lock-recovery-btn:hover {
     transform: scale(1.05);
     background: var(--accent-glow);
 }
 
-#lock-unlock-btn span, #lock-recovery-btn span {
+#lock-unlock-btn span,
+#lock-recovery-btn span {
     font-size: 18px;
 }
 
