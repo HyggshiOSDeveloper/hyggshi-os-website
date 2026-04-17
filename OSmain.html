@@ -944,34 +944,50 @@
                 <div class="gc-sidebar-header">
                     <div class="gc-user-bar">
                         <div class="gc-user-avatar">?</div>
-                        <div class="gc-user-name">Unknown</div>
+                        <div class="gc-user-meta">
+                            <div class="gc-user-name">Unknown</div>
+                            <div class="gc-user-subtitle">Đang hoạt động</div>
+                        </div>
                         <button class="gc-settings-btn" onclick="gcShowSettings()"><span
                                 class="material-icons-round">settings</span></button>
                     </div>
+                    <div class="gc-sidebar-search">
+                        <span class="material-icons-round">search</span>
+                        <input type="text" placeholder="Tìm cuộc trò chuyện">
+                    </div>
                 </div>
                 <div class="gc-rooms-section">
-                    <div class="gc-rooms-label">Chat Rooms</div>
+                    <div class="gc-rooms-label">Tin nhắn</div>
                     <div class="gc-rooms-list"></div>
                     <button class="gc-create-btn" onclick="gcShowCreateGroup()"><span
-                            class="material-icons-round">add</span> Create Group</button>
+                            class="material-icons-round">add_comment</span> Tạo nhóm chat</button>
                 </div>
             </div>
             <div class="gc-main">
                 <div class="gc-chat-header">
-                    <div class="gc-chat-header-icon"></div>
+                    <div class="gc-chat-header-icon"><span class="material-icons-round">forum</span></div>
                     <div class="gc-chat-header-info">
                         <div class="gc-chat-header-name">Select a room</div>
-                        <div class="gc-chat-header-status"></div>
+                        <div class="gc-chat-header-status">Chọn cuộc trò chuyện để bắt đầu</div>
                     </div>
                     <div class="gc-header-actions">
                         <button class="gc-delete-room-btn" style="display:none" onclick="gcDeleteCurrentRoom()"><span
                                 class="material-icons-round">delete</span></button>
+                        <button class="gc-header-btn" title="Tìm trong đoạn chat"><span
+                                class="material-icons-round">search</span></button>
+                        <button class="gc-header-btn" title="Ghim cuộc trò chuyện"><span
+                                class="material-icons-round">push_pin</span></button>
                         <button class="gc-header-btn" onclick="gcToggleMembers()"><span
                                 class="material-icons-round">people</span></button>
                     </div>
                 </div>
                 <div class="gc-messages"></div>
                 <div class="gc-input-area">
+                    <div class="gc-composer-tools">
+                        <button class="gc-tool-btn" title="Ảnh"><span class="material-icons-round">image</span></button>
+                        <button class="gc-tool-btn" title="Sticker"><span class="material-icons-round">mood</span></button>
+                        <button class="gc-tool-btn" title="Tệp"><span class="material-icons-round">folder</span></button>
+                    </div>
                     <div class="gc-input-box">
                         <input type="file" id="gc-file-input" style="display:none" accept="image/*,video/*" onchange="gcHandleFileSelect(this)">
                         <button class="gc-header-btn" onclick="document.getElementById('gc-file-input').click()" title="Upload File">
