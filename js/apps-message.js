@@ -460,9 +460,14 @@ function gcFindPendingMessageMatch(msg) {
 }
 
 function gcReplacePendingMessage(element, msg) {
-    const replacement = gcAppendMessage(document.createElement('div'), msg, { forceSent: true }).firstElementChild;
-    if (!replacement) return;
-    element.replaceWith(replacement);
+    if (!element) return;
+    const bubble = element.querySelector('.gc-msg-bubble');
+    if (bubble) bubble.textContent = msg.text || '';
+    element.classList.remove('pending');
+    element.dataset.messageId = msg.id;
+    const timeEl = element.querySelector('.gc-msg-time');
+    if (timeEl) timeEl.textContent = gcFormatMessageTime(msg.created_at || new Date().toISOString());
+    element.querySelector('.gc-upload-progress')?.remove();
 }
 
 /* ===== SEND & UPLOAD ===== */
@@ -843,7 +848,7 @@ function gcFormatMessageTime(value) {
     if (!value) return '';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 function gcOpenExternalMedia(url) {
