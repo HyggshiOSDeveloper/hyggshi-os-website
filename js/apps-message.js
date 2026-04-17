@@ -100,6 +100,14 @@ function gcFormatSupabaseError(error, tableName) {
     return error.message || 'Database error.';
 }
 
+function gcFormatStorageError(error) {
+    if (!error) return 'Upload failed.';
+    if (error.status === 404) {
+        return `Storage bucket "${GC_STORAGE_BUCKET}" is missing. Run supabase-schema.sql in your project first.`;
+    }
+    return error.message || 'Upload failed.';
+}
+
 function gcNotifySetupIssue(message) {
     if (!gcSetupErrorShown) {
         showNotification('Global Chat', message);
@@ -609,7 +617,7 @@ async function gcSendAttachment(attachment, extraText = '') {
         }
     } catch (error) {
         console.error('Attachment send error:', error);
-        showNotification('Global Chat', gcFormatSupabaseError(error, GC_TABLES.messages));
+        showNotification('Global Chat', gcFormatStorageError(error));
         pendingEl.remove();
         gcPendingMessages.delete(tempId);
         URL.revokeObjectURL(previewUrl);
@@ -623,43 +631,41 @@ async function gcSendAttachment(attachment, extraText = '') {
 }
 
 function gcUploadFileWithProgress(file, filePath, onProgress) {
-    const endpoint = `${SB_URL}/storage/v1/object/${GC_STORAGE_BUCKET}/${filePath}`;
-
     return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', endpoint);
-        xhr.setRequestHeader('apikey', SB_KEY);
-        xhr.setRequestHeader('Authorization', `Bearer ${SB_KEY}`);
-        xhr.setRequestHeader('x-upsert', 'false');
-        xhr.setRequestHeader('cache-control', '3600');
-        xhr.setRequestHeader('content-type', file.type || 'application/octet-stream');
+        if (!sbClient) {
+            reject(new Error('Storage client is not ready.'));
+            return;
+        }
 
-        xhr.upload.addEventListener('progress', event => {
-            if (!event.lengthComputable) return;
-            const percent = Math.round((event.loaded / event.total) * 100);
-            if (typeof onProgress === 'function') onProgress(percent);
-        });
+        let progress = 0;
+        if (typeof onProgress === 'function') onProgress(progress);
 
-        xhr.addEventListener('load', () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
+        const progressTimer = window.setInterval(() => {
+            progress = Math.min(progress + 8, 90);
+            if (typeof onProgress === 'function') onProgress(progress);
+        }, 120);
+
+        sbClient.storage
+            .from(GC_STORAGE_BUCKET)
+            .upload(filePath, file, {
+                upsert: false,
+                contentType: file.type || 'application/octet-stream'
+            })
+            .then(({ data, error }) => {
+                window.clearInterval(progressTimer);
+
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
                 if (typeof onProgress === 'function') onProgress(100);
-                resolve(xhr.responseText);
-                return;
-            }
-
-            let errorMessage = xhr.responseText || `Upload failed with status ${xhr.status}`;
-            try {
-                const parsed = JSON.parse(xhr.responseText);
-                errorMessage = parsed.message || parsed.error || errorMessage;
-            } catch (parseError) {
-                void parseError;
-            }
-
-            reject(new Error(errorMessage));
-        });
-
-        xhr.addEventListener('error', () => reject(new Error('Upload failed.')));
-        xhr.send(file);
+                resolve(data);
+            })
+            .catch(error => {
+                window.clearInterval(progressTimer);
+                reject(error);
+            });
     });
 }
 
@@ -672,6 +678,21 @@ function gcBindComposer(win) {
 
     if (textarea && !textarea.dataset.gcBound) {
         textarea.dataset.gcBound = 'true';
+        textarea.removeAttribute('onkeydown');
+        textarea.dataset.gcComposing = 'false';
+        textarea.addEventListener('compositionstart', () => {
+            textarea.dataset.gcComposing = 'true';
+        });
+        textarea.addEventListener('compositionend', () => {
+            textarea.dataset.gcComposing = 'false';
+        });
+        textarea.addEventListener('keydown', event => {
+            if (event.isComposing || textarea.dataset.gcComposing === 'true') return;
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                gcSendMessage();
+            }
+        });
         textarea.addEventListener('input', () => gcResizeTextarea(textarea));
         gcResizeTextarea(textarea);
     }
