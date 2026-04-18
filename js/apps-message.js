@@ -25,6 +25,14 @@ let gcRoomCache = [];
 let gcKnownMessageIds = new Set();
 let gcPendingMessages = new Map();
 let gcPendingAttachment = null;
+let gcSyncInterval = null;
+let gcActiveRoomRequestId = 0;
+const GC_SYNC_INTERVAL_MS = 3000;
+const gcTimeFormatter = new Intl.DateTimeFormat(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+});
 
 /* ===== INIT ===== */
 function initMessage(win) {
@@ -32,6 +40,7 @@ function initMessage(win) {
     gcKnownMessageIds = new Set();
     gcPendingMessages = new Map();
     gcPendingAttachment = null;
+    gcStopRoomSync();
 
     let cleanUrl = SB_URL.trim();
     try {
@@ -315,11 +324,9 @@ function gcRenderRoomList(win, rooms) {
 
 async function gcSwitchRoom(roomId) {
     if (!sbClient) return;
+    const requestId = ++gcActiveRoomRequestId;
 
-    if (gcSubscription) {
-        sbClient.removeChannel(gcSubscription);
-        gcSubscription = null;
-    }
+    gcStopRoomSync();
 
     gcCurrentRoom = roomId;
     gcKnownMessageIds = new Set();
@@ -333,7 +340,7 @@ async function gcSwitchRoom(roomId) {
         .from(GC_TABLES.messages)
         .select('*')
         .eq('room_id', roomId)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(100);
 
     if (error) {
@@ -341,14 +348,31 @@ async function gcSwitchRoom(roomId) {
         gcNotifySetupIssue(gcFormatSupabaseError(error, GC_TABLES.messages));
         return;
     }
+    if (requestId !== gcActiveRoomRequestId || roomId !== gcCurrentRoom) return;
 
     gcRenderRoomList(gcWin, gcRoomCache);
-    (messages || []).forEach(msg => {
+    (messages || []).slice().reverse().forEach(msg => {
         if (msg.id) gcKnownMessageIds.add(msg.id);
         gcAppendMessage(msgContainer, msg);
     });
     msgContainer.scrollTop = msgContainer.scrollHeight;
 
+    gcStartRoomSync(roomId);
+    gcUpdateHeader(roomId);
+}
+
+function gcStopRoomSync() {
+    if (gcSubscription) {
+        sbClient?.removeChannel(gcSubscription);
+        gcSubscription = null;
+    }
+    if (gcSyncInterval) {
+        window.clearInterval(gcSyncInterval);
+        gcSyncInterval = null;
+    }
+}
+
+function gcStartRoomSync(roomId) {
     gcSubscription = sbClient.channel(`room:${roomId}`)
         .on('postgres_changes', {
             event: 'INSERT',
@@ -360,7 +384,39 @@ async function gcSwitchRoom(roomId) {
         })
         .subscribe();
 
-    gcUpdateHeader(roomId);
+    gcSyncLatestMessages(roomId);
+    gcSyncInterval = window.setInterval(() => {
+        gcSyncLatestMessages(roomId);
+    }, GC_SYNC_INTERVAL_MS);
+}
+
+async function gcSyncLatestMessages(roomId = gcCurrentRoom) {
+    if (!sbClient || roomId !== gcCurrentRoom) return;
+
+    const { data: messages, error } = await sbClient
+        .from(GC_TABLES.messages)
+        .select('*')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+    if (error) {
+        console.error('Supabase sync error:', error);
+        return;
+    }
+
+    const msgContainer = gcWin?.querySelector('.gc-messages');
+    if (!msgContainer) return;
+
+    let appended = false;
+    (messages || []).slice().reverse().forEach(msg => {
+        if (!msg?.id || gcKnownMessageIds.has(msg.id)) return;
+        gcKnownMessageIds.add(msg.id);
+        gcAppendMessage(msgContainer, msg);
+        appended = true;
+    });
+
+    if (appended) msgContainer.scrollTop = msgContainer.scrollHeight;
 }
 
 function gcUpdateHeader(roomId) {
@@ -846,12 +902,10 @@ function gcEscape(text) {
 
 function gcFormatMessageTime(value) {
     if (!value) return '';
-    const date = new Date(value);
+    const normalizedValue = typeof value === 'string' ? value.replace(' ', 'T') : value;
+    const date = new Date(normalizedValue);
     if (isNaN(date.getTime())) return '';
-    // Consistent 24-hour time format (HH:MM)
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
+    return gcTimeFormatter.format(date);
 }
 
 function gcOpenExternalMedia(url) {
