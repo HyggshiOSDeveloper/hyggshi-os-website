@@ -148,7 +148,7 @@
             <div class="desktop-icon" data-app="global-chat" ondblclick="openApp('global-chat')">
                 <div class="icon-img" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe)"><span
                         class="material-icons-round" style="color: white">public</span></div>
-                <span class="icon-label">Global Chat</span>
+                <span class="icon-label">Zashi Messaging</span>
             </div>
         </div>
 
@@ -514,7 +514,8 @@
                     <div class="set-group">
                         <label>UI Style</label>
                         <div class="set-styles">
-                            <div class="set-style-card active" data-ui-style="glass" onclick="setUIStyle('glassmorphism')">
+                            <div class="set-style-card active" data-ui-style="glass"
+                                onclick="setUIStyle('glassmorphism')">
                                 <div class="style-preview glassmorphism-preview">
                                     <div class="sp-bar"></div>
                                     <div class="sp-win"></div>
@@ -888,15 +889,15 @@
         </div>
     </template>
 
-    <!-- Global Chat -->
+    <!-- Zashi Messaging -->
     <template id="tmpl-global-chat">
         <div class="app-globalchat">
             <div class="gc-setup-overlay hidden">
                 <!-- Login Card -->
                 <div class="gc-setup-card" id="gc-login-card">
                     <span class="material-icons-round gc-setup-icon">public</span>
-                    <h2>Global Chat Login</h2>
-                    <p>Connect with other Web OS users. Enter your credentials to start chatting.</p>
+                    <h2>Zashi Messaging Login</h2>
+                    <p>Connect with other Zashi users. Enter your credentials to start chatting.</p>
                     <div class="gc-setup-group">
                         <label class="gc-setup-label">Username</label>
                         <input type="text" id="gc-login-user" class="gc-setup-input" placeholder="Your username...">
@@ -910,7 +911,8 @@
                         Login
                     </button>
                     <p style="margin-top: 20px; font-size: 12px; color: var(--text-muted);">
-                        Don't have an account? <a href="javascript:void(0)" onclick="gcToggleAuth(true)" style="color: var(--accent); font-weight: 600;">Register here</a>
+                        Don't have an account? <a href="javascript:void(0)" onclick="gcToggleAuth(true)"
+                            style="color: var(--accent); font-weight: 600;">Register here</a>
                     </p>
                 </div>
 
@@ -925,18 +927,21 @@
                     </div>
                     <div class="gc-setup-group">
                         <label class="gc-setup-label">Password</label>
-                        <input type="password" id="gc-reg-pass" class="gc-setup-input" placeholder="Min 6 characters...">
+                        <input type="password" id="gc-reg-pass" class="gc-setup-input"
+                            placeholder="Min 6 characters...">
                     </div>
                     <div class="gc-setup-group">
                         <label class="gc-setup-label">Confirm Password</label>
-                        <input type="password" id="gc-reg-confirm" class="gc-setup-input" placeholder="Repeat password...">
+                        <input type="password" id="gc-reg-confirm" class="gc-setup-input"
+                            placeholder="Repeat password...">
                     </div>
                     <button class="gc-setup-btn" onclick="gcRegister()">
                         <span class="material-icons-round">how_to_reg</span>
                         Create Account
                     </button>
                     <p style="margin-top: 20px; font-size: 12px; color: var(--text-muted);">
-                        Already have an account? <a href="javascript:void(0)" onclick="gcToggleAuth(false)" style="color: var(--accent); font-weight: 600;">Login here</a>
+                        Already have an account? <a href="javascript:void(0)" onclick="gcToggleAuth(false)"
+                            style="color: var(--accent); font-weight: 600;">Login here</a>
                     </p>
                 </div>
             </div>
@@ -985,12 +990,16 @@
                 <div class="gc-input-area">
                     <div class="gc-composer-tools">
                         <button class="gc-tool-btn" title="Ảnh"><span class="material-icons-round">image</span></button>
-                        <button class="gc-tool-btn" title="Sticker"><span class="material-icons-round">mood</span></button>
-                        <button class="gc-tool-btn" title="Tệp"><span class="material-icons-round">folder</span></button>
+                        <button class="gc-tool-btn" title="Sticker"><span
+                                class="material-icons-round">mood</span></button>
+                        <button class="gc-tool-btn" title="Tệp"><span
+                                class="material-icons-round">folder</span></button>
                     </div>
                     <div class="gc-input-box">
-                        <input type="file" id="gc-file-input" style="display:none" accept="image/*" onchange="gcHandleFileSelect(this)">
-                        <button class="gc-header-btn" onclick="document.getElementById('gc-file-input').click()" title="Upload image">
+                        <input type="file" id="gc-file-input" style="display:none" accept="image/*"
+                            onchange="gcHandleFileSelect(this)">
+                        <button class="gc-header-btn" onclick="document.getElementById('gc-file-input').click()"
+                            title="Upload image">
                             <span class="material-icons-round">attach_file</span>
                         </button>
                         <textarea placeholder="Type a message..."
@@ -1001,7 +1010,7 @@
                 </div>
                 <div class="gc-welcome">
                     <span class="material-icons-round">forum</span>
-                    <h3>Welcome to Global Chat</h3>
+                    <h3>Welcome to Zashi Messaging</h3>
                     <p>Select a room on the left to start chatting.</p>
                 </div>
             </div>

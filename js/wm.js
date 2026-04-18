@@ -21,7 +21,7 @@ const appMeta = {
     'video-player': { title: 'Video Player', icon: 'movie', w: 750, h: 520 },
     'youtube': { title: 'YouTube', icon: 'smart_display', w: 850, h: 550 },
     'weather': { title: 'Weather', icon: 'cloud', w: 700, h: 500 },
-    'global-chat': { title: 'Global Chat', icon: 'public', w: 850, h: 600 },
+    'global-chat': { title: 'Zashi Messaging', icon: 'public', w: 850, h: 600 },
     'about': { title: 'About Web OS', icon: 'info', w: 420, h: 500 },
 };
 

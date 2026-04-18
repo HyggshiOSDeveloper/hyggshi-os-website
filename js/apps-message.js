@@ -1,4 +1,4 @@
-/* ============ GLOBAL CHAT APP (Supabase Edition) ============ */
+/* ============ Zashi Messaging APP (Supabase Edition) ============ */
 
 const SB_URL = 'https://kwgxqxffjruykjzjhlkq.supabase.co';
 const SB_KEY = 'sb_publishable_cj9pOUvJFPdOEtZCziWULQ_c-Ch1xPb';
@@ -50,29 +50,30 @@ function initMessage(win) {
     }
 
     if (!cleanUrl || cleanUrl.includes('YOUR_SUPABASE_URL')) {
-        showNotification('Global Chat', 'Set a real Supabase URL in js/apps-message.js.');
+        showNotification('Zashi Messaging', 'Set a real Supabase URL in js/apps-message.js.');
         gcShowSetup(win);
         return;
     }
 
     if (window.location.protocol === 'file:') {
-        showNotification('Global Chat', 'Open this project with a local web server. file:// mode breaks parts of the app.');
+        showNotification('Zashi Messaging', 'Open this project with a local web server. file:// mode breaks parts of the app.');
     }
 
     try {
         if (typeof supabase === 'undefined') {
-            showNotification('Global Chat', 'Supabase library did not load.');
+            showNotification('Zashi Messaging', 'Supabase library did not load.');
             return;
         }
         sbClient = supabase.createClient(cleanUrl, SB_KEY);
     } catch (error) {
         console.error('Supabase init error:', error);
-        showNotification('Global Chat', 'Cannot connect to Supabase.');
+        showNotification('Zashi Messaging', 'Cannot connect to Supabase.');
         return;
     }
 
     gcApplyEnglishCopy(win);
     gcBindComposer(win);
+    gcBindGroupModal(win);
 
     const userName = localStorage.getItem('webos-gc-username');
     const userId = localStorage.getItem('webos-gc-userid');
@@ -119,7 +120,7 @@ function gcFormatStorageError(error) {
 
 function gcNotifySetupIssue(message) {
     if (!gcSetupErrorShown) {
-        showNotification('Global Chat', message);
+        showNotification('Zashi Messaging', message);
         gcSetupErrorShown = true;
     }
     if (gcWin) gcShowSetup(gcWin);
@@ -146,7 +147,7 @@ async function gcEnsureBackendReady() {
 
 async function gcLogin() {
     if (!sbClient) {
-        showNotification('Global Chat', 'The chat backend is not ready.');
+        showNotification('Zashi Messaging', 'The chat backend is not ready.');
         return;
     }
 
@@ -166,12 +167,12 @@ async function gcLogin() {
 
         if (error) {
             console.error('Supabase SQL Error:', error);
-            showNotification('Global Chat', gcFormatSupabaseError(error, GC_TABLES.users));
+            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
 
         if (!data || data.password !== password) {
-            showNotification('Global Chat', 'Wrong username or password.');
+            showNotification('Zashi Messaging', 'Wrong username or password.');
             return;
         }
 
@@ -180,13 +181,13 @@ async function gcLogin() {
         gcStartApp(gcWin);
     } catch (error) {
         console.error('Login error:', error);
-        showNotification('Global Chat', 'Database connection error.');
+        showNotification('Zashi Messaging', 'Database connection error.');
     }
 }
 
 async function gcRegister() {
     if (!sbClient) {
-        showNotification('Global Chat', 'The chat backend is not ready.');
+        showNotification('Zashi Messaging', 'The chat backend is not ready.');
         return;
     }
 
@@ -200,11 +201,11 @@ async function gcRegister() {
 
     if (!username || !password) return;
     if (username.length < 3 || password.length < 6) {
-        showNotification('Global Chat', 'Username must be at least 3 characters and password at least 6 characters.');
+        showNotification('Zashi Messaging', 'Username must be at least 3 characters and password at least 6 characters.');
         return;
     }
     if (password !== confirmation) {
-        showNotification('Global Chat', 'Passwords do not match.');
+        showNotification('Zashi Messaging', 'Passwords do not match.');
         return;
     }
 
@@ -218,13 +219,13 @@ async function gcRegister() {
 
         if (error) {
             console.error('Supabase SQL Error:', error);
-            showNotification('Global Chat', gcFormatSupabaseError(error, GC_TABLES.users));
+            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
 
         const newUser = data?.[0];
         if (!newUser) {
-            showNotification('Global Chat', 'Registration failed.');
+            showNotification('Zashi Messaging', 'Registration failed.');
             return;
         }
 
@@ -233,7 +234,7 @@ async function gcRegister() {
         gcStartApp(gcWin);
     } catch (error) {
         console.error('Register error:', error);
-        showNotification('Global Chat', 'System error while creating the account.');
+        showNotification('Zashi Messaging', 'System error while creating the account.');
     }
 }
 
@@ -294,7 +295,7 @@ function gcRenderRoomList(win, rooms) {
     list.innerHTML = '';
 
     if (!rooms.find(room => room.id === 'global')) {
-        rooms.unshift({ id: 'global', name: 'Global Chat', type: 'global' });
+        rooms.unshift({ id: 'global', name: 'Zashi Messaging', type: 'global' });
     }
 
     rooms.forEach(room => {
@@ -425,7 +426,7 @@ function gcUpdateHeader(roomId) {
     const headerIcon = gcWin?.querySelector('.gc-chat-header-icon');
     const room = gcRoomCache.find(item => item.id === roomId) || {
         id: roomId,
-        name: roomId === 'global' ? 'Global Chat' : 'Group Chat',
+        name: roomId === 'global' ? 'Zashi Messaging' : 'Group Chat',
         type: roomId === 'global' ? 'global' : 'group'
     };
 
@@ -577,7 +578,7 @@ async function gcSendMessage() {
 
     if (error) {
         console.error('Supabase SQL Error:', error);
-        showNotification('Global Chat', gcFormatSupabaseError(error, GC_TABLES.messages));
+        showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.messages));
         pendingEl.remove();
         gcPendingMessages.delete(tempId);
         textarea.value = text;
@@ -678,7 +679,7 @@ async function gcSendAttachment(attachment, extraText = '') {
         }
     } catch (error) {
         console.error('Attachment send error:', error);
-        showNotification('Global Chat', gcFormatStorageError(error));
+        showNotification('Zashi Messaging', gcFormatStorageError(error));
         pendingEl.remove();
         gcPendingMessages.delete(tempId);
         URL.revokeObjectURL(previewUrl);
@@ -799,18 +800,18 @@ function gcPrepareAttachment(file) {
     if (!gcWin) return;
 
     if (file.size > 5 * 1024 * 1024) {
-        showNotification('Global Chat', 'Maximum file size is 5 MB.');
+        showNotification('Zashi Messaging', 'Maximum file size is 5 MB.');
         return;
     }
 
     if (file.type.startsWith('video/')) {
-        showNotification('Global Chat', 'Video upload trực tiếp chưa hỗ trợ. Hãy dán link Google Drive, YouTube hoặc TikTok để chia sẻ.');
+        showNotification('Zashi Messaging', 'Video upload trực tiếp chưa hỗ trợ. Hãy dán link Google Drive, YouTube hoặc TikTok để chia sẻ.');
         return;
     }
 
     const type = file.type.startsWith('image/') ? 'image' : null;
     if (!type) {
-        showNotification('Global Chat', 'Only image files are supported here. For videos, use a Google Drive, YouTube, or TikTok link.');
+        showNotification('Zashi Messaging', 'Only image files are supported here. For videos, use a Google Drive, YouTube, or TikTok link.');
         return;
     }
 
@@ -830,8 +831,8 @@ function gcPrepareAttachment(file) {
         </button>
         <div class="gc-attachment-preview-media">
             ${type === 'image'
-                ? `<img src="${previewUrl}" alt="${gcEscape(file.name)}">`
-                : `<video src="${previewUrl}" muted></video>`}
+            ? `<img src="${previewUrl}" alt="${gcEscape(file.name)}">`
+            : `<video src="${previewUrl}" muted></video>`}
         </div>
         <div class="gc-attachment-preview-info">
             <div class="gc-attachment-preview-title">${gcEscape(file.name)}</div>
@@ -841,6 +842,35 @@ function gcPrepareAttachment(file) {
 
     preview.querySelector('.gc-attachment-remove')?.addEventListener('click', () => gcClearAttachmentPreview());
     inputArea.insertBefore(preview, inputArea.firstChild);
+}
+
+function gcBindGroupModal(win) {
+    const overlay = win.querySelector('.gc-modal-overlay');
+    const modal = win.querySelector('.gc-modal');
+    const input = win.querySelector('#gc-group-name');
+    if (!overlay || !modal || !input || overlay.dataset.gcBound) return;
+
+    overlay.dataset.gcBound = 'true';
+
+    overlay.addEventListener('click', event => {
+        if (event.target === overlay) gcHideModal();
+    });
+
+    modal.addEventListener('click', event => {
+        event.stopPropagation();
+    });
+
+    input.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            gcHideModal();
+            return;
+        }
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            gcCreateGroup();
+        }
+    });
 }
 
 function gcApplyEnglishCopy(win) {
@@ -1046,9 +1076,107 @@ function gcShowSettings() {
 }
 
 function gcShowCreateGroup() {
-    showNotification('Global Chat', 'Group creation is not implemented yet.');
+    const overlay = gcWin?.querySelector('.gc-modal-overlay');
+    const input = gcWin?.querySelector('#gc-group-name');
+    if (!overlay || !input) return;
+
+    input.value = '';
+    overlay.classList.remove('hidden');
+    window.setTimeout(() => input.focus(), 0);
+}
+
+function gcHideModal() {
+    const overlay = gcWin?.querySelector('.gc-modal-overlay');
+    const input = gcWin?.querySelector('#gc-group-name');
+    if (overlay) overlay.classList.add('hidden');
+    if (input) input.value = '';
+}
+
+function gcBuildRoomId(name) {
+    const slug = (name || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 36);
+    const suffix = Math.random().toString(36).slice(2, 8);
+    return `group-${slug || 'room'}-${suffix}`;
+}
+
+async function gcCreateGroup() {
+    if (!sbClient || !gcWin) return;
+
+    const input = gcWin.querySelector('#gc-group-name');
+    const createBtn = gcWin.querySelector('.gc-btn-primary');
+    const rawName = input?.value || '';
+    const name = rawName.trim().replace(/\s+/g, ' ');
+
+    if (!name) {
+        showNotification('Zashi Messaging', 'Enter a group name.');
+        input?.focus();
+        return;
+    }
+
+    if (name.length < 3) {
+        showNotification('Zashi Messaging', 'Group name must be at least 3 characters.');
+        input?.focus();
+        return;
+    }
+
+    const duplicate = gcRoomCache.some(room =>
+        room.type !== 'global' && (room.name || '').trim().toLowerCase() === name.toLowerCase()
+    );
+    if (duplicate) {
+        showNotification('Zashi Messaging', 'A group with this name already exists.');
+        input?.focus();
+        input?.select();
+        return;
+    }
+
+    const payload = {
+        id: gcBuildRoomId(name),
+        name,
+        type: 'group'
+    };
+
+    if (createBtn) {
+        createBtn.disabled = true;
+        createBtn.textContent = 'Creating...';
+    }
+
+    try {
+        const { data, error } = await sbClient
+            .from(GC_TABLES.rooms)
+            .insert([payload])
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Create group error:', error);
+            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.rooms));
+            return;
+        }
+
+        if (data) {
+            gcRoomCache = gcRoomCache.filter(room => room.id !== data.id);
+            gcRoomCache.push(data);
+            gcRenderRoomList(gcWin, gcRoomCache);
+            gcHideModal();
+            gcSwitchRoom(data.id);
+            showNotification('Zashi Messaging', `Created group "${data.name}".`);
+        }
+    } catch (error) {
+        console.error('Create group error:', error);
+        showNotification('Zashi Messaging', 'Could not create the group.');
+    } finally {
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.textContent = 'Create';
+        }
+    }
 }
 
 function gcToggleMembers() {
-    showNotification('Global Chat', 'Member list is not implemented yet.');
+    showNotification('Zashi Messaging', 'Member list is not implemented yet.');
 }
