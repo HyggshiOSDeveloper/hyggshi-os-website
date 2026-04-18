@@ -124,6 +124,11 @@ function gcToggleAuth(isRegister) {
 function gcFormatSupabaseError(error, tableName) {
     if (!error) return 'Unknown database error.';
     const rawMessage = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`.toLowerCase();
+    if (error.code === '23505' || error.status === 409) {
+        if (tableName === GC_TABLES.users) return 'This username is already taken.';
+        if (tableName === GC_TABLES.rooms) return 'A group with this name already exists.';
+        return 'This item already exists.';
+    }
     if (error.status === 404) {
         return 'Chat data is not ready yet. Run supabase-schema.sql first.';
     }
@@ -263,6 +268,27 @@ async function gcRegister() {
         return;
     }
 
+    try {
+        const { data: duplicateUser } = await sbClient
+            .from(GC_TABLES.users)
+            .select('id')
+            .eq('username_key', usernameKey)
+            .maybeSingle();
+
+        if (duplicateUser) {
+            const suggestion = await gcSuggestAvailableUsername(username);
+            if (userInp) {
+                userInp.value = suggestion;
+                userInp.focus();
+                userInp.select();
+            }
+            gcNotifyError(`This username is already taken. Try "${suggestion}".`);
+            return;
+        }
+    } catch (error) {
+        gcDebugError('Check duplicate username error:', error);
+    }
+
     const color = GC_COLORS[Math.floor(Math.random() * GC_COLORS.length)];
 
     try {
@@ -272,6 +298,16 @@ async function gcRegister() {
             .select();
 
         if (error) {
+            if (error.code === '23505' || error.status === 409) {
+                const suggestion = await gcSuggestAvailableUsername(username);
+                if (userInp) {
+                    userInp.value = suggestion;
+                    userInp.focus();
+                    userInp.select();
+                }
+                gcNotifyError(`This username is already taken. Try "${suggestion}".`);
+                return;
+            }
             gcDebugError('Supabase SQL Error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
             return;
@@ -358,6 +394,37 @@ function gcBuildNameKey(value) {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '');
+}
+
+function gcBuildAutoName(baseName, existingKeys = new Set()) {
+    const trimmedBase = (baseName || '').trim().replace(/\s+/g, ' ') || 'name';
+    let candidate = trimmedBase;
+    let index = 1;
+
+    while (existingKeys.has(gcBuildNameKey(candidate))) {
+        candidate = `${trimmedBase}${index}`;
+        index += 1;
+    }
+
+    return candidate;
+}
+
+async function gcSuggestAvailableUsername(baseName) {
+    if (!sbClient) return `${(baseName || 'user').trim() || 'user'}1`;
+
+    try {
+        const { data } = await sbClient.from(GC_TABLES.users).select('username_key');
+        const existingKeys = new Set((data || []).map(item => item.username_key).filter(Boolean));
+        return gcBuildAutoName(baseName, existingKeys);
+    } catch (error) {
+        gcDebugError('Suggest username error:', error);
+        return `${(baseName || 'user').trim() || 'user'}1`;
+    }
+}
+
+function gcSuggestAvailableRoomName(baseName) {
+    const existingKeys = new Set(gcRoomCache.map(room => gcBuildNameKey(room.name)).filter(Boolean));
+    return gcBuildAutoName(baseName, existingKeys);
 }
 
 function gcGetInitials(name) {
@@ -1901,9 +1968,14 @@ async function gcCreateGroup() {
         room.type !== 'global' && gcBuildNameKey(room.name) === nameKey
     );
     if (duplicate) {
-        gcNotifyError('A group with this name already exists.');
+        const suggestion = gcSuggestAvailableRoomName(name);
+        if (input) {
+            input.value = suggestion;
+            input.focus();
+            input.select();
+        }
+        gcNotifyError(`A group with this name already exists. Try "${suggestion}".`);
         input?.focus();
-        input?.select();
         return;
     }
 
@@ -1927,6 +1999,16 @@ async function gcCreateGroup() {
             .single();
 
         if (error) {
+            if (error.code === '23505' || error.status === 409) {
+                const suggestion = gcSuggestAvailableRoomName(name);
+                if (input) {
+                    input.value = suggestion;
+                    input.focus();
+                    input.select();
+                }
+                gcNotifyError(`A group with this name already exists. Try "${suggestion}".`);
+                return;
+            }
             gcDebugError('Create group error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
             return;
