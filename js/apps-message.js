@@ -6,7 +6,8 @@ const SB_KEY = 'sb_publishable_cj9pOUvJFPdOEtZCziWULQ_c-Ch1xPb';
 const GC_TABLES = {
     users: 'users',
     rooms: 'rooms',
-    messages: 'messages'
+    messages: 'messages',
+    roomMembers: 'room_members'
 };
 
 const GC_STORAGE_BUCKET = 'chat-files';
@@ -23,6 +24,7 @@ let gcSubscription = null;
 let gcRoomsSubscription = null;
 let gcSetupErrorShown = false;
 let gcRoomCache = [];
+let gcRoomMembersCache = [];
 let gcCurrentRoomMessages = [];
 let gcKnownMessageIds = new Set();
 let gcPendingMessages = new Map();
@@ -32,6 +34,7 @@ let gcActiveRoomRequestId = 0;
 let gcPinnedRoomIds = new Set();
 let gcMembersPanelOpen = false;
 let gcAvatarUploadMode = 'user';
+let gcCurrentUserRoomRole = 'member';
 const GC_PINNED_ROOMS_KEY = 'webos-gc-pinned-rooms';
 const GC_MAX_AVATAR_BYTES = 500 * 1024;
 const GC_AVATAR_PRIMARY_SIZE = 256;
@@ -145,7 +148,7 @@ function gcNotifySetupIssue(message) {
 async function gcEnsureBackendReady() {
     if (!sbClient) return false;
 
-    for (const tableName of [GC_TABLES.rooms, GC_TABLES.messages, GC_TABLES.users]) {
+    for (const tableName of [GC_TABLES.rooms, GC_TABLES.messages, GC_TABLES.users, GC_TABLES.roomMembers]) {
         const { error } = await sbClient
             .from(tableName)
             .select('*', { head: true, count: 'exact' })
@@ -287,6 +290,32 @@ function gcGetRoomById(roomId = gcCurrentRoom) {
     return gcRoomCache.find(room => room.id === roomId) || null;
 }
 
+function gcIsGroupRoom(roomId = gcCurrentRoom) {
+    const room = gcGetRoomById(roomId);
+    return room?.type === 'group';
+}
+
+function gcCanManageGroup(roomId = gcCurrentRoom) {
+    if (!gcIsGroupRoom(roomId)) return false;
+    return gcCurrentUserRoomRole === 'owner' || gcCurrentUserRoomRole === 'deputy';
+}
+
+function gcCanDeleteGroup(roomId = gcCurrentRoom) {
+    if (!gcIsGroupRoom(roomId)) return false;
+    return gcCurrentUserRoomRole === 'owner';
+}
+
+function gcCanAppointDeputy(roomId = gcCurrentRoom) {
+    if (!gcIsGroupRoom(roomId)) return false;
+    return gcCurrentUserRoomRole === 'owner';
+}
+
+function gcGetRoleLabel(role) {
+    if (role === 'owner') return 'Leader';
+    if (role === 'deputy') return 'Deputy';
+    return 'Member';
+}
+
 function gcGetInitials(name) {
     return (name || '?').trim().charAt(0).toUpperCase() || '?';
 }
@@ -423,6 +452,8 @@ async function gcSwitchRoom(roomId) {
     gcStopRoomSync();
 
     gcCurrentRoom = roomId;
+    gcCurrentUserRoomRole = roomId === 'global' ? 'owner' : 'member';
+    gcRoomMembersCache = [];
     gcKnownMessageIds = new Set();
     gcPendingMessages.clear();
 
@@ -445,6 +476,7 @@ async function gcSwitchRoom(roomId) {
     }
     if (requestId !== gcActiveRoomRequestId || roomId !== gcCurrentRoom) return;
 
+    await gcLoadRoomMembers(roomId);
     gcRenderRoomList(gcWin, gcRoomCache);
     const orderedMessages = (messages || []).slice().reverse();
     gcCurrentRoomMessages = orderedMessages.slice();
@@ -457,6 +489,53 @@ async function gcSwitchRoom(roomId) {
     gcStartRoomSync(roomId);
     gcUpdateHeader(roomId);
     gcRefreshMembersPanel();
+}
+
+async function gcEnsureRoomMembership(roomId = gcCurrentRoom) {
+    if (!sbClient || !gcUserId || !gcIsGroupRoom(roomId)) return;
+
+    const exists = gcRoomMembersCache.some(member => member.user_id === gcUserId);
+    if (exists) return;
+
+    const payload = {
+        room_id: roomId,
+        user_id: gcUserId,
+        role: 'member'
+    };
+
+    const { error } = await sbClient
+        .from(GC_TABLES.roomMembers)
+        .upsert([payload], { onConflict: 'room_id,user_id' });
+
+    if (!error) {
+        await gcLoadRoomMembers(roomId);
+    }
+}
+
+async function gcLoadRoomMembers(roomId = gcCurrentRoom) {
+    if (!sbClient) return;
+
+    if (!gcIsGroupRoom(roomId)) {
+        gcRoomMembersCache = [];
+        gcCurrentUserRoomRole = 'owner';
+        return;
+    }
+
+    const { data, error } = await sbClient
+        .from(GC_TABLES.roomMembers)
+        .select('room_id,user_id,role,users(id,username,color,avatar_url)')
+        .eq('room_id', roomId);
+
+    if (error) {
+        console.error('Load room members error:', error);
+        gcRoomMembersCache = [];
+        gcCurrentUserRoomRole = 'member';
+        return;
+    }
+
+    gcRoomMembersCache = data || [];
+    const self = gcRoomMembersCache.find(member => member.user_id === gcUserId);
+    gcCurrentUserRoomRole = self?.role || 'member';
 }
 
 function gcStopRoomSync() {
@@ -479,6 +558,14 @@ function gcStartRoomSync(roomId) {
             filter: `room_id=eq.${roomId}`
         }, payload => {
             gcHandleIncomingMessage(payload.new);
+        })
+        .on('postgres_changes', {
+            event: 'DELETE',
+            schema: 'public',
+            table: GC_TABLES.messages,
+            filter: `room_id=eq.${roomId}`
+        }, payload => {
+            gcHandleDeletedMessage(payload.old);
         })
         .subscribe();
 
@@ -507,12 +594,17 @@ async function gcSyncLatestMessages(roomId = gcCurrentRoom) {
     if (!msgContainer) return;
 
     let appended = false;
+    const liveMessageIds = new Set((messages || []).map(msg => msg?.id).filter(Boolean));
     (messages || []).slice().reverse().forEach(msg => {
         if (!msg?.id || gcKnownMessageIds.has(msg.id)) return;
         gcKnownMessageIds.add(msg.id);
         gcAppendMessage(msgContainer, msg);
+        gcCurrentRoomMessages.push(msg);
         appended = true;
     });
+
+    const removedIds = [...gcKnownMessageIds].filter(id => !liveMessageIds.has(id));
+    removedIds.forEach(id => gcRemoveMessageFromUi(id));
 
     if (appended) msgContainer.scrollTop = msgContainer.scrollHeight;
 }
@@ -545,7 +637,7 @@ function gcUpdateHeader(roomId) {
         });
         headerIcon.title = room.type === 'group' ? 'Change group avatar' : 'Community room';
     }
-    if (deleteBtn) deleteBtn.style.display = room.type === 'group' ? 'grid' : 'none';
+    if (deleteBtn) deleteBtn.style.display = room.type === 'group' && gcCanDeleteGroup(roomId) ? 'grid' : 'none';
     if (pinBtn) pinBtn.classList.toggle('active', gcIsRoomPinned(roomId));
     if (membersBtn) membersBtn.classList.toggle('active', gcMembersPanelOpen);
 }
@@ -576,6 +668,12 @@ function gcAppendMessage(container, msg, options = {}) {
             <div class="gc-upload-progress-bar" style="width:${Math.max(0, Math.min(100, options.progressValue || 0))}%"></div>
         </div>
     ` : '';
+    const canDeleteMessage = msg.id && !options.pending && (isSent || (gcCanManageGroup(msg.room_id) && gcIsGroupRoom(msg.room_id)));
+    const deleteButtonHtml = canDeleteMessage ? `
+        <button class="gc-msg-delete" type="button" onclick="gcDeleteMessage('${gcEscape(msg.id)}')" title="Delete message">
+            <span class="material-icons-round">delete</span>
+        </button>
+    ` : '';
 
     div.innerHTML = `
         <div class="gc-msg-avatar" style="background:${color}">${initials}</div>
@@ -583,7 +681,10 @@ function gcAppendMessage(container, msg, options = {}) {
             <div class="gc-msg-sender" style="color:${color}">${gcEscape(msg.sender_name || 'Unknown')}</div>
             ${contentHtml}
             ${progressHtml}
-            <div class="gc-msg-time">${timeText}</div>
+            <div class="gc-msg-meta">
+                <div class="gc-msg-time">${timeText}</div>
+                ${deleteButtonHtml}
+            </div>
         </div>
     `;
 
@@ -614,6 +715,22 @@ function gcHandleIncomingMessage(msg) {
     if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
 }
 
+function gcHandleDeletedMessage(msg) {
+    const messageId = msg?.id;
+    if (!messageId) return;
+    gcRemoveMessageFromUi(messageId);
+}
+
+function gcRemoveMessageFromUi(messageId) {
+    if (!messageId) return;
+
+    gcKnownMessageIds.delete(messageId);
+    gcCurrentRoomMessages = gcCurrentRoomMessages.filter(msg => msg?.id !== messageId);
+    const element = gcWin?.querySelector(`.gc-msg[data-message-id="${messageId}"]`);
+    element?.remove();
+    gcRefreshMembersPanel();
+}
+
 function gcFindPendingMessageMatch(msg) {
     for (const [tempId, element] of gcPendingMessages.entries()) {
         const type = element.dataset.messageType;
@@ -636,6 +753,71 @@ function gcReplacePendingMessage(element, msg) {
     const timeEl = element.querySelector('.gc-msg-time');
     if (timeEl) timeEl.textContent = gcFormatMessageTime(msg.created_at || new Date().toISOString());
     element.querySelector('.gc-upload-progress')?.remove();
+    const metaEl = element.querySelector('.gc-msg-meta');
+    if (metaEl && msg.id && (msg.sender_id === gcUserId || element.classList.contains('sent') || gcCanManageGroup(msg.room_id))) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'gc-msg-delete';
+        deleteBtn.type = 'button';
+        deleteBtn.title = 'Delete message';
+        deleteBtn.setAttribute('onclick', `gcDeleteMessage('${msg.id}')`);
+        deleteBtn.innerHTML = '<span class="material-icons-round">delete</span>';
+        metaEl.appendChild(deleteBtn);
+    }
+}
+
+async function gcDeleteMessage(messageId) {
+    if (!sbClient || !messageId) return;
+
+    const message = gcCurrentRoomMessages.find(item => item?.id === messageId);
+    if (!message) return;
+    const canDelete = message.sender_id === gcUserId || (gcIsGroupRoom(message.room_id) && gcCanManageGroup(message.room_id));
+    if (!canDelete) {
+        showNotification('Zashi Messaging', 'You do not have permission to delete this message.');
+        return;
+    }
+
+    const confirmed = confirm('Delete this message?');
+    if (!confirmed) return;
+
+    try {
+        const { error } = await sbClient
+            .from(GC_TABLES.messages)
+            .delete()
+            .eq('id', messageId);
+
+        if (error) {
+            console.error('Delete message error:', error);
+            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.messages));
+            return;
+        }
+
+        gcRemoveMessageFromUi(messageId);
+        if (message.file_url) {
+            gcDeleteStorageObjectByUrl(message.file_url).catch(storageError => {
+                console.error('Delete message file error:', storageError);
+            });
+        }
+        showNotification('Zashi Messaging', 'Message deleted.');
+    } catch (error) {
+        console.error('Delete message error:', error);
+        showNotification('Zashi Messaging', 'Could not delete message.');
+    }
+}
+
+async function gcDeleteStorageObjectByUrl(fileUrl) {
+    if (!sbClient || !fileUrl) return;
+
+    try {
+        const parsed = new URL(fileUrl);
+        const marker = `/storage/v1/object/public/${GC_STORAGE_BUCKET}/`;
+        const index = parsed.pathname.indexOf(marker);
+        if (index === -1) return;
+        const objectPath = decodeURIComponent(parsed.pathname.slice(index + marker.length));
+        if (!objectPath) return;
+        await sbClient.storage.from(GC_STORAGE_BUCKET).remove([objectPath]);
+    } catch (error) {
+        console.error('Storage delete parse error:', error);
+    }
 }
 
 /* ===== SEND & UPLOAD ===== */
@@ -1206,6 +1388,10 @@ async function gcUploadGroupAvatar(file) {
 
     const room = gcGetRoomById();
     if (!room || room.type !== 'group') return;
+    if (!gcCanManageGroup(room.id)) {
+        showNotification('Zashi Messaging', 'Only the group leader or deputy can change the group avatar.');
+        return;
+    }
 
     const filePath = `avatars/rooms/${room.id}-${Date.now()}.${gcGetFileExtension(file)}`;
 
@@ -1258,6 +1444,50 @@ function gcTogglePinRoom() {
 async function gcRefreshMembersPanel() {
     const list = gcWin?.querySelector('.gc-members-list');
     if (!list) return;
+
+    await gcEnsureRoomMembership();
+    await gcLoadRoomMembers();
+
+    if (gcIsGroupRoom()) {
+        const memberList = gcRoomMembersCache.map(member => {
+            const user = member.users || {};
+            return {
+                id: member.user_id,
+                name: user.username || 'Unknown',
+                color: user.color || '#6c5ce7',
+                avatar_url: user.avatar_url || '',
+                role: member.role || 'member'
+            };
+        });
+
+        list.innerHTML = memberList.map(member => {
+            const canPromote = gcCanAppointDeputy() && member.id !== gcUserId && member.role === 'member';
+            const canDemote = gcCanAppointDeputy() && member.id !== gcUserId && member.role === 'deputy';
+            const canRemove = gcCanManageGroup() && member.id !== gcUserId && member.role !== 'owner';
+            return `
+                <div class="gc-member-item">
+                    <div class="gc-member-avatar${member.avatar_url ? ' has-image' : ''}" style="${member.avatar_url ? '' : `background:${member.color};`}">
+                        ${member.avatar_url
+                            ? `<img src="${gcEscape(member.avatar_url)}" alt="${gcEscape(member.name)}">`
+                            : gcEscape(gcGetInitials(member.name))}
+                    </div>
+                    <div class="gc-member-main">
+                        <div class="gc-member-name-row">
+                            <div class="gc-member-name">${gcEscape(member.name)}</div>
+                            <div class="gc-member-role ${member.role}">${gcGetRoleLabel(member.role)}</div>
+                        </div>
+                        <div class="gc-member-actions">
+                            ${canPromote ? `<button class="gc-member-action" onclick="gcAssignDeputy('${member.id}')">Promote deputy</button>` : ''}
+                            ${canDemote ? `<button class="gc-member-action" onclick="gcDemoteDeputy('${member.id}')">Remove deputy</button>` : ''}
+                            ${canRemove ? `<button class="gc-member-action danger" onclick="gcRemoveMember('${member.id}')">Remove</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="gc-member-online"></div>
+                </div>
+            `;
+        }).join('');
+        return;
+    }
 
     const members = new Map();
     members.set(gcUserId || 'self', {
@@ -1345,6 +1575,64 @@ function gcApplyEnglishCopy(win) {
 
     const uploadBtn = win.querySelector('.gc-input-box .gc-header-btn');
     if (uploadBtn) uploadBtn.title = 'Upload image';
+}
+
+async function gcAssignDeputy(userId) {
+    if (!sbClient || !gcCanAppointDeputy() || !userId) return;
+    await gcUpdateMemberRole(userId, 'deputy', 'Deputy assigned.');
+}
+
+async function gcDemoteDeputy(userId) {
+    if (!sbClient || !gcCanAppointDeputy() || !userId) return;
+    await gcUpdateMemberRole(userId, 'member', 'Deputy role removed.');
+}
+
+async function gcUpdateMemberRole(userId, role, successMessage) {
+    const room = gcGetRoomById();
+    if (!room || room.type !== 'group') return;
+
+    const { error } = await sbClient
+        .from(GC_TABLES.roomMembers)
+        .update({ role })
+        .eq('room_id', room.id)
+        .eq('user_id', userId);
+
+    if (error) {
+        console.error('Update member role error:', error);
+        showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.roomMembers));
+        return;
+    }
+
+    await gcLoadRoomMembers(room.id);
+    await gcRefreshMembersPanel();
+    gcUpdateHeader(room.id);
+    showNotification('Zashi Messaging', successMessage);
+}
+
+async function gcRemoveMember(userId) {
+    if (!sbClient || !gcCanManageGroup() || !userId) return;
+    const room = gcGetRoomById();
+    const member = gcRoomMembersCache.find(item => item.user_id === userId);
+    if (!room || !member || member.role === 'owner') return;
+
+    const confirmed = confirm(`Remove "${member.users?.username || 'this member'}" from the group?`);
+    if (!confirmed) return;
+
+    const { error } = await sbClient
+        .from(GC_TABLES.roomMembers)
+        .delete()
+        .eq('room_id', room.id)
+        .eq('user_id', userId);
+
+    if (error) {
+        console.error('Remove member error:', error);
+        showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.roomMembers));
+        return;
+    }
+
+    await gcLoadRoomMembers(room.id);
+    await gcRefreshMembersPanel();
+    showNotification('Zashi Messaging', 'Member removed from the group.');
 }
 
 function gcClearAttachmentPreview() {
@@ -1599,6 +1887,13 @@ async function gcCreateGroup() {
         }
 
         if (data) {
+            await sbClient
+                .from(GC_TABLES.roomMembers)
+                .upsert([{
+                    room_id: data.id,
+                    user_id: gcUserId,
+                    role: 'owner'
+                }], { onConflict: 'room_id,user_id' });
             gcRoomCache = gcRoomCache.filter(room => room.id !== data.id);
             gcRoomCache.push(data);
             gcRoomCache = gcSortRooms(gcRoomCache);
@@ -1621,6 +1916,10 @@ async function gcCreateGroup() {
 async function gcDeleteCurrentRoom() {
     const room = gcGetRoomById();
     if (!sbClient || !room || room.type !== 'group') return;
+    if (!gcCanDeleteGroup(room.id)) {
+        showNotification('Zashi Messaging', 'Only the group leader can delete this group.');
+        return;
+    }
 
     const confirmed = confirm(`Delete group "${room.name}"? This will remove its messages too.`);
     if (!confirmed) return;

@@ -600,6 +600,43 @@
     font-size: 10px;
 }
 
+.gc-msg-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gc-msg.sent .gc-msg-meta {
+    justify-content: flex-end;
+}
+
+.gc-msg-delete {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 93, 111, 0.1);
+    color: #ff5d6f;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .16s ease, background .16s ease;
+}
+
+.gc-msg:hover .gc-msg-delete,
+.gc-msg-delete:focus-visible {
+    opacity: 1;
+}
+
+.gc-msg-delete:hover {
+    background: rgba(255, 93, 111, 0.18);
+}
+
+.gc-msg-delete .material-icons-round {
+    font-size: 16px;
+}
+
 .gc-upload-progress {
     width: 100%;
     height: 4px;
@@ -938,6 +975,17 @@
     padding: 6px 0;
 }
 
+.gc-member-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.gc-member-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .gc-member-avatar {
     width: 28px;
     height: 28px;
@@ -953,6 +1001,54 @@
 .gc-member-name {
     color: #22324b;
     font-size: 12px;
+}
+
+.gc-member-role {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.gc-member-role.owner {
+    background: rgba(255, 193, 7, 0.18);
+    color: #9a6a00;
+}
+
+.gc-member-role.deputy {
+    background: rgba(22, 119, 255, 0.14);
+    color: #1677ff;
+}
+
+.gc-member-role.member {
+    background: rgba(148, 163, 184, 0.16);
+    color: #64748b;
+}
+
+.gc-member-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.gc-member-action {
+    border: none;
+    border-radius: 999px;
+    padding: 4px 10px;
+    background: rgba(22, 119, 255, 0.12);
+    color: #1677ff;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.gc-member-action.danger {
+    background: rgba(255, 93, 111, 0.12);
+    color: #ff5d6f;
 }
 
 .gc-member-online {
