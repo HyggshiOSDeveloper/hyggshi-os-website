@@ -61,7 +61,7 @@ function initMessage(win) {
     try {
         cleanUrl = new URL(cleanUrl).origin;
     } catch (error) {
-        console.error('Invalid Supabase URL:', error);
+        gcDebugError('Invalid Supabase URL:', error);
     }
 
     if (!cleanUrl || cleanUrl.includes('YOUR_SUPABASE_URL')) {
@@ -81,7 +81,7 @@ function initMessage(win) {
         }
         sbClient = supabase.createClient(cleanUrl, SB_KEY);
     } catch (error) {
-        console.error('Supabase init error:', error);
+        gcDebugError('Supabase init error:', error);
         gcNotifyError('Cannot connect to Supabase.');
         return;
     }
@@ -123,22 +123,51 @@ function gcToggleAuth(isRegister) {
 
 function gcFormatSupabaseError(error, tableName) {
     if (!error) return 'Unknown database error.';
+    const rawMessage = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`.toLowerCase();
     if (error.status === 404) {
-        return `Missing Supabase REST resource "${tableName}". Run supabase-schema.sql in your project first.`;
+        return 'Chat data is not ready yet. Run supabase-schema.sql first.';
     }
-    return error.message || 'Database error.';
+    if (rawMessage.includes('duplicate key') || rawMessage.includes('unique constraint') || rawMessage.includes('already exists')) {
+        if (tableName === GC_TABLES.users) return 'This username is already taken.';
+        if (tableName === GC_TABLES.rooms) return 'A group with this name already exists.';
+        return 'This item already exists.';
+    }
+    if (rawMessage.includes('row-level security') || rawMessage.includes('permission denied')) {
+        return 'You do not have permission to do that.';
+    }
+    if (rawMessage.includes('violates check constraint') || rawMessage.includes('invalid input')) {
+        return 'The information you entered is not valid.';
+    }
+    if (rawMessage.includes('network') || rawMessage.includes('fetch')) {
+        return 'Could not connect to the chat server.';
+    }
+    if (tableName === GC_TABLES.roomMembers) return 'Could not update group members.';
+    if (tableName === GC_TABLES.messages) return 'Could not update messages.';
+    if (tableName === GC_TABLES.rooms) return 'Could not update the group.';
+    if (tableName === GC_TABLES.users) return 'Could not update the account.';
+    return 'Database error.';
 }
 
 function gcFormatStorageError(error) {
     if (!error) return 'Upload failed.';
+    const rawMessage = `${error.message || ''} ${error.details || ''}`.toLowerCase();
     if (error.status === 404) {
-        return `Storage bucket "${GC_STORAGE_BUCKET}" is missing. Run supabase-schema.sql in your project first.`;
+        return 'File storage is not ready yet. Run supabase-schema.sql first.';
     }
-    return error.message || 'Upload failed.';
+    if (rawMessage.includes('too large') || rawMessage.includes('entity too large')) {
+        return 'The selected file is too large.';
+    }
+    if (rawMessage.includes('permission') || rawMessage.includes('row-level security')) {
+        return 'You do not have permission to upload this file.';
+    }
+    return 'Upload failed.';
 }
 
 function gcNotifyError(message) {
     showNotification('Zashi Messaging', message, 'error');
+}
+
+function gcDebugError() {
 }
 
 function gcNotifySetupIssue(message) {
@@ -159,7 +188,7 @@ async function gcEnsureBackendReady() {
             .limit(1);
 
         if (error) {
-            console.error('Supabase SQL Error:', error);
+            gcDebugError('Supabase SQL Error:', error);
             gcNotifySetupIssue(gcFormatSupabaseError(error, tableName));
             return false;
         }
@@ -190,7 +219,7 @@ async function gcLogin() {
             .single();
 
         if (error) {
-            console.error('Supabase SQL Error:', error);
+            gcDebugError('Supabase SQL Error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
@@ -204,7 +233,7 @@ async function gcLogin() {
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
-        console.error('Login error:', error);
+        gcDebugError('Login error:', error);
         gcNotifyError('Database connection error.');
     }
 }
@@ -243,7 +272,7 @@ async function gcRegister() {
             .select();
 
         if (error) {
-            console.error('Supabase SQL Error:', error);
+            gcDebugError('Supabase SQL Error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
@@ -258,7 +287,7 @@ async function gcRegister() {
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
-        console.error('Register error:', error);
+        gcDebugError('Register error:', error);
         gcNotifyError('System error while creating the account.');
     }
 }
@@ -395,7 +424,7 @@ async function gcListenRooms(win) {
 
     const { data, error } = await sbClient.from(GC_TABLES.rooms).select('*');
     if (error) {
-        console.error('Supabase SQL Error:', error);
+        gcDebugError('Supabase SQL Error:', error);
         gcNotifySetupIssue(gcFormatSupabaseError(error, GC_TABLES.rooms));
         return;
     }
@@ -485,7 +514,7 @@ async function gcSwitchRoom(roomId) {
         .limit(100);
 
     if (error) {
-        console.error('Supabase SQL Error:', error);
+        gcDebugError('Supabase SQL Error:', error);
         gcNotifySetupIssue(gcFormatSupabaseError(error, GC_TABLES.messages));
         return;
     }
@@ -542,7 +571,7 @@ async function gcLoadRoomMembers(roomId = gcCurrentRoom) {
         .eq('room_id', roomId);
 
     if (error) {
-        console.error('Load room members error:', error);
+        gcDebugError('Load room members error:', error);
         gcRoomMembersCache = [];
         gcCurrentUserRoomRole = 'member';
         return;
@@ -601,7 +630,7 @@ async function gcSyncLatestMessages(roomId = gcCurrentRoom) {
         .limit(100);
 
     if (error) {
-        console.error('Supabase sync error:', error);
+        gcDebugError('Supabase sync error:', error);
         return;
     }
 
@@ -801,7 +830,7 @@ async function gcDeleteMessage(messageId) {
             .eq('id', messageId);
 
         if (error) {
-            console.error('Delete message error:', error);
+            gcDebugError('Delete message error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.messages));
             return;
         }
@@ -809,12 +838,12 @@ async function gcDeleteMessage(messageId) {
         gcRemoveMessageFromUi(messageId);
         if (message.file_url) {
             gcDeleteStorageObjectByUrl(message.file_url).catch(storageError => {
-                console.error('Delete message file error:', storageError);
+                gcDebugError('Delete message file error:', storageError);
             });
         }
         showNotification('Zashi Messaging', 'Message deleted.');
     } catch (error) {
-        console.error('Delete message error:', error);
+        gcDebugError('Delete message error:', error);
         gcNotifyError('Could not delete message.');
     }
 }
@@ -831,7 +860,7 @@ async function gcDeleteStorageObjectByUrl(fileUrl) {
         if (!objectPath) return;
         await sbClient.storage.from(GC_STORAGE_BUCKET).remove([objectPath]);
     } catch (error) {
-        console.error('Storage delete parse error:', error);
+        gcDebugError('Storage delete parse error:', error);
     }
 }
 
@@ -885,7 +914,7 @@ async function gcSendMessage() {
         .single();
 
     if (error) {
-        console.error('Supabase SQL Error:', error);
+        gcDebugError('Supabase SQL Error:', error);
         gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.messages));
         pendingEl.remove();
         gcPendingMessages.delete(tempId);
@@ -990,7 +1019,7 @@ async function gcSendAttachment(attachment, extraText = '') {
             }
         }
     } catch (error) {
-        console.error('Attachment send error:', error);
+        gcDebugError('Attachment send error:', error);
         gcNotifyError(gcFormatStorageError(error));
         pendingEl.remove();
         gcPendingMessages.delete(tempId);
@@ -1285,7 +1314,7 @@ async function gcPrepareAvatarFile(file) {
         gcNotifyError('Avatar could not be reduced below 500 KB. Try a simpler image.');
         return null;
     } catch (error) {
-        console.error('Avatar resize error:', error);
+        gcDebugError('Avatar resize error:', error);
         gcNotifyError('Could not process avatar image.');
         return null;
     }
@@ -1382,7 +1411,7 @@ async function gcUploadUserAvatar(file) {
             .eq('id', gcUserId);
 
         if (error) {
-            console.error('User avatar update error:', error);
+            gcDebugError('User avatar update error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
@@ -1393,7 +1422,7 @@ async function gcUploadUserAvatar(file) {
         gcRefreshMembersPanel();
         showNotification('Zashi Messaging', 'User avatar updated.');
     } catch (error) {
-        console.error('User avatar upload error:', error);
+        gcDebugError('User avatar upload error:', error);
         gcNotifyError(gcFormatStorageError(error));
     }
 }
@@ -1423,7 +1452,7 @@ async function gcUploadGroupAvatar(file) {
             .single();
 
         if (error) {
-            console.error('Group avatar update error:', error);
+            gcDebugError('Group avatar update error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
             return;
         }
@@ -1433,7 +1462,7 @@ async function gcUploadGroupAvatar(file) {
         gcUpdateHeader(room.id);
         showNotification('Zashi Messaging', 'Group avatar updated.');
     } catch (error) {
-        console.error('Group avatar upload error:', error);
+        gcDebugError('Group avatar upload error:', error);
         gcNotifyError(gcFormatStorageError(error));
     }
 }
@@ -1538,7 +1567,7 @@ async function gcRefreshMembersPanel() {
                 if (member) member.avatar_url = user.avatar_url || member.avatar_url;
             });
         } catch (error) {
-            console.error('Members avatar lookup error:', error);
+            gcDebugError('Members avatar lookup error:', error);
         }
     }
 
@@ -1613,7 +1642,7 @@ async function gcUpdateMemberRole(userId, role, successMessage) {
         .eq('user_id', userId);
 
     if (error) {
-        console.error('Update member role error:', error);
+        gcDebugError('Update member role error:', error);
         gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.roomMembers));
         return;
     }
@@ -1640,7 +1669,7 @@ async function gcRemoveMember(userId) {
         .eq('user_id', userId);
 
     if (error) {
-        console.error('Remove member error:', error);
+        gcDebugError('Remove member error:', error);
         gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.roomMembers));
         return;
     }
@@ -1898,7 +1927,7 @@ async function gcCreateGroup() {
             .single();
 
         if (error) {
-            console.error('Create group error:', error);
+            gcDebugError('Create group error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
             return;
         }
@@ -1920,7 +1949,7 @@ async function gcCreateGroup() {
             showNotification('Zashi Messaging', `Created group "${data.name}".`);
         }
     } catch (error) {
-        console.error('Create group error:', error);
+        gcDebugError('Create group error:', error);
         gcNotifyError('Could not create the group.');
     } finally {
         if (createBtn) {
@@ -1947,7 +1976,7 @@ async function gcDeleteCurrentRoom() {
         .eq('id', room.id);
 
     if (error) {
-        console.error('Delete room error:', error);
+        gcDebugError('Delete room error:', error);
         gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
         return;
     }
