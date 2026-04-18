@@ -18,12 +18,13 @@ function updateLockClock() {
 }
 
 /* ============ NOTIFICATIONS ============ */
-function showNotification(title, body) {
+function showNotification(title, body, tone = 'default') {
     const list = document.getElementById('notif-list');
     list.innerHTML = '';
     const el = document.createElement('div');
-    el.style.cssText = 'padding: 12px 16px; border-bottom: 1px solid var(--border);';
-    el.innerHTML = `<div style="font-weight:600;font-size:13px;margin-bottom:4px;">${title}</div><div style="font-size:12px;color:var(--text-secondary);">${body}</div>`;
+    const isError = tone === 'error';
+    el.style.cssText = `padding: 12px 16px; border-bottom: 1px solid var(--border);${isError ? 'background: rgba(255, 93, 111, 0.12); border-left: 4px solid #ff5d6f;' : ''}`;
+    el.innerHTML = `<div style="font-weight:600;font-size:13px;margin-bottom:4px;${isError ? 'color:#c62839;' : ''}">${title}</div><div style="font-size:12px;${isError ? 'color:#a61e2d;' : 'color:var(--text-secondary);'}">${body}</div>`;
     list.appendChild(el);
 }
 

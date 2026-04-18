@@ -65,24 +65,24 @@ function initMessage(win) {
     }
 
     if (!cleanUrl || cleanUrl.includes('YOUR_SUPABASE_URL')) {
-        showNotification('Zashi Messaging', 'Set a real Supabase URL in js/apps-message.js.');
+        gcNotifyError('Set a real Supabase URL in js/apps-message.js.');
         gcShowSetup(win);
         return;
     }
 
     if (window.location.protocol === 'file:') {
-        showNotification('Zashi Messaging', 'Open this project with a local web server. file:// mode breaks parts of the app.');
+        gcNotifyError('Open this project with a local web server. file:// mode breaks parts of the app.');
     }
 
     try {
         if (typeof supabase === 'undefined') {
-            showNotification('Zashi Messaging', 'Supabase library did not load.');
+            gcNotifyError('Supabase library did not load.');
             return;
         }
         sbClient = supabase.createClient(cleanUrl, SB_KEY);
     } catch (error) {
         console.error('Supabase init error:', error);
-        showNotification('Zashi Messaging', 'Cannot connect to Supabase.');
+        gcNotifyError('Cannot connect to Supabase.');
         return;
     }
 
@@ -137,9 +137,13 @@ function gcFormatStorageError(error) {
     return error.message || 'Upload failed.';
 }
 
+function gcNotifyError(message) {
+    showNotification('Zashi Messaging', message, 'error');
+}
+
 function gcNotifySetupIssue(message) {
     if (!gcSetupErrorShown) {
-        showNotification('Zashi Messaging', message);
+        gcNotifyError(message);
         gcSetupErrorShown = true;
     }
     if (gcWin) gcShowSetup(gcWin);
@@ -166,32 +170,33 @@ async function gcEnsureBackendReady() {
 
 async function gcLogin() {
     if (!sbClient) {
-        showNotification('Zashi Messaging', 'The chat backend is not ready.');
+        gcNotifyError('The chat backend is not ready.');
         return;
     }
 
     const userInp = gcWin.querySelector('#gc-login-user');
     const passInp = gcWin.querySelector('#gc-login-pass');
     const username = userInp?.value.trim().toLowerCase();
+    const usernameKey = gcBuildNameKey(username);
     const password = passInp?.value.trim();
 
-    if (!username || !password) return;
+    if (!username || !password || !usernameKey) return;
 
     try {
         const { data, error } = await sbClient
             .from(GC_TABLES.users)
             .select('*')
-            .eq('username', username)
+            .eq('username_key', usernameKey)
             .single();
 
         if (error) {
             console.error('Supabase SQL Error:', error);
-            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.users));
+            gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
 
         if (!data || data.password !== password) {
-            showNotification('Zashi Messaging', 'Wrong username or password.');
+            gcNotifyError('Wrong username or password.');
             return;
         }
 
@@ -200,13 +205,13 @@ async function gcLogin() {
         gcStartApp(gcWin);
     } catch (error) {
         console.error('Login error:', error);
-        showNotification('Zashi Messaging', 'Database connection error.');
+        gcNotifyError('Database connection error.');
     }
 }
 
 async function gcRegister() {
     if (!sbClient) {
-        showNotification('Zashi Messaging', 'The chat backend is not ready.');
+        gcNotifyError('The chat backend is not ready.');
         return;
     }
 
@@ -215,16 +220,17 @@ async function gcRegister() {
     const confirmInp = gcWin.querySelector('#gc-reg-confirm');
 
     const username = userInp?.value.trim().toLowerCase();
+    const usernameKey = gcBuildNameKey(username);
     const password = passInp?.value.trim();
     const confirmation = confirmInp?.value.trim();
 
-    if (!username || !password) return;
-    if (username.length < 3 || password.length < 6) {
-        showNotification('Zashi Messaging', 'Username must be at least 3 characters and password at least 6 characters.');
+    if (!username || !password || !usernameKey) return;
+    if (usernameKey.length < 3 || password.length < 6) {
+        gcNotifyError('Username must be at least 3 characters and password at least 6 characters.');
         return;
     }
     if (password !== confirmation) {
-        showNotification('Zashi Messaging', 'Passwords do not match.');
+        gcNotifyError('Passwords do not match.');
         return;
     }
 
@@ -233,18 +239,18 @@ async function gcRegister() {
     try {
         const { data, error } = await sbClient
             .from(GC_TABLES.users)
-            .insert([{ username, password, color }])
+            .insert([{ username, username_key: usernameKey, password, color }])
             .select();
 
         if (error) {
             console.error('Supabase SQL Error:', error);
-            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.users));
+            gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
 
         const newUser = data?.[0];
         if (!newUser) {
-            showNotification('Zashi Messaging', 'Registration failed.');
+            gcNotifyError('Registration failed.');
             return;
         }
 
@@ -253,7 +259,7 @@ async function gcRegister() {
         gcStartApp(gcWin);
     } catch (error) {
         console.error('Register error:', error);
-        showNotification('Zashi Messaging', 'System error while creating the account.');
+        gcNotifyError('System error while creating the account.');
     }
 }
 
@@ -314,6 +320,15 @@ function gcGetRoleLabel(role) {
     if (role === 'owner') return 'Leader';
     if (role === 'deputy') return 'Deputy';
     return 'Member';
+}
+
+function gcBuildNameKey(value) {
+    return (value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '');
 }
 
 function gcGetInitials(name) {
@@ -772,7 +787,7 @@ async function gcDeleteMessage(messageId) {
     if (!message) return;
     const canDelete = message.sender_id === gcUserId || (gcIsGroupRoom(message.room_id) && gcCanManageGroup(message.room_id));
     if (!canDelete) {
-        showNotification('Zashi Messaging', 'You do not have permission to delete this message.');
+        gcNotifyError('You do not have permission to delete this message.');
         return;
     }
 
@@ -787,7 +802,7 @@ async function gcDeleteMessage(messageId) {
 
         if (error) {
             console.error('Delete message error:', error);
-            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.messages));
+            gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.messages));
             return;
         }
 
@@ -800,7 +815,7 @@ async function gcDeleteMessage(messageId) {
         showNotification('Zashi Messaging', 'Message deleted.');
     } catch (error) {
         console.error('Delete message error:', error);
-        showNotification('Zashi Messaging', 'Could not delete message.');
+        gcNotifyError('Could not delete message.');
     }
 }
 
@@ -871,7 +886,7 @@ async function gcSendMessage() {
 
     if (error) {
         console.error('Supabase SQL Error:', error);
-        showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.messages));
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.messages));
         pendingEl.remove();
         gcPendingMessages.delete(tempId);
         textarea.value = text;
@@ -976,7 +991,7 @@ async function gcSendAttachment(attachment, extraText = '') {
         }
     } catch (error) {
         console.error('Attachment send error:', error);
-        showNotification('Zashi Messaging', gcFormatStorageError(error));
+        gcNotifyError(gcFormatStorageError(error));
         pendingEl.remove();
         gcPendingMessages.delete(tempId);
         URL.revokeObjectURL(previewUrl);
@@ -1097,18 +1112,18 @@ function gcPrepareAttachment(file) {
     if (!gcWin) return;
 
     if (file.size > 5 * 1024 * 1024) {
-        showNotification('Zashi Messaging', 'Maximum file size is 5 MB.');
+        gcNotifyError('Maximum file size is 5 MB.');
         return;
     }
 
     if (file.type.startsWith('video/')) {
-        showNotification('Zashi Messaging', 'Video upload trực tiếp chưa hỗ trợ. Hãy dán link Google Drive, YouTube hoặc TikTok để chia sẻ.');
+        gcNotifyError('Video upload trực tiếp chưa hỗ trợ. Hãy dán link Google Drive, YouTube hoặc TikTok để chia sẻ.');
         return;
     }
 
     const type = file.type.startsWith('image/') ? 'image' : null;
     if (!type) {
-        showNotification('Zashi Messaging', 'Only image files are supported here. For videos, use a Google Drive, YouTube, or TikTok link.');
+        gcNotifyError('Only image files are supported here. For videos, use a Google Drive, YouTube, or TikTok link.');
         return;
     }
 
@@ -1210,7 +1225,7 @@ function gcBindAvatarActions(win) {
         headerIcon.addEventListener('click', () => {
             const room = gcGetRoomById();
             if (!room || room.type !== 'group') {
-                showNotification('Zashi Messaging', 'Only group chats can have a custom group avatar.');
+                gcNotifyError('Only group chats can have a custom group avatar.');
                 return;
             }
             gcPromptAvatarUpload('group');
@@ -1232,7 +1247,7 @@ async function gcHandleAvatarFileSelect(input) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-        showNotification('Zashi Messaging', 'Avatar must be an image file.');
+        gcNotifyError('Avatar must be an image file.');
         input.value = '';
         return;
     }
@@ -1267,11 +1282,11 @@ async function gcPrepareAvatarFile(file) {
         const fallback = await gcResizeAvatarImage(file, GC_AVATAR_FALLBACK_SIZE);
         if (fallback.size <= GC_MAX_AVATAR_BYTES) return fallback;
 
-        showNotification('Zashi Messaging', 'Avatar could not be reduced below 500 KB. Try a simpler image.');
+        gcNotifyError('Avatar could not be reduced below 500 KB. Try a simpler image.');
         return null;
     } catch (error) {
         console.error('Avatar resize error:', error);
-        showNotification('Zashi Messaging', 'Could not process avatar image.');
+        gcNotifyError('Could not process avatar image.');
         return null;
     }
 }
@@ -1368,7 +1383,7 @@ async function gcUploadUserAvatar(file) {
 
         if (error) {
             console.error('User avatar update error:', error);
-            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.users));
+            gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
 
@@ -1379,7 +1394,7 @@ async function gcUploadUserAvatar(file) {
         showNotification('Zashi Messaging', 'User avatar updated.');
     } catch (error) {
         console.error('User avatar upload error:', error);
-        showNotification('Zashi Messaging', gcFormatStorageError(error));
+        gcNotifyError(gcFormatStorageError(error));
     }
 }
 
@@ -1389,7 +1404,7 @@ async function gcUploadGroupAvatar(file) {
     const room = gcGetRoomById();
     if (!room || room.type !== 'group') return;
     if (!gcCanManageGroup(room.id)) {
-        showNotification('Zashi Messaging', 'Only the group leader or deputy can change the group avatar.');
+        gcNotifyError('Only the group leader or deputy can change the group avatar.');
         return;
     }
 
@@ -1409,7 +1424,7 @@ async function gcUploadGroupAvatar(file) {
 
         if (error) {
             console.error('Group avatar update error:', error);
-            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.rooms));
+            gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
             return;
         }
 
@@ -1419,7 +1434,7 @@ async function gcUploadGroupAvatar(file) {
         showNotification('Zashi Messaging', 'Group avatar updated.');
     } catch (error) {
         console.error('Group avatar upload error:', error);
-        showNotification('Zashi Messaging', gcFormatStorageError(error));
+        gcNotifyError(gcFormatStorageError(error));
     }
 }
 
@@ -1599,7 +1614,7 @@ async function gcUpdateMemberRole(userId, role, successMessage) {
 
     if (error) {
         console.error('Update member role error:', error);
-        showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.roomMembers));
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.roomMembers));
         return;
     }
 
@@ -1626,7 +1641,7 @@ async function gcRemoveMember(userId) {
 
     if (error) {
         console.error('Remove member error:', error);
-        showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.roomMembers));
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.roomMembers));
         return;
     }
 
@@ -1839,24 +1854,25 @@ async function gcCreateGroup() {
     const createBtn = gcWin.querySelector('.gc-btn-primary');
     const rawName = input?.value || '';
     const name = rawName.trim().replace(/\s+/g, ' ');
+    const nameKey = gcBuildNameKey(name);
 
-    if (!name) {
-        showNotification('Zashi Messaging', 'Enter a group name.');
+    if (!name || !nameKey) {
+        gcNotifyError('Enter a group name.');
         input?.focus();
         return;
     }
 
-    if (name.length < 3) {
-        showNotification('Zashi Messaging', 'Group name must be at least 3 characters.');
+    if (nameKey.length < 3) {
+        gcNotifyError('Group name must be at least 3 characters.');
         input?.focus();
         return;
     }
 
     const duplicate = gcRoomCache.some(room =>
-        room.type !== 'global' && (room.name || '').trim().toLowerCase() === name.toLowerCase()
+        room.type !== 'global' && gcBuildNameKey(room.name) === nameKey
     );
     if (duplicate) {
-        showNotification('Zashi Messaging', 'A group with this name already exists.');
+        gcNotifyError('A group with this name already exists.');
         input?.focus();
         input?.select();
         return;
@@ -1865,6 +1881,7 @@ async function gcCreateGroup() {
     const payload = {
         id: gcBuildRoomId(name),
         name,
+        name_key: nameKey,
         type: 'group'
     };
 
@@ -1882,7 +1899,7 @@ async function gcCreateGroup() {
 
         if (error) {
             console.error('Create group error:', error);
-            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.rooms));
+            gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
             return;
         }
 
@@ -1904,7 +1921,7 @@ async function gcCreateGroup() {
         }
     } catch (error) {
         console.error('Create group error:', error);
-        showNotification('Zashi Messaging', 'Could not create the group.');
+        gcNotifyError('Could not create the group.');
     } finally {
         if (createBtn) {
             createBtn.disabled = false;
@@ -1917,7 +1934,7 @@ async function gcDeleteCurrentRoom() {
     const room = gcGetRoomById();
     if (!sbClient || !room || room.type !== 'group') return;
     if (!gcCanDeleteGroup(room.id)) {
-        showNotification('Zashi Messaging', 'Only the group leader can delete this group.');
+        gcNotifyError('Only the group leader can delete this group.');
         return;
     }
 
@@ -1931,7 +1948,7 @@ async function gcDeleteCurrentRoom() {
 
     if (error) {
         console.error('Delete room error:', error);
-        showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.rooms));
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
         return;
     }
 
