@@ -458,7 +458,7 @@ function gcAppendMessage(container, msg, options = {}) {
     } else if (msg.type === 'video') {
         contentHtml = `<video src="${gcEscape(msg.file_url || '')}" controls class="gc-msg-media"></video>`;
     } else {
-        contentHtml = `<div class="gc-msg-bubble">${gcEscape(msg.text || '')}</div>`;
+        contentHtml = gcRenderMessageTextContent(msg.text || '');
     }
 
     const progressHtml = options.progress === true ? `
@@ -803,9 +803,14 @@ function gcPrepareAttachment(file) {
         return;
     }
 
-    const type = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : null;
+    if (file.type.startsWith('video/')) {
+        showNotification('Global Chat', 'Video upload trực tiếp chưa hỗ trợ. Hãy dán link Google Drive, YouTube hoặc TikTok để chia sẻ.');
+        return;
+    }
+
+    const type = file.type.startsWith('image/') ? 'image' : null;
     if (!type) {
-        showNotification('Global Chat', 'Only image and video files are supported.');
+        showNotification('Global Chat', 'Only image files are supported here. For videos, use a Google Drive, YouTube, or TikTok link.');
         return;
     }
 
@@ -830,7 +835,7 @@ function gcPrepareAttachment(file) {
         </div>
         <div class="gc-attachment-preview-info">
             <div class="gc-attachment-preview-title">${gcEscape(file.name)}</div>
-            <div class="gc-attachment-preview-meta">${type === 'image' ? 'Image ready to send' : 'Video ready to send'}</div>
+            <div class="gc-attachment-preview-meta">Image ready to send</div>
         </div>
     `;
 
@@ -867,10 +872,10 @@ function gcApplyEnglishCopy(win) {
     const toolButtons = win.querySelectorAll('.gc-composer-tools .gc-tool-btn');
     if (toolButtons[0]) toolButtons[0].title = 'Image';
     if (toolButtons[1]) toolButtons[1].title = 'Sticker';
-    if (toolButtons[2]) toolButtons[2].title = 'Files';
+    if (toolButtons[2]) toolButtons[2].title = 'Image upload';
 
     const uploadBtn = win.querySelector('.gc-input-box .gc-header-btn');
-    if (uploadBtn) uploadBtn.title = 'Upload file';
+    if (uploadBtn) uploadBtn.title = 'Upload image';
 }
 
 function gcClearAttachmentPreview() {
@@ -898,6 +903,124 @@ function gcEscape(text) {
     const div = document.createElement('div');
     div.textContent = text ?? '';
     return div.innerHTML;
+}
+
+function gcRenderMessageTextContent(text) {
+    const preview = gcExtractSupportedVideoLink(text);
+    const safeText = gcLinkifyText(text);
+    const previewHtml = preview ? gcBuildLinkPreviewHtml(preview) : '';
+    return `
+        <div class="gc-msg-bubble">${safeText}</div>
+        ${previewHtml}
+    `;
+}
+
+function gcLinkifyText(text) {
+    const escapedText = gcEscape(text || '');
+    return escapedText
+        .replace(/(https?:\/\/[^\s<]+)/gi, url => {
+            const safeUrl = gcEscape(url);
+            return `<a href="${safeUrl}" class="gc-msg-link" target="_blank" rel="noopener noreferrer">${safeUrl}</a>`;
+        })
+        .replace(/\n/g, '<br>');
+}
+
+function gcExtractSupportedVideoLink(text) {
+    if (!text) return null;
+    const matches = text.match(/https?:\/\/[^\s]+/gi) || [];
+    for (const rawUrl of matches) {
+        const preview = gcGetLinkPreviewData(rawUrl);
+        if (preview) return preview;
+    }
+    return null;
+}
+
+function gcGetLinkPreviewData(rawUrl) {
+    let parsed;
+    try {
+        parsed = new URL(rawUrl);
+    } catch (error) {
+        return null;
+    }
+
+    const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+    if (host === 'youtu.be') {
+        const videoId = parsed.pathname.split('/').filter(Boolean)[0];
+        if (!videoId) return null;
+        return {
+            type: 'youtube',
+            url: rawUrl,
+            embedUrl: `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`,
+            label: 'YouTube video'
+        };
+    }
+
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+        const videoId = parsed.searchParams.get('v');
+        if (!videoId) return null;
+        return {
+            type: 'youtube',
+            url: rawUrl,
+            embedUrl: `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`,
+            label: 'YouTube video'
+        };
+    }
+
+    if (host === 'drive.google.com') {
+        return {
+            type: 'drive',
+            url: rawUrl,
+            label: 'Google Drive video'
+        };
+    }
+
+    if (host === 'tiktok.com' || host.endsWith('.tiktok.com')) {
+        return {
+            type: 'tiktok',
+            url: rawUrl,
+            label: 'TikTok video'
+        };
+    }
+
+    return null;
+}
+
+function gcBuildLinkPreviewHtml(preview) {
+    const safeUrl = gcEscape(preview.url || '');
+    const safeLabel = gcEscape(preview.label || 'Video link');
+
+    if (preview.type === 'youtube' && preview.embedUrl) {
+        const safeEmbedUrl = gcEscape(preview.embedUrl);
+        return `
+            <div class="gc-link-preview gc-link-preview-youtube">
+                <div class="gc-link-preview-frame">
+                    <iframe
+                        src="${safeEmbedUrl}"
+                        title="${safeLabel}"
+                        loading="lazy"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                    ></iframe>
+                </div>
+                <a href="${safeUrl}" class="gc-link-preview-action" target="_blank" rel="noopener noreferrer">Open on YouTube</a>
+            </div>
+        `;
+    }
+
+    const platformName = preview.type === 'drive'
+        ? 'Google Drive'
+        : preview.type === 'tiktok'
+            ? 'TikTok'
+            : 'Video link';
+
+    return `
+        <div class="gc-link-preview gc-link-preview-card">
+            <div class="gc-link-preview-eyebrow">${platformName}</div>
+            <div class="gc-link-preview-title">${safeLabel}</div>
+            <a href="${safeUrl}" class="gc-link-preview-action" target="_blank" rel="noopener noreferrer">Open video link</a>
+        </div>
+    `;
 }
 
 function gcFormatMessageTime(value) {
