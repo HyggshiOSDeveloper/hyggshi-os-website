@@ -16,17 +16,26 @@ let sbClient = null;
 let gcUserId = null;
 let gcUserName = '';
 let gcUserColor = '';
+let gcUserAvatarUrl = '';
 let gcCurrentRoom = 'global';
 let gcWin = null;
 let gcSubscription = null;
 let gcRoomsSubscription = null;
 let gcSetupErrorShown = false;
 let gcRoomCache = [];
+let gcCurrentRoomMessages = [];
 let gcKnownMessageIds = new Set();
 let gcPendingMessages = new Map();
 let gcPendingAttachment = null;
 let gcSyncInterval = null;
 let gcActiveRoomRequestId = 0;
+let gcPinnedRoomIds = new Set();
+let gcMembersPanelOpen = false;
+let gcAvatarUploadMode = 'user';
+const GC_PINNED_ROOMS_KEY = 'webos-gc-pinned-rooms';
+const GC_MAX_AVATAR_BYTES = 500 * 1024;
+const GC_AVATAR_PRIMARY_SIZE = 256;
+const GC_AVATAR_FALLBACK_SIZE = 128;
 const GC_SYNC_INTERVAL_MS = 3000;
 const gcTimeFormatter = new Intl.DateTimeFormat(undefined, {
     hour: '2-digit',
@@ -37,9 +46,12 @@ const gcTimeFormatter = new Intl.DateTimeFormat(undefined, {
 /* ===== INIT ===== */
 function initMessage(win) {
     gcWin = win;
+    gcCurrentRoomMessages = [];
     gcKnownMessageIds = new Set();
     gcPendingMessages = new Map();
     gcPendingAttachment = null;
+    gcMembersPanelOpen = false;
+    gcPinnedRoomIds = gcLoadPinnedRooms();
     gcStopRoomSync();
 
     let cleanUrl = SB_URL.trim();
@@ -74,9 +86,12 @@ function initMessage(win) {
     gcApplyEnglishCopy(win);
     gcBindComposer(win);
     gcBindGroupModal(win);
+    gcBindHeaderActions(win);
+    gcBindAvatarActions(win);
 
     const userName = localStorage.getItem('webos-gc-username');
     const userId = localStorage.getItem('webos-gc-userid');
+    const userAvatarUrl = localStorage.getItem('webos-gc-avatar') || '';
 
     if (!userName || !userId) {
         gcShowSetup(win);
@@ -86,6 +101,7 @@ function initMessage(win) {
     gcUserId = userId;
     gcUserName = userName;
     gcUserColor = localStorage.getItem('webos-gc-color') || GC_COLORS[0];
+    gcUserAvatarUrl = userAvatarUrl;
     gcHideSetup(win);
     gcStartApp(win);
 }
@@ -176,7 +192,7 @@ async function gcLogin() {
             return;
         }
 
-        gcSetUserSession(data.username, data.id, data.color);
+        gcSetUserSession(data.username, data.id, data.color, data.avatar_url);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -229,7 +245,7 @@ async function gcRegister() {
             return;
         }
 
-        gcSetUserSession(newUser.username, newUser.id, newUser.color);
+        gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -238,27 +254,93 @@ async function gcRegister() {
     }
 }
 
-function gcSetUserSession(name, id, color) {
+function gcSetUserSession(name, id, color, avatarUrl = '') {
     gcUserName = name;
     gcUserId = id;
     gcUserColor = color;
+    gcUserAvatarUrl = avatarUrl || '';
     localStorage.setItem('webos-gc-username', name);
     localStorage.setItem('webos-gc-userid', id);
     localStorage.setItem('webos-gc-color', color);
+    localStorage.setItem('webos-gc-avatar', gcUserAvatarUrl);
+}
+
+function gcLoadPinnedRooms() {
+    try {
+        const raw = localStorage.getItem(GC_PINNED_ROOMS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return new Set(Array.isArray(parsed) ? parsed : []);
+    } catch (error) {
+        return new Set();
+    }
+}
+
+function gcSavePinnedRooms() {
+    localStorage.setItem(GC_PINNED_ROOMS_KEY, JSON.stringify([...gcPinnedRoomIds]));
+}
+
+function gcIsRoomPinned(roomId) {
+    return gcPinnedRoomIds.has(roomId);
+}
+
+function gcGetRoomById(roomId = gcCurrentRoom) {
+    return gcRoomCache.find(room => room.id === roomId) || null;
+}
+
+function gcGetInitials(name) {
+    return (name || '?').trim().charAt(0).toUpperCase() || '?';
+}
+
+function gcSetAvatarContent(element, options = {}) {
+    if (!element) return;
+
+    const {
+        avatarUrl = '',
+        initials = '?',
+        color = '#6c5ce7',
+        icon = ''
+    } = options;
+
+    element.classList.toggle('has-image', !!avatarUrl);
+    element.style.background = avatarUrl ? 'transparent' : color;
+    element.innerHTML = avatarUrl
+        ? `<img src="${gcEscape(avatarUrl)}" alt="${gcEscape(initials)}">`
+        : (icon ? `<span class="material-icons-round">${icon}</span>` : gcEscape(initials));
+}
+
+function gcRenderUserIdentity(win = gcWin) {
+    if (!win) return;
+
+    const avatarEl = win.querySelector('.gc-user-avatar');
+    if (avatarEl) {
+        gcSetAvatarContent(avatarEl, {
+            avatarUrl: gcUserAvatarUrl,
+            initials: gcGetInitials(gcUserName),
+            color: gcUserColor
+        });
+        avatarEl.title = 'Change your avatar';
+    }
+
+    const userNameEl = win.querySelector('.gc-user-name');
+    if (userNameEl) userNameEl.textContent = gcUserName;
+}
+
+function gcSortRooms(rooms) {
+    return [...rooms].sort((a, b) => {
+        if (a.id === 'global') return -1;
+        if (b.id === 'global') return 1;
+
+        const pinnedDelta = Number(gcIsRoomPinned(b.id)) - Number(gcIsRoomPinned(a.id));
+        if (pinnedDelta !== 0) return pinnedDelta;
+
+        return (a.name || '').localeCompare(b.name || '');
+    });
 }
 
 /* ===== APP LOGIC ===== */
 async function gcStartApp(win) {
     if (!await gcEnsureBackendReady()) return;
-
-    const avatarEl = win.querySelector('.gc-user-avatar');
-    if (avatarEl) {
-        avatarEl.style.background = gcUserColor;
-        avatarEl.textContent = gcUserName.charAt(0).toUpperCase();
-    }
-
-    const userNameEl = win.querySelector('.gc-user-name');
-    if (userNameEl) userNameEl.textContent = gcUserName;
+    gcRenderUserIdentity(win);
 
     gcListenRooms(win);
     gcSwitchRoom('global');
@@ -275,7 +357,15 @@ async function gcListenRooms(win) {
     }
 
     gcRoomCache = data || [];
+    gcRoomCache = gcSortRooms(gcRoomCache);
     gcRenderRoomList(win, gcRoomCache);
+
+    if (gcCurrentRoom !== 'global' && !gcRoomCache.some(room => room.id === gcCurrentRoom)) {
+        gcSwitchRoom('global');
+        return;
+    }
+
+    gcUpdateHeader(gcCurrentRoom);
 
     if (gcRoomsSubscription) {
         sbClient.removeChannel(gcRoomsSubscription);
@@ -298,19 +388,22 @@ function gcRenderRoomList(win, rooms) {
         rooms.unshift({ id: 'global', name: 'Zashi Messaging', type: 'global' });
     }
 
-    rooms.forEach(room => {
+    gcSortRooms(rooms).forEach(room => {
         const div = document.createElement('div');
-        div.className = `gc-room-item${gcCurrentRoom === room.id ? ' active' : ''}`;
+        const isPinned = gcIsRoomPinned(room.id);
+        div.className = `gc-room-item${gcCurrentRoom === room.id ? ' active' : ''}${isPinned ? ' pinned' : ''}`;
         div.onclick = () => gcSwitchRoom(room.id);
 
         const icon = room.type === 'global' ? 'public' : 'group';
         const preview = room.type === 'global'
             ? 'Shared conversation for everyone'
             : 'Group conversation';
-        const meta = room.id === gcCurrentRoom ? 'Open now' : 'Today';
+        const meta = room.id === gcCurrentRoom ? 'Open now' : (isPinned ? 'Pinned' : 'Today');
 
         div.innerHTML = `
-            <div class="gc-room-icon ${room.type}"><span class="material-icons-round">${icon}</span></div>
+            <div class="gc-room-icon ${room.type}">${room.avatar_url
+                ? `<img src="${gcEscape(room.avatar_url)}" alt="${gcEscape(room.name)}">`
+                : `<span class="material-icons-round">${icon}</span>`}</div>
             <div class="gc-room-info">
                 <div class="gc-room-name-row">
                     <div class="gc-room-name">${gcEscape(room.name)}</div>
@@ -336,6 +429,7 @@ async function gcSwitchRoom(roomId) {
     const msgContainer = gcWin?.querySelector('.gc-messages');
     if (!msgContainer) return;
     msgContainer.innerHTML = '';
+    gcCurrentRoomMessages = [];
 
     const { data: messages, error } = await sbClient
         .from(GC_TABLES.messages)
@@ -352,7 +446,9 @@ async function gcSwitchRoom(roomId) {
     if (requestId !== gcActiveRoomRequestId || roomId !== gcCurrentRoom) return;
 
     gcRenderRoomList(gcWin, gcRoomCache);
-    (messages || []).slice().reverse().forEach(msg => {
+    const orderedMessages = (messages || []).slice().reverse();
+    gcCurrentRoomMessages = orderedMessages.slice();
+    orderedMessages.forEach(msg => {
         if (msg.id) gcKnownMessageIds.add(msg.id);
         gcAppendMessage(msgContainer, msg);
     });
@@ -360,6 +456,7 @@ async function gcSwitchRoom(roomId) {
 
     gcStartRoomSync(roomId);
     gcUpdateHeader(roomId);
+    gcRefreshMembersPanel();
 }
 
 function gcStopRoomSync() {
@@ -424,6 +521,9 @@ function gcUpdateHeader(roomId) {
     const headerName = gcWin?.querySelector('.gc-chat-header-name');
     const headerStatus = gcWin?.querySelector('.gc-chat-header-status');
     const headerIcon = gcWin?.querySelector('.gc-chat-header-icon');
+    const deleteBtn = gcWin?.querySelector('.gc-delete-room-btn');
+    const pinBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(3)');
+    const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
     const room = gcRoomCache.find(item => item.id === roomId) || {
         id: roomId,
         name: roomId === 'global' ? 'Zashi Messaging' : 'Group Chat',
@@ -437,8 +537,17 @@ function gcUpdateHeader(roomId) {
             : 'This group is active';
     }
     if (headerIcon) {
-        headerIcon.innerHTML = `<span class="material-icons-round">${room.type === 'global' ? 'forum' : 'groups'}</span>`;
+        gcSetAvatarContent(headerIcon, {
+            avatarUrl: room.avatar_url || '',
+            initials: gcGetInitials(room.name),
+            color: '#6c5ce7',
+            icon: room.type === 'global' ? 'forum' : 'groups'
+        });
+        headerIcon.title = room.type === 'group' ? 'Change group avatar' : 'Community room';
     }
+    if (deleteBtn) deleteBtn.style.display = room.type === 'group' ? 'grid' : 'none';
+    if (pinBtn) pinBtn.classList.toggle('active', gcIsRoomPinned(roomId));
+    if (membersBtn) membersBtn.classList.toggle('active', gcMembersPanelOpen);
 }
 
 function gcAppendMessage(container, msg, options = {}) {
@@ -498,6 +607,8 @@ function gcHandleIncomingMessage(msg) {
     }
 
     if (msg.id) gcKnownMessageIds.add(msg.id);
+    gcCurrentRoomMessages.push(msg);
+    gcRefreshMembersPanel();
 
     const msgContainer = gcWin?.querySelector('.gc-messages');
     if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
@@ -589,6 +700,8 @@ async function gcSendMessage() {
     gcPendingMessages.delete(tempId);
     if (data?.id) gcKnownMessageIds.add(data.id);
     gcReplacePendingMessage(pendingEl, data || optimistic);
+    gcCurrentRoomMessages.push(data || optimistic);
+    gcRefreshMembersPanel();
 }
 
 async function gcHandleFileSelect(input) {
@@ -667,6 +780,8 @@ async function gcSendAttachment(attachment, extraText = '') {
         gcPendingMessages.delete(tempId);
         if (data?.id) gcKnownMessageIds.add(data.id);
         gcReplacePendingMessage(pendingEl, data || payload);
+        gcCurrentRoomMessages.push(data || payload);
+        gcRefreshMembersPanel();
         URL.revokeObjectURL(previewUrl);
 
         const trimmedText = extraText.trim();
@@ -873,6 +988,328 @@ function gcBindGroupModal(win) {
     });
 }
 
+function gcEnsureAvatarInput(win = gcWin) {
+    if (!win) return null;
+
+    let input = win.querySelector('#gc-avatar-input');
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'file';
+        input.id = 'gc-avatar-input';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        input.addEventListener('change', () => gcHandleAvatarFileSelect(input));
+        win.querySelector('.gc-input-box')?.prepend(input);
+    }
+    return input;
+}
+
+function gcBindHeaderActions(win) {
+    const pinBtn = win.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(3)');
+    if (pinBtn) pinBtn.title = 'Pin conversation';
+
+    const membersBtn = win.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
+    if (membersBtn) membersBtn.title = 'Members';
+}
+
+function gcBindAvatarActions(win) {
+    const userAvatar = win.querySelector('.gc-user-avatar');
+    if (userAvatar && !userAvatar.dataset.gcBound) {
+        userAvatar.dataset.gcBound = 'true';
+        userAvatar.title = 'Change your avatar';
+        userAvatar.style.cursor = 'pointer';
+        userAvatar.addEventListener('click', () => gcPromptAvatarUpload('user'));
+    }
+
+    const headerIcon = win.querySelector('.gc-chat-header-icon');
+    if (headerIcon && !headerIcon.dataset.gcBound) {
+        headerIcon.dataset.gcBound = 'true';
+        headerIcon.style.cursor = 'pointer';
+        headerIcon.addEventListener('click', () => {
+            const room = gcGetRoomById();
+            if (!room || room.type !== 'group') {
+                showNotification('Zashi Messaging', 'Only group chats can have a custom group avatar.');
+                return;
+            }
+            gcPromptAvatarUpload('group');
+        });
+    }
+}
+
+function gcPromptAvatarUpload(mode) {
+    const input = gcEnsureAvatarInput();
+    if (!input) return;
+
+    gcAvatarUploadMode = mode;
+    input.value = '';
+    input.click();
+}
+
+async function gcHandleAvatarFileSelect(input) {
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showNotification('Zashi Messaging', 'Avatar must be an image file.');
+        input.value = '';
+        return;
+    }
+
+    const processedFile = await gcPrepareAvatarFile(file);
+    if (!processedFile) {
+        input.value = '';
+        return;
+    }
+
+    if (gcAvatarUploadMode === 'group') {
+        await gcUploadGroupAvatar(processedFile);
+    } else {
+        await gcUploadUserAvatar(processedFile);
+    }
+
+    input.value = '';
+}
+
+function gcGetFileExtension(file) {
+    const ext = (file?.name || '').split('.').pop();
+    return ext && ext !== file?.name ? ext.toLowerCase() : 'png';
+}
+
+async function gcPrepareAvatarFile(file) {
+    if (file.size <= GC_MAX_AVATAR_BYTES) return file;
+
+    try {
+        const primary = await gcResizeAvatarImage(file, GC_AVATAR_PRIMARY_SIZE);
+        if (primary.size <= GC_MAX_AVATAR_BYTES) return primary;
+
+        const fallback = await gcResizeAvatarImage(file, GC_AVATAR_FALLBACK_SIZE);
+        if (fallback.size <= GC_MAX_AVATAR_BYTES) return fallback;
+
+        showNotification('Zashi Messaging', 'Avatar could not be reduced below 500 KB. Try a simpler image.');
+        return null;
+    } catch (error) {
+        console.error('Avatar resize error:', error);
+        showNotification('Zashi Messaging', 'Could not process avatar image.');
+        return null;
+    }
+}
+
+function gcLoadImageFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = reject;
+            image.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function gcCanvasToBlob(canvas, type, quality) {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+            if (!blob) {
+                reject(new Error('Canvas conversion failed.'));
+                return;
+            }
+            resolve(blob);
+        }, type, quality);
+    });
+}
+
+async function gcResizeAvatarImage(file, targetSize) {
+    const image = await gcLoadImageFile(file);
+    const canvas = document.createElement('canvas');
+    canvas.width = targetSize;
+    canvas.height = targetSize;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas context is unavailable.');
+
+    const squareSize = Math.min(image.width, image.height);
+    const sourceX = Math.floor((image.width - squareSize) / 2);
+    const sourceY = Math.floor((image.height - squareSize) / 2);
+
+    context.clearRect(0, 0, targetSize, targetSize);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(image, sourceX, sourceY, squareSize, squareSize, 0, 0, targetSize, targetSize);
+
+    const formats = [
+        { type: 'image/webp', qualities: [0.9, 0.82, 0.72] },
+        { type: 'image/jpeg', qualities: [0.9, 0.82, 0.72] }
+    ];
+
+    let bestBlob = null;
+    let bestType = 'image/jpeg';
+
+    for (const format of formats) {
+        for (const quality of format.qualities) {
+            const blob = await gcCanvasToBlob(canvas, format.type, quality);
+            if (!bestBlob || blob.size < bestBlob.size) {
+                bestBlob = blob;
+                bestType = format.type;
+            }
+            if (blob.size <= GC_MAX_AVATAR_BYTES) {
+                return new File([blob], `avatar-${targetSize}.${format.type === 'image/webp' ? 'webp' : 'jpg'}`, {
+                    type: format.type,
+                    lastModified: Date.now()
+                });
+            }
+        }
+    }
+
+    if (!bestBlob) throw new Error('No avatar blob generated.');
+
+    return new File([bestBlob], `avatar-${targetSize}.${bestType === 'image/webp' ? 'webp' : 'jpg'}`, {
+        type: bestType,
+        lastModified: Date.now()
+    });
+}
+
+async function gcUploadUserAvatar(file) {
+    if (!sbClient || !gcUserId) return;
+
+    const filePath = `avatars/users/${gcUserId}-${Date.now()}.${gcGetFileExtension(file)}`;
+
+    try {
+        await gcUploadFileWithProgress(file, filePath);
+        const { data: urlData } = sbClient.storage.from(GC_STORAGE_BUCKET).getPublicUrl(filePath);
+        const avatarUrl = urlData?.publicUrl || '';
+
+        const { error } = await sbClient
+            .from(GC_TABLES.users)
+            .update({ avatar_url: avatarUrl })
+            .eq('id', gcUserId);
+
+        if (error) {
+            console.error('User avatar update error:', error);
+            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.users));
+            return;
+        }
+
+        gcUserAvatarUrl = avatarUrl;
+        localStorage.setItem('webos-gc-avatar', avatarUrl);
+        gcRenderUserIdentity();
+        gcRefreshMembersPanel();
+        showNotification('Zashi Messaging', 'User avatar updated.');
+    } catch (error) {
+        console.error('User avatar upload error:', error);
+        showNotification('Zashi Messaging', gcFormatStorageError(error));
+    }
+}
+
+async function gcUploadGroupAvatar(file) {
+    if (!sbClient) return;
+
+    const room = gcGetRoomById();
+    if (!room || room.type !== 'group') return;
+
+    const filePath = `avatars/rooms/${room.id}-${Date.now()}.${gcGetFileExtension(file)}`;
+
+    try {
+        await gcUploadFileWithProgress(file, filePath);
+        const { data: urlData } = sbClient.storage.from(GC_STORAGE_BUCKET).getPublicUrl(filePath);
+        const avatarUrl = urlData?.publicUrl || '';
+
+        const { data, error } = await sbClient
+            .from(GC_TABLES.rooms)
+            .update({ avatar_url: avatarUrl })
+            .eq('id', room.id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Group avatar update error:', error);
+            showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.rooms));
+            return;
+        }
+
+        gcRoomCache = gcRoomCache.map(item => item.id === room.id ? { ...item, ...(data || {}), avatar_url: avatarUrl } : item);
+        gcRenderRoomList(gcWin, gcRoomCache);
+        gcUpdateHeader(room.id);
+        showNotification('Zashi Messaging', 'Group avatar updated.');
+    } catch (error) {
+        console.error('Group avatar upload error:', error);
+        showNotification('Zashi Messaging', gcFormatStorageError(error));
+    }
+}
+
+function gcTogglePinRoom() {
+    const roomId = gcCurrentRoom;
+    if (!roomId) return;
+
+    if (gcPinnedRoomIds.has(roomId)) {
+        gcPinnedRoomIds.delete(roomId);
+        showNotification('Zashi Messaging', 'Conversation unpinned.');
+    } else {
+        gcPinnedRoomIds.add(roomId);
+        showNotification('Zashi Messaging', 'Conversation pinned.');
+    }
+
+    gcSavePinnedRooms();
+    gcRoomCache = gcSortRooms(gcRoomCache);
+    gcRenderRoomList(gcWin, gcRoomCache);
+    gcUpdateHeader(roomId);
+}
+
+async function gcRefreshMembersPanel() {
+    const list = gcWin?.querySelector('.gc-members-list');
+    if (!list) return;
+
+    const members = new Map();
+    members.set(gcUserId || 'self', {
+        id: gcUserId,
+        name: gcUserName,
+        color: gcUserColor,
+        avatar_url: gcUserAvatarUrl
+    });
+
+    [...gcCurrentRoomMessages].reverse().forEach(msg => {
+        const key = msg.sender_id || `${msg.sender_name}-${msg.sender_color}`;
+        if (members.has(key)) return;
+        members.set(key, {
+            id: msg.sender_id || null,
+            name: msg.sender_name || 'Unknown',
+            color: msg.sender_color || '#6c5ce7',
+            avatar_url: ''
+        });
+    });
+
+    const memberList = [...members.values()];
+    const userIds = memberList.map(member => member.id).filter(Boolean);
+
+    if (sbClient && userIds.length > 0) {
+        try {
+            const { data } = await sbClient
+                .from(GC_TABLES.users)
+                .select('id, avatar_url')
+                .in('id', userIds);
+
+            (data || []).forEach(user => {
+                const member = memberList.find(item => item.id === user.id);
+                if (member) member.avatar_url = user.avatar_url || member.avatar_url;
+            });
+        } catch (error) {
+            console.error('Members avatar lookup error:', error);
+        }
+    }
+
+    list.innerHTML = memberList.map(member => `
+        <div class="gc-member-item">
+            <div class="gc-member-avatar${member.avatar_url ? ' has-image' : ''}" style="${member.avatar_url ? '' : `background:${member.color};`}">
+                ${member.avatar_url
+                    ? `<img src="${gcEscape(member.avatar_url)}" alt="${gcEscape(member.name)}">`
+                    : gcEscape(gcGetInitials(member.name))}
+            </div>
+            <div class="gc-member-name">${gcEscape(member.name)}</div>
+            <div class="gc-member-online"></div>
+        </div>
+    `).join('');
+}
+
 function gcApplyEnglishCopy(win) {
     const mappings = [
         ['.gc-user-subtitle', 'Active now'],
@@ -892,12 +1329,14 @@ function gcApplyEnglishCopy(win) {
     const searchInput = win.querySelector('.gc-sidebar-search input');
     if (searchInput) searchInput.placeholder = 'Search conversations';
 
-    const searchBtn = win.querySelector('.gc-header-actions .gc-header-btn[title]');
+    const searchBtn = win.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(2)');
     if (searchBtn) searchBtn.title = 'Search in chat';
 
-    const headerButtons = win.querySelectorAll('.gc-header-actions .gc-header-btn');
-    if (headerButtons[1]) headerButtons[1].title = 'Pin conversation';
-    if (headerButtons[2]) headerButtons[2].title = 'Members';
+    const pinBtn = win.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(3)');
+    if (pinBtn) pinBtn.title = 'Pin conversation';
+
+    const membersBtn = win.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
+    if (membersBtn) membersBtn.title = 'Members';
 
     const toolButtons = win.querySelectorAll('.gc-composer-tools .gc-tool-btn');
     if (toolButtons[0]) toolButtons[0].title = 'Image';
@@ -1071,6 +1510,7 @@ function gcShowSettings() {
         localStorage.removeItem('webos-gc-username');
         localStorage.removeItem('webos-gc-userid');
         localStorage.removeItem('webos-gc-color');
+        localStorage.removeItem('webos-gc-avatar');
         location.reload();
     }
 }
@@ -1161,6 +1601,7 @@ async function gcCreateGroup() {
         if (data) {
             gcRoomCache = gcRoomCache.filter(room => room.id !== data.id);
             gcRoomCache.push(data);
+            gcRoomCache = gcSortRooms(gcRoomCache);
             gcRenderRoomList(gcWin, gcRoomCache);
             gcHideModal();
             gcSwitchRoom(data.id);
@@ -1177,6 +1618,52 @@ async function gcCreateGroup() {
     }
 }
 
-function gcToggleMembers() {
-    showNotification('Zashi Messaging', 'Member list is not implemented yet.');
+async function gcDeleteCurrentRoom() {
+    const room = gcGetRoomById();
+    if (!sbClient || !room || room.type !== 'group') return;
+
+    const confirmed = confirm(`Delete group "${room.name}"? This will remove its messages too.`);
+    if (!confirmed) return;
+
+    const { error } = await sbClient
+        .from(GC_TABLES.rooms)
+        .delete()
+        .eq('id', room.id);
+
+    if (error) {
+        console.error('Delete room error:', error);
+        showNotification('Zashi Messaging', gcFormatSupabaseError(error, GC_TABLES.rooms));
+        return;
+    }
+
+    gcPinnedRoomIds.delete(room.id);
+    gcSavePinnedRooms();
+    gcRoomCache = gcRoomCache.filter(item => item.id !== room.id);
+    gcRoomCache = gcSortRooms(gcRoomCache);
+    gcRenderRoomList(gcWin, gcRoomCache);
+    gcHideMembersPanel();
+    gcSwitchRoom('global');
+    showNotification('Zashi Messaging', `Deleted group "${room.name}".`);
+}
+
+function gcHideMembersPanel() {
+    const panel = gcWin?.querySelector('.gc-members-panel');
+    const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
+    gcMembersPanelOpen = false;
+    panel?.classList.remove('show');
+    membersBtn?.classList.remove('active');
+}
+
+async function gcToggleMembers() {
+    const panel = gcWin?.querySelector('.gc-members-panel');
+    const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
+    if (!panel) return;
+
+    gcMembersPanelOpen = !gcMembersPanelOpen;
+    panel.classList.toggle('show', gcMembersPanelOpen);
+    membersBtn?.classList.toggle('active', gcMembersPanelOpen);
+
+    if (gcMembersPanelOpen) {
+        await gcRefreshMembersPanel();
+    }
 }

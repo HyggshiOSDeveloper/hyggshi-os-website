@@ -190,6 +190,23 @@
     border-radius: 50%;
 }
 
+.gc-user-avatar,
+.gc-chat-header-icon,
+.gc-room-icon,
+.gc-member-avatar {
+    overflow: hidden;
+}
+
+.gc-user-avatar img,
+.gc-chat-header-icon img,
+.gc-room-icon img,
+.gc-member-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
 .gc-user-meta {
     flex: 1;
     min-width: 0;
@@ -233,6 +250,11 @@
 .gc-header-btn:hover,
 .gc-tool-btn:hover {
     background: rgba(22, 119, 255, 0.1);
+    color: #1677ff;
+}
+
+.gc-header-btn.active {
+    background: rgba(22, 119, 255, 0.14);
     color: #1677ff;
 }
 
@@ -460,6 +482,15 @@
 
 .gc-delete-room-btn:hover {
     background: rgba(255, 93, 111, 0.12);
+}
+
+.gc-room-item.pinned .gc-room-name::before {
+    content: 'pin';
+    font-family: 'Material Icons Round';
+    font-size: 14px;
+    margin-right: 6px;
+    vertical-align: -2px;
+    color: #1677ff;
 }
 
 .gc-header-btn .material-icons-round,
