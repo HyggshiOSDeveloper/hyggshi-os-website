@@ -133,6 +133,37 @@
     gap: 8px;
 }
 
+.gc-discord-btn {
+    width: 100%;
+    margin-top: 12px;
+    border-radius: 14px;
+    padding: 13px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    background: linear-gradient(180deg, #5865f2 0%, #4752c4 100%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 12px 26px rgba(88, 101, 242, 0.22);
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.gc-discord-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+    box-shadow: 0 16px 30px rgba(88, 101, 242, 0.28);
+}
+
+.gc-discord-btn-inline {
+    width: auto;
+    min-width: 180px;
+    margin-top: 16px;
+}
+
 .gc-setup-help,
 .gc-modal {
     background: #fff;
