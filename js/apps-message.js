@@ -32,6 +32,7 @@ let gcCurrentRoomMessages = [];
 let gcKnownMessageIds = new Set();
 let gcPendingMessages = new Map();
 let gcPendingAttachment = null;
+let gcReplyDraft = null;
 let gcSyncInterval = null;
 let gcActiveRoomRequestId = 0;
 let gcPinnedRoomIds = new Set();
@@ -602,6 +603,7 @@ function gcSortRooms(rooms) {
 /* ===== APP LOGIC ===== */
 async function gcStartApp(win) {
     if (!await gcEnsureBackendReady()) return;
+    gcClearReplyTarget();
     gcRenderUserIdentity(win);
 
     gcListenRooms(win);
@@ -685,6 +687,7 @@ async function gcSwitchRoom(roomId) {
     gcStopRoomSync();
 
     gcCurrentRoom = roomId;
+    gcClearReplyTarget();
     gcCurrentUserRoomRole = roomId === 'global' ? 'owner' : 'member';
     gcRoomMembersCache = [];
     gcKnownMessageIds = new Set();
@@ -877,13 +880,108 @@ function gcUpdateHeader(roomId) {
     if (membersBtn) membersBtn.classList.toggle('active', gcMembersPanelOpen);
 }
 
-function gcAppendMessage(container, msg, options = {}) {
-    const isSent = msg.sender_id === gcUserId || options.forceSent;
-    const div = document.createElement('div');
-    div.className = `gc-msg${isSent ? ' sent' : ''}${options.pending ? ' pending' : ''}`;
-    if (options.tempId) div.dataset.tempId = options.tempId;
-    if (msg.id) div.dataset.messageId = msg.id;
+function gcGetMessageById(messageId) {
+    if (!messageId) return null;
+    return gcCurrentRoomMessages.find(msg => msg?.id === messageId) || null;
+}
 
+function gcGetReplyPreviewText(msg) {
+    if (!msg) return '';
+    if (msg.reply_to_text) return String(msg.reply_to_text).trim();
+    if (msg.text) return String(msg.text).trim();
+    if (msg.type === 'image') return 'Image';
+    if (msg.type === 'video') return 'Video';
+    if (msg.file_url) return 'Attachment';
+    return 'Message';
+}
+
+function gcBuildReplyPayload(sourceMessage) {
+    if (!sourceMessage) return null;
+    return {
+        messageId: sourceMessage.id || '',
+        userId: sourceMessage.sender_id || null,
+        senderName: sourceMessage.sender_name || 'Unknown',
+        text: gcGetReplyPreviewText(sourceMessage).slice(0, 120)
+    };
+}
+
+function gcClearReplyTarget() {
+    gcReplyDraft = null;
+    gcWin?.querySelector('.gc-reply-preview')?.remove();
+}
+
+function gcRenderReplyComposer() {
+    if (!gcWin) return;
+    const inputArea = gcWin.querySelector('.gc-input-area');
+    if (!inputArea) return;
+
+    inputArea.querySelector('.gc-reply-preview')?.remove();
+    if (!gcReplyDraft?.messageId) return;
+
+    const replyingToYou = gcReplyDraft.userId && gcReplyDraft.userId === gcUserId;
+    const preview = document.createElement('div');
+    preview.className = `gc-reply-preview${replyingToYou ? ' is-you' : ''}`;
+    preview.innerHTML = `
+        <div class="gc-reply-preview-bar"></div>
+        <div class="gc-reply-preview-content">
+            <div class="gc-reply-preview-title">
+                Replying to ${gcEscape(gcReplyDraft.senderName || 'Unknown')}
+                ${replyingToYou ? '<span class="gc-reply-pill">@you</span>' : ''}
+            </div>
+            <div class="gc-reply-preview-text">${gcEscape(gcReplyDraft.text || 'Message')}</div>
+        </div>
+        <button class="gc-attachment-remove" type="button" aria-label="Cancel reply">
+            <span class="material-icons-round">close</span>
+        </button>
+    `;
+
+    preview.querySelector('.gc-attachment-remove')?.addEventListener('click', () => gcClearReplyTarget());
+    inputArea.insertBefore(preview, inputArea.firstChild);
+}
+
+function gcSetReplyTarget(messageId) {
+    const sourceMessage = gcGetMessageById(messageId);
+    if (!sourceMessage) {
+        gcNotifyError('Could not find the message to reply to.');
+        return;
+    }
+
+    gcReplyDraft = gcBuildReplyPayload(sourceMessage);
+    gcRenderReplyComposer();
+    const textarea = gcWin?.querySelector('.gc-input-box textarea');
+    textarea?.focus();
+}
+
+function gcScrollToMessage(messageId) {
+    if (!messageId) return;
+    const target = gcWin?.querySelector(`.gc-msg[data-message-id="${messageId}"]`);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.remove('gc-msg-flash');
+    void target.offsetWidth;
+    target.classList.add('gc-msg-flash');
+    window.setTimeout(() => target.classList.remove('gc-msg-flash'), 1800);
+}
+
+function gcBuildMessageReplyHtml(msg) {
+    if (!msg?.reply_to_message_id) return '';
+    const replyName = gcEscape(msg.reply_to_sender_name || 'Unknown');
+    const replyText = gcEscape(String(msg.reply_to_text || '').trim() || 'Message');
+    const replyTag = msg.reply_to_user_id && msg.reply_to_user_id === gcUserId
+        ? '<span class="gc-reply-pill">@you</span>'
+        : '';
+    return `
+        <button class="gc-msg-reply-context${msg.reply_to_user_id && msg.reply_to_user_id === gcUserId ? ' is-you' : ''}" type="button" data-reply-message-id="${gcEscape(msg.reply_to_message_id)}" title="Jump to original message">
+            <span class="material-icons-round">reply</span>
+            <div class="gc-msg-reply-copy">
+                <div class="gc-msg-reply-name">${replyName}${replyTag}</div>
+                <div class="gc-msg-reply-text">${replyText}</div>
+            </div>
+        </button>
+    `;
+}
+
+function gcBuildMessageBodyHtml(msg, options = {}) {
     const initials = (msg.sender_name || '?')[0].toUpperCase();
     const color = msg.sender_color || '#6c5ce7';
     const avatarUrl = msg.sender_avatar_url || gcResolveUserAvatar(msg.sender_id, msg.sender_name);
@@ -904,34 +1002,72 @@ function gcAppendMessage(container, msg, options = {}) {
             <div class="gc-upload-progress-bar" style="width:${Math.max(0, Math.min(100, options.progressValue || 0))}%"></div>
         </div>
     ` : '';
-    const canDeleteMessage = msg.id && !options.pending && (isSent || (gcCanManageGroup(msg.room_id) && gcIsGroupRoom(msg.room_id)));
+    const canDeleteMessage = msg.id && !options.pending && ((msg.sender_id === gcUserId || options.forceSent) || (gcCanManageGroup(msg.room_id) && gcIsGroupRoom(msg.room_id)));
     const deleteButtonHtml = canDeleteMessage ? `
-        <button class="gc-msg-delete" type="button" onclick="gcDeleteMessage('${gcEscape(msg.id)}')" title="Delete message">
+        <button class="gc-msg-action gc-msg-delete" type="button" data-action="delete" title="Delete message">
             <span class="material-icons-round">delete</span>
         </button>
     ` : '';
+    const replyButtonHtml = !options.pending && msg.id ? `
+        <button class="gc-msg-action gc-msg-reply" type="button" data-action="reply" title="Reply to message">
+            <span class="material-icons-round">reply</span>
+        </button>
+    ` : '';
 
-    div.innerHTML = `
+    return `
         <div class="gc-msg-avatar${avatarUrl ? ' has-image' : ''}" style="${avatarUrl ? '' : `background:${color}`}" title="View profile">${avatarUrl ? `<img src="${gcEscape(avatarUrl)}" alt="${gcEscape(msg.sender_name || 'User')}">` : initials}</div>
         <div class="gc-msg-body">
             <div class="gc-msg-sender" style="color:${color}">${gcEscape(msg.sender_name || 'Unknown')}</div>
+            ${gcBuildMessageReplyHtml(msg)}
             ${contentHtml}
             ${progressHtml}
             <div class="gc-msg-meta">
                 <div class="gc-msg-time">${timeText}</div>
+                ${replyButtonHtml}
                 ${deleteButtonHtml}
             </div>
         </div>
     `;
+}
 
-    container.appendChild(div);
-    const avatarEl = div.querySelector('.gc-msg-avatar');
+function gcBindMessageInteractions(element, msg, options = {}) {
+    if (!element) return;
+    const avatarUrl = msg.sender_avatar_url || gcResolveUserAvatar(msg.sender_id, msg.sender_name);
+    const avatarEl = element.querySelector('.gc-msg-avatar');
     if (avatarEl) {
         avatarEl.style.cursor = 'pointer';
-        avatarEl.addEventListener('click', () => {
+        avatarEl.onclick = () => {
             gcShowUserProfile(msg.sender_id || '', msg.sender_name || '', msg.sender_color || '', avatarUrl || '');
-        });
+        };
     }
+
+    const replyAction = element.querySelector('.gc-msg-reply');
+    if (replyAction) {
+        replyAction.onclick = () => gcSetReplyTarget(msg.id);
+    }
+
+    const deleteAction = element.querySelector('.gc-msg-delete');
+    if (deleteAction) {
+        deleteAction.onclick = () => gcDeleteMessage(msg.id);
+    }
+
+    const replyContext = element.querySelector('.gc-msg-reply-context');
+    if (replyContext) {
+        replyContext.onclick = () => gcScrollToMessage(msg.reply_to_message_id);
+    }
+}
+
+function gcAppendMessage(container, msg, options = {}) {
+    const isSent = msg.sender_id === gcUserId || options.forceSent;
+    const div = document.createElement('div');
+    const isReplyHit = msg.reply_to_user_id && msg.reply_to_user_id === gcUserId && msg.sender_id !== gcUserId;
+    div.className = `gc-msg${isSent ? ' sent' : ''}${options.pending ? ' pending' : ''}${isReplyHit ? ' reply-hit' : ''}`;
+    if (options.tempId) div.dataset.tempId = options.tempId;
+    if (msg.id) div.dataset.messageId = msg.id;
+    div.innerHTML = gcBuildMessageBodyHtml(msg, options);
+
+    container.appendChild(div);
+    gcBindMessageInteractions(div, msg, options);
     return div;
 }
 
@@ -972,6 +1108,9 @@ function gcRemoveMessageFromUi(messageId) {
 
     gcKnownMessageIds.delete(messageId);
     gcCurrentRoomMessages = gcCurrentRoomMessages.filter(msg => msg?.id !== messageId);
+    if (gcReplyDraft?.messageId === messageId) {
+        gcClearReplyTarget();
+    }
     const element = gcWin?.querySelector(`.gc-msg[data-message-id="${messageId}"]`);
     element?.remove();
     gcRefreshMembersPanel();
@@ -992,23 +1131,12 @@ function gcFindPendingMessageMatch(msg) {
 
 function gcReplacePendingMessage(element, msg) {
     if (!element) return;
-    const bubble = element.querySelector('.gc-msg-bubble');
-    if (bubble) bubble.textContent = msg.text || '';
     element.classList.remove('pending');
+    element.classList.toggle('sent', msg.sender_id === gcUserId);
+    element.classList.toggle('reply-hit', !!(msg.reply_to_user_id && msg.reply_to_user_id === gcUserId && msg.sender_id !== gcUserId));
     element.dataset.messageId = msg.id;
-    const timeEl = element.querySelector('.gc-msg-time');
-    if (timeEl) timeEl.textContent = gcFormatMessageTime(msg.created_at || new Date().toISOString());
-    element.querySelector('.gc-upload-progress')?.remove();
-    const metaEl = element.querySelector('.gc-msg-meta');
-    if (metaEl && msg.id && (msg.sender_id === gcUserId || element.classList.contains('sent') || gcCanManageGroup(msg.room_id))) {
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'gc-msg-delete';
-        deleteBtn.type = 'button';
-        deleteBtn.title = 'Delete message';
-        deleteBtn.setAttribute('onclick', `gcDeleteMessage('${msg.id}')`);
-        deleteBtn.innerHTML = '<span class="material-icons-round">delete</span>';
-        metaEl.appendChild(deleteBtn);
-    }
+    element.innerHTML = gcBuildMessageBodyHtml(msg, {});
+    gcBindMessageInteractions(element, msg, {});
 }
 
 async function gcDeleteMessage(messageId) {
@@ -1092,6 +1220,12 @@ async function gcSendMessage() {
 
     if (!textarea || !text) return;
 
+    const replyPayload = gcReplyDraft ? {
+        reply_to_message_id: gcReplyDraft.messageId || null,
+        reply_to_user_id: gcReplyDraft.userId || null,
+        reply_to_sender_name: gcReplyDraft.senderName || null,
+        reply_to_text: gcReplyDraft.text || null
+    } : {};
     textarea.value = '';
     gcResizeTextarea(textarea);
 
@@ -1103,7 +1237,8 @@ async function gcSendMessage() {
         sender_color: gcUserColor,
         sender_avatar_url: gcUserAvatarUrl,
         type: 'text',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        ...replyPayload
     };
 
     const tempId = gcCreateTempId('text');
@@ -1135,6 +1270,7 @@ async function gcSendMessage() {
         return;
     }
 
+    gcClearReplyTarget();
     gcPendingMessages.delete(tempId);
     if (data?.id) gcKnownMessageIds.add(data.id);
     gcReplacePendingMessage(pendingEl, data || optimistic);
@@ -1162,6 +1298,12 @@ async function gcSendAttachment(attachment, extraText = '') {
 
     gcPendingAttachment = null;
     gcWin.querySelector('.gc-attachment-preview')?.remove();
+    const replyPayload = gcReplyDraft ? {
+        reply_to_message_id: gcReplyDraft.messageId || null,
+        reply_to_user_id: gcReplyDraft.userId || null,
+        reply_to_sender_name: gcReplyDraft.senderName || null,
+        reply_to_text: gcReplyDraft.text || null
+    } : {};
 
     const optimistic = {
         room_id: gcCurrentRoom,
@@ -1171,7 +1313,8 @@ async function gcSendAttachment(attachment, extraText = '') {
         sender_color: gcUserColor,
         sender_avatar_url: gcUserAvatarUrl,
         type,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        ...replyPayload
     };
 
     const pendingEl = gcAppendMessage(msgContainer, optimistic, {
@@ -1206,7 +1349,8 @@ async function gcSendAttachment(attachment, extraText = '') {
             sender_name: gcUserName,
             sender_color: gcUserColor,
             sender_avatar_url: gcUserAvatarUrl,
-            type
+            type,
+            ...replyPayload
         };
 
         const { data, error } = await sbClient
@@ -1222,6 +1366,7 @@ async function gcSendAttachment(attachment, extraText = '') {
         gcReplacePendingMessage(pendingEl, data || payload);
         gcCurrentRoomMessages.push(data || payload);
         gcRefreshMembersPanel();
+        gcClearReplyTarget();
         URL.revokeObjectURL(previewUrl);
 
         const trimmedText = extraText.trim();
@@ -1787,6 +1932,8 @@ async function gcUploadUserCover(file) {
 
 async function gcRemoveUserAvatar() {
     if (!sbClient || !gcUserId || !gcUserAvatarUrl) return;
+    const confirmed = confirm('Remove your avatar?');
+    if (!confirmed) return;
 
     const previousAvatarUrl = gcUserAvatarUrl;
     const { error } = await sbClient
@@ -1819,6 +1966,8 @@ async function gcRemoveUserAvatar() {
 
 async function gcRemoveUserCover() {
     if (!sbClient || !gcUserId || !gcUserCoverUrl) return;
+    const confirmed = confirm('Remove your profile cover?');
+    if (!confirmed) return;
 
     const previousCoverUrl = gcUserCoverUrl;
     const { error } = await sbClient
@@ -1989,6 +2138,41 @@ async function gcUploadGroupAvatar(file) {
         gcDebugError('Group avatar upload error:', error);
         gcNotifyError(gcFormatStorageError(error));
     }
+}
+
+async function gcRemoveGroupAvatar() {
+    if (!sbClient) return;
+
+    const room = gcGetRoomById();
+    if (!room || room.type !== 'group' || !room.avatar_url) return;
+    if (!gcCanManageGroup(room.id)) {
+        gcNotifyError('Only the group leader or deputy can remove the group avatar.');
+        return;
+    }
+
+    const confirmed = confirm(`Remove the avatar for "${room.name}"?`);
+    if (!confirmed) return;
+
+    const previousAvatarUrl = room.avatar_url;
+    const { data, error } = await sbClient
+        .from(GC_TABLES.rooms)
+        .update({ avatar_url: null })
+        .eq('id', room.id)
+        .select()
+        .single();
+
+    if (error) {
+        gcDebugError('Remove group avatar error:', error);
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
+        return;
+    }
+
+    gcRoomCache = gcRoomCache.map(item => item.id === room.id ? { ...item, ...(data || {}), avatar_url: '' } : item);
+    gcRenderRoomList(gcWin, gcRoomCache);
+    gcUpdateHeader(room.id);
+    gcShowSettings();
+    gcDeleteStorageObjectQuietly(previousAvatarUrl);
+    showNotification('Zashi Messaging', 'Group avatar removed.');
 }
 
 function gcTogglePinRoom() {
@@ -2437,6 +2621,23 @@ function gcShowSettings() {
                     <strong>${gcIsRoomPinned(gcCurrentRoom) ? 'Yes' : 'No'}</strong>
                 </div>
             </div>
+            ${gcIsGroupRoom() && gcCanManageGroup() ? `
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Group Appearance</div>
+                <div class="gc-settings-actions">
+                    <button class="gc-settings-link" type="button" onclick="gcPromptAvatarUpload('group')">
+                        <span class="material-icons-round">imagesmode</span>
+                        Change group avatar
+                    </button>
+                    ${room?.avatar_url ? `
+                    <button class="gc-settings-link gc-settings-link-danger" type="button" onclick="gcRemoveGroupAvatar()">
+                        <span class="material-icons-round">delete</span>
+                        Remove group avatar
+                    </button>
+                    ` : ''}
+                </div>
+            </div>
+            ` : ''}
             <div class="gc-settings-card">
                 <div class="gc-settings-card-title">Profile Bio</div>
                 <div class="gc-profile-bio-row">
