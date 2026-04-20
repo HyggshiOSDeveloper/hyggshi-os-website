@@ -678,6 +678,15 @@
     color: #ff5d6f;
 }
 
+.gc-msg-report {
+    background: rgba(255, 171, 0, 0.12);
+    color: #b26a00;
+}
+
+.gc-msg-report:hover {
+    background: rgba(255, 171, 0, 0.2);
+}
+
 .gc-msg-delete:hover {
     background: rgba(255, 93, 111, 0.18);
 }
@@ -1401,6 +1410,44 @@
 .gc-settings-link.gc-settings-link-danger .material-icons-round {
     background: rgba(255, 93, 111, 0.12);
     color: #ff5d6f;
+}
+
+.gc-report-quote {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 171, 0, 0.2);
+    background: rgba(255, 248, 231, 0.95);
+}
+
+.gc-report-quote-name {
+    color: #8f5200;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.gc-report-quote-text {
+    margin-top: 4px;
+    color: #324963;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.gc-legal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.gc-legal-item {
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: #f7faff;
+    border: 1px solid #dbe7f8;
+    color: #26405d;
+    font-size: 13px;
+    line-height: 1.5;
 }
 
 .gc-settings-tile-title,

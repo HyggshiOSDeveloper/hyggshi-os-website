@@ -7,11 +7,18 @@ const GC_TABLES = {
     users: 'users',
     rooms: 'rooms',
     messages: 'messages',
-    roomMembers: 'room_members'
+    roomMembers: 'room_members',
+    reports: 'reports'
 };
 
 const GC_STORAGE_BUCKET = 'chat-files';
 const GC_COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#fd79a8', '#e84393', '#00cec9', '#ff7675', '#74b9ff', '#55efc4', '#ffeaa7', '#fab1a0'];
+const GC_GLOBAL_ROOM_ID = 'global';
+const GC_GLOBAL_ROOM_LABEL = 'Global Chat (Public room)';
+const GC_GLOBAL_RATE_LIMIT_MS = 5000;
+const GC_GLOBAL_MAX_MESSAGES = 100;
+const GC_GLOBAL_MAX_TEXT_LENGTH = 400;
+const GC_GLOBAL_FILTER_WORDS = ['dm me now', 'free nitro', 'discord.gg/', 'telegram.me/', 'sex', 'porn', 'nude', 'xxx', 'kill yourself'];
 
 let sbClient = null;
 let gcUserId = null;
@@ -39,6 +46,8 @@ let gcPinnedRoomIds = new Set();
 let gcMembersPanelOpen = false;
 let gcAvatarUploadMode = 'user';
 let gcCurrentUserRoomRole = 'member';
+let gcGlobalLastSentAt = 0;
+let gcGlobalLastPruneAt = 0;
 const GC_PINNED_ROOMS_KEY = 'webos-gc-pinned-rooms';
 const GC_MAX_AVATAR_BYTES = 500 * 1024;
 const GC_AVATAR_PRIMARY_SIZE = 256;
@@ -52,6 +61,78 @@ const gcTimeFormatter = new Intl.DateTimeFormat(undefined, {
     minute: '2-digit',
     hour12: false
 });
+
+function gcIsGlobalRoom(roomId = gcCurrentRoom) {
+    return roomId === GC_GLOBAL_ROOM_ID;
+}
+
+function gcGetDisplayRoomName(room) {
+    if (!room) return GC_GLOBAL_ROOM_LABEL;
+    return room.id === GC_GLOBAL_ROOM_ID ? GC_GLOBAL_ROOM_LABEL : (room.name || 'Group Chat');
+}
+
+function gcGetGlobalRoomPreview() {
+    return 'Public room for signed-in users only';
+}
+
+function gcHasBlockedGlobalContent(text) {
+    const lowered = String(text || '').toLowerCase();
+    return GC_GLOBAL_FILTER_WORDS.find(word => lowered.includes(word)) || '';
+}
+
+function gcGetGlobalSlowmodeError(roomId = gcCurrentRoom) {
+    if (!gcIsGlobalRoom(roomId)) return '';
+    const remaining = GC_GLOBAL_RATE_LIMIT_MS - (Date.now() - gcGlobalLastSentAt);
+    if (remaining > 0) {
+        return `Global chat slowmode is on. Wait ${Math.ceil(remaining / 1000)}s before sending again.`;
+    }
+    return '';
+}
+
+function gcValidateOutgoingMessage(text, roomId = gcCurrentRoom) {
+    const trimmed = String(text || '').trim();
+    if (!trimmed) return null;
+    if (trimmed.length > GC_GLOBAL_MAX_TEXT_LENGTH) {
+        return `Messages can be at most ${GC_GLOBAL_MAX_TEXT_LENGTH} characters.`;
+    }
+    if (gcIsGlobalRoom(roomId)) {
+        const slowmodeError = gcGetGlobalSlowmodeError(roomId);
+        if (slowmodeError) return slowmodeError;
+        const blockedWord = gcHasBlockedGlobalContent(trimmed);
+        if (blockedWord) {
+            return 'This message contains blocked words for the public room.';
+        }
+    }
+    return null;
+}
+
+async function gcPruneGlobalMessages(force = false) {
+    if (!sbClient || !gcIsGlobalRoom()) return;
+    const now = Date.now();
+    if (!force && now - gcGlobalLastPruneAt < 15000) return;
+    gcGlobalLastPruneAt = now;
+
+    try {
+        const { data, error } = await sbClient
+            .from(GC_TABLES.messages)
+            .select('id')
+            .eq('room_id', GC_GLOBAL_ROOM_ID)
+            .order('created_at', { ascending: false })
+            .range(GC_GLOBAL_MAX_MESSAGES, GC_GLOBAL_MAX_MESSAGES + 149);
+
+        if (error || !data?.length) return;
+
+        const idsToDelete = data.map(item => item.id).filter(Boolean);
+        if (idsToDelete.length === 0) return;
+
+        await sbClient
+            .from(GC_TABLES.messages)
+            .delete()
+            .in('id', idsToDelete);
+    } catch (error) {
+        gcDebugError('Global prune error:', error);
+    }
+}
 
 /* ===== INIT ===== */
 function initMessage(win) {
@@ -138,6 +219,7 @@ function gcFormatSupabaseError(error, tableName) {
     if (error.code === '23505' || error.status === 409) {
         if (tableName === GC_TABLES.users) return 'This username is already taken.';
         if (tableName === GC_TABLES.rooms) return 'A group with this name already exists.';
+        if (tableName === GC_TABLES.reports) return 'This report was already submitted.';
         return 'This item already exists.';
     }
     if (error.status === 404) {
@@ -159,6 +241,7 @@ function gcFormatSupabaseError(error, tableName) {
     }
     if (tableName === GC_TABLES.roomMembers) return 'Could not update group members.';
     if (tableName === GC_TABLES.messages) return 'Could not update messages.';
+    if (tableName === GC_TABLES.reports) return 'Could not submit the report.';
     if (tableName === GC_TABLES.rooms) return 'Could not update the group.';
     if (tableName === GC_TABLES.users) return 'Could not update the account.';
     return 'Database error.';
@@ -197,7 +280,7 @@ function gcNotifySetupIssue(message) {
 async function gcEnsureBackendReady() {
     if (!sbClient) return false;
 
-    for (const tableName of [GC_TABLES.rooms, GC_TABLES.messages, GC_TABLES.users, GC_TABLES.roomMembers]) {
+    for (const tableName of [GC_TABLES.rooms, GC_TABLES.messages, GC_TABLES.users, GC_TABLES.roomMembers, GC_TABLES.reports]) {
         const { error } = await sbClient
             .from(tableName)
             .select('*', { head: true, count: 'exact' })
@@ -648,8 +731,8 @@ function gcRenderRoomList(win, rooms) {
 
     list.innerHTML = '';
 
-    if (!rooms.find(room => room.id === 'global')) {
-        rooms.unshift({ id: 'global', name: 'Zashi Messaging', type: 'global' });
+    if (!rooms.find(room => room.id === GC_GLOBAL_ROOM_ID)) {
+        rooms.unshift({ id: GC_GLOBAL_ROOM_ID, name: GC_GLOBAL_ROOM_LABEL, type: 'global' });
     }
 
     gcSortRooms(rooms).forEach(room => {
@@ -659,8 +742,9 @@ function gcRenderRoomList(win, rooms) {
         div.onclick = () => gcSwitchRoom(room.id);
 
         const icon = room.type === 'global' ? 'public' : 'group';
+        const roomName = gcGetDisplayRoomName(room);
         const preview = room.type === 'global'
-            ? 'Shared conversation for everyone'
+            ? gcGetGlobalRoomPreview()
             : 'Group conversation';
         const meta = room.id === gcCurrentRoom ? 'Open now' : (isPinned ? 'Pinned' : 'Today');
 
@@ -670,7 +754,7 @@ function gcRenderRoomList(win, rooms) {
                 : `<span class="material-icons-round">${icon}</span>`}</div>
             <div class="gc-room-info">
                 <div class="gc-room-name-row">
-                    <div class="gc-room-name">${gcEscape(room.name)}</div>
+                    <div class="gc-room-name">${gcEscape(roomName)}</div>
                     <div class="gc-room-meta">${meta}</div>
                 </div>
                 <div class="gc-room-preview">${preview}</div>
@@ -688,7 +772,7 @@ async function gcSwitchRoom(roomId) {
 
     gcCurrentRoom = roomId;
     gcClearReplyTarget();
-    gcCurrentUserRoomRole = roomId === 'global' ? 'owner' : 'member';
+    gcCurrentUserRoomRole = roomId === GC_GLOBAL_ROOM_ID ? 'owner' : 'member';
     gcRoomMembersCache = [];
     gcKnownMessageIds = new Set();
     gcPendingMessages.clear();
@@ -844,6 +928,10 @@ async function gcSyncLatestMessages(roomId = gcCurrentRoom) {
     const removedIds = [...gcKnownMessageIds].filter(id => !liveMessageIds.has(id));
     removedIds.forEach(id => gcRemoveMessageFromUi(id));
 
+    if (gcIsGlobalRoom(roomId) && (messages || []).length >= GC_GLOBAL_MAX_MESSAGES) {
+        gcPruneGlobalMessages();
+    }
+
     if (appended) msgContainer.scrollTop = msgContainer.scrollHeight;
 }
 
@@ -856,14 +944,14 @@ function gcUpdateHeader(roomId) {
     const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
     const room = gcRoomCache.find(item => item.id === roomId) || {
         id: roomId,
-        name: roomId === 'global' ? 'Zashi Messaging' : 'Group Chat',
-        type: roomId === 'global' ? 'global' : 'group'
+        name: roomId === GC_GLOBAL_ROOM_ID ? GC_GLOBAL_ROOM_LABEL : 'Group Chat',
+        type: roomId === GC_GLOBAL_ROOM_ID ? 'global' : 'group'
     };
 
-    if (headerName) headerName.textContent = room.name;
+    if (headerName) headerName.textContent = gcGetDisplayRoomName(room);
     if (headerStatus) {
         headerStatus.textContent = room.type === 'global'
-            ? 'The community is chatting now'
+            ? 'Public room for signed-in users. Slowmode is enabled.'
             : 'This group is active';
     }
     if (headerIcon) {
@@ -873,7 +961,7 @@ function gcUpdateHeader(roomId) {
             color: '#6c5ce7',
             icon: room.type === 'global' ? 'forum' : 'groups'
         });
-        headerIcon.title = room.type === 'group' ? 'Change group avatar' : 'Community room';
+        headerIcon.title = room.type === 'group' ? 'Change group avatar' : 'Public room';
     }
     if (deleteBtn) deleteBtn.style.display = room.type === 'group' && gcCanDeleteGroup(roomId) ? 'grid' : 'none';
     if (pinBtn) pinBtn.classList.toggle('active', gcIsRoomPinned(roomId));
@@ -903,6 +991,16 @@ function gcBuildReplyPayload(sourceMessage) {
         senderName: sourceMessage.sender_name || 'Unknown',
         text: gcGetReplyPreviewText(sourceMessage).slice(0, 120)
     };
+}
+
+function gcGetMessageSnapshot(msg) {
+    if (!msg) return '';
+    if (msg.text) return String(msg.text).trim().slice(0, 280);
+    if (msg.reply_to_text) return String(msg.reply_to_text).trim().slice(0, 280);
+    if (msg.type === 'image') return '[Image]';
+    if (msg.type === 'video') return '[Video]';
+    if (msg.file_url) return '[Attachment]';
+    return '[Message]';
 }
 
 function gcClearReplyTarget() {
@@ -1013,6 +1111,11 @@ function gcBuildMessageBodyHtml(msg, options = {}) {
             <span class="material-icons-round">reply</span>
         </button>
     ` : '';
+    const reportButtonHtml = !options.pending && msg.id ? `
+        <button class="gc-msg-action gc-msg-report" type="button" data-action="report" title="Report message">
+            <span class="material-icons-round">flag</span>
+        </button>
+    ` : '';
 
     return `
         <div class="gc-msg-avatar${avatarUrl ? ' has-image' : ''}" style="${avatarUrl ? '' : `background:${color}`}" title="View profile">${avatarUrl ? `<img src="${gcEscape(avatarUrl)}" alt="${gcEscape(msg.sender_name || 'User')}">` : initials}</div>
@@ -1024,6 +1127,7 @@ function gcBuildMessageBodyHtml(msg, options = {}) {
             <div class="gc-msg-meta">
                 <div class="gc-msg-time">${timeText}</div>
                 ${replyButtonHtml}
+                ${reportButtonHtml}
                 ${deleteButtonHtml}
             </div>
         </div>
@@ -1044,6 +1148,11 @@ function gcBindMessageInteractions(element, msg, options = {}) {
     const replyAction = element.querySelector('.gc-msg-reply');
     if (replyAction) {
         replyAction.onclick = () => gcSetReplyTarget(msg.id);
+    }
+
+    const reportAction = element.querySelector('.gc-msg-report');
+    if (reportAction) {
+        reportAction.onclick = () => gcShowReportModal(msg.id);
     }
 
     const deleteAction = element.querySelector('.gc-msg-delete');
@@ -1212,6 +1321,19 @@ async function gcSendMessage() {
     const attachment = gcPendingAttachment;
 
     if (!text && !attachment) return;
+    if (attachment && !text) {
+        const slowmodeError = gcGetGlobalSlowmodeError(gcCurrentRoom);
+        if (slowmodeError) {
+            gcNotifyError(slowmodeError);
+            return;
+        }
+    }
+
+    const validationError = text ? gcValidateOutgoingMessage(text, gcCurrentRoom) : null;
+    if (validationError) {
+        gcNotifyError(validationError);
+        return;
+    }
 
     if (attachment) {
         await gcSendAttachment(attachment, text);
@@ -1271,6 +1393,10 @@ async function gcSendMessage() {
     }
 
     gcClearReplyTarget();
+    if (gcIsGlobalRoom()) {
+        gcGlobalLastSentAt = Date.now();
+        gcPruneGlobalMessages();
+    }
     gcPendingMessages.delete(tempId);
     if (data?.id) gcKnownMessageIds.add(data.id);
     gcReplacePendingMessage(pendingEl, data || optimistic);
@@ -1287,6 +1413,12 @@ async function gcHandleFileSelect(input) {
 
 async function gcSendAttachment(attachment, extraText = '') {
     if (!sbClient || !gcWin || !attachment?.file) return;
+    const trimmedExtraText = String(extraText || '').trim();
+    const validationError = trimmedExtraText ? gcValidateOutgoingMessage(trimmedExtraText, gcCurrentRoom) : null;
+    if (validationError) {
+        gcNotifyError(validationError);
+        return;
+    }
 
     const file = attachment.file;
     const type = attachment.type;
@@ -1369,13 +1501,16 @@ async function gcSendAttachment(attachment, extraText = '') {
         gcClearReplyTarget();
         URL.revokeObjectURL(previewUrl);
 
-        const trimmedText = extraText.trim();
+        const trimmedText = trimmedExtraText;
         if (trimmedText) {
             const textarea = gcWin.querySelector('.gc-input-box textarea');
             if (textarea) {
                 textarea.value = trimmedText;
                 await gcSendMessage();
             }
+        } else if (gcIsGlobalRoom()) {
+            gcGlobalLastSentAt = Date.now();
+            gcPruneGlobalMessages();
         }
     } catch (error) {
         gcDebugError('Attachment send error:', error);
@@ -2404,6 +2539,17 @@ function gcShowSetup(win) {
     win?.querySelector('.gc-setup-overlay')?.classList.remove('hidden');
 }
 
+function gcBuildDefaultModalHtml() {
+    return `
+        <h3>Create New Group</h3>
+        <input type="text" id="gc-group-name" class="gc-setup-input" placeholder="Group name...">
+        <div class="gc-modal-actions">
+            <button class="gc-btn-cancel" onclick="gcHideModal()">Cancel</button>
+            <button class="gc-btn-primary" onclick="gcCreateGroup()">Create</button>
+        </div>
+    `;
+}
+
 function gcHideSetup(win) {
     win?.querySelector('.gc-setup-overlay')?.classList.add('hidden');
 }
@@ -2412,6 +2558,144 @@ function gcEscape(text) {
     const div = document.createElement('div');
     div.textContent = text ?? '';
     return div.innerHTML;
+}
+
+function gcShowLegalModal(type = 'terms') {
+    const overlay = gcWin?.querySelector('.gc-modal-overlay');
+    const modal = gcWin?.querySelector('.gc-modal');
+    if (!overlay || !modal) return;
+
+    const isPrivacy = type === 'privacy';
+    const title = isPrivacy ? 'Privacy Policy' : 'Terms of Service';
+    const intro = isPrivacy
+        ? 'What Zashi Messaging stores and how it handles your data.'
+        : 'Basic rules for using the chat system.';
+    const items = isPrivacy
+        ? [
+            'We store account details you provide, such as username, avatar, cover, bio, and chat content.',
+            'We store message attachments and moderation reports so the system can work and abuse can be reviewed.',
+            'We do not sell your personal data.',
+            'Administrators may remove content or accounts that violate the rules or harm the service.'
+        ]
+        : [
+            'Do not spam, harass, or abuse other users.',
+            'Do not post illegal, harmful, or infringing content.',
+            'Uploaded files and messages may be removed to protect the platform or its users.',
+            'The service may suspend or delete content, groups, or accounts that break these rules.'
+        ];
+
+    modal.classList.add('gc-settings-modal');
+    modal.innerHTML = `
+        <div class="gc-settings-sheet">
+            <div class="gc-settings-header">
+                <div>
+                    <div class="gc-settings-eyebrow">Legal</div>
+                    <h3>${title}</h3>
+                </div>
+                <button class="gc-settings-close" type="button" onclick="gcHideModal()" aria-label="Close ${title}">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">${title}</div>
+                <div class="gc-settings-card-note">${intro}</div>
+                <div class="gc-legal-list">
+                    ${items.map(item => `<div class="gc-legal-item">${gcEscape(item)}</div>`).join('')}
+                </div>
+            </div>
+            <div class="gc-settings-footer">
+                <button class="gc-btn-cancel" type="button" onclick="gcHideModal()">Close</button>
+            </div>
+        </div>
+    `;
+    overlay.classList.remove('hidden');
+}
+
+function gcShowReportModal(messageId) {
+    const overlay = gcWin?.querySelector('.gc-modal-overlay');
+    const modal = gcWin?.querySelector('.gc-modal');
+    const message = gcGetMessageById(messageId);
+    if (!overlay || !modal || !message?.id) return;
+
+    modal.classList.add('gc-settings-modal');
+    modal.innerHTML = `
+        <div class="gc-settings-sheet">
+            <div class="gc-settings-header">
+                <div>
+                    <div class="gc-settings-eyebrow">Safety</div>
+                    <h3>Report Message</h3>
+                </div>
+                <button class="gc-settings-close" type="button" onclick="gcHideModal()" aria-label="Close report modal">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Reported message</div>
+                <div class="gc-report-quote">
+                    <div class="gc-report-quote-name">${gcEscape(message.sender_name || 'Unknown')}</div>
+                    <div class="gc-report-quote-text">${gcEscape(gcGetMessageSnapshot(message) || 'Message')}</div>
+                </div>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Reason</div>
+                <select id="gc-report-reason" class="gc-setup-input">
+                    <option value="spam">Spam</option>
+                    <option value="harassment">Harassment</option>
+                    <option value="illegal">Illegal content</option>
+                    <option value="impersonation">Impersonation</option>
+                    <option value="other">Other</option>
+                </select>
+                <textarea id="gc-report-details" class="gc-setup-textarea" maxlength="300" placeholder="Optional details..."></textarea>
+                <div class="gc-settings-card-note">Reports help moderators review abuse and remove harmful content.</div>
+            </div>
+            <div class="gc-settings-footer">
+                <button class="gc-btn-cancel" type="button" onclick="gcHideModal()">Cancel</button>
+                <button class="gc-btn-primary" type="button" onclick="gcSubmitReport('${gcEscape(message.id)}')">Submit report</button>
+            </div>
+        </div>
+    `;
+    overlay.classList.remove('hidden');
+}
+
+async function gcSubmitReport(messageId) {
+    if (!sbClient || !gcUserId || !messageId) return;
+    const message = gcGetMessageById(messageId);
+    if (!message) {
+        gcNotifyError('Could not find that message anymore.');
+        return;
+    }
+
+    const reasonInput = gcWin?.querySelector('#gc-report-reason');
+    const detailsInput = gcWin?.querySelector('#gc-report-details');
+    const reason = (reasonInput?.value || '').trim();
+    const details = (detailsInput?.value || '').trim().slice(0, 300);
+    if (!reason) {
+        gcNotifyError('Choose a reason for the report.');
+        return;
+    }
+
+    const payload = {
+        room_id: message.room_id || gcCurrentRoom,
+        message_id: message.id,
+        reporter_user_id: gcUserId,
+        reported_user_id: message.sender_id || null,
+        reason,
+        details: details || null,
+        message_snapshot: gcGetMessageSnapshot(message)
+    };
+
+    const { error } = await sbClient
+        .from(GC_TABLES.reports)
+        .insert([payload]);
+
+    if (error) {
+        gcDebugError('Submit report error:', error);
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.reports));
+        return;
+    }
+
+    gcHideModal();
+    showNotification('Zashi Messaging', 'Report submitted. Thank you.');
 }
 
 function gcRenderMessageTextContent(text) {
@@ -2552,7 +2836,7 @@ function gcShowSettings() {
 
     const room = gcGetRoomById();
     const roleText = gcIsGroupRoom() ? gcGetRoleLabel(gcCurrentUserRoomRole) : 'Community';
-    const roomText = room?.name || 'Zashi Messaging';
+    const roomText = gcGetDisplayRoomName(room);
 
     modal.classList.add('gc-settings-modal');
     modal.innerHTML = `
@@ -2680,6 +2964,14 @@ function gcShowSettings() {
                         <span class="material-icons-round">push_pin</span>
                         ${gcIsRoomPinned(gcCurrentRoom) ? 'Unpin conversation' : 'Pin conversation'}
                     </button>
+                    <button class="gc-settings-link" type="button" onclick="gcShowLegalModal('terms')">
+                        <span class="material-icons-round">description</span>
+                        Terms of Service
+                    </button>
+                    <button class="gc-settings-link" type="button" onclick="gcShowLegalModal('privacy')">
+                        <span class="material-icons-round">shield</span>
+                        Privacy Policy
+                    </button>
                 </div>
             </div>
             <div class="gc-settings-footer">
@@ -2719,15 +3011,8 @@ function gcHideModal() {
     if (overlay) overlay.classList.add('hidden');
     if (input) input.value = '';
     if (modal) {
-        modal.classList.remove('gc-settings-modal');
-        modal.innerHTML = `
-            <h3>Create New Group</h3>
-            <input type="text" id="gc-group-name" class="gc-setup-input" placeholder="Group name...">
-            <div class="gc-modal-actions">
-                <button class="gc-btn-cancel" onclick="gcHideModal()">Cancel</button>
-                <button class="gc-btn-primary" onclick="gcCreateGroup()">Create</button>
-            </div>
-        `;
+        modal.classList.remove('gc-settings-modal', 'gc-profile-modal');
+        modal.innerHTML = gcBuildDefaultModalHtml();
         gcBindGroupModal(gcWin);
     }
 }
