@@ -18,6 +18,8 @@ let gcUserId = null;
 let gcUserName = '';
 let gcUserColor = '';
 let gcUserAvatarUrl = '';
+let gcUserCoverUrl = '';
+let gcUserBio = '';
 let gcCurrentRoom = 'global';
 let gcWin = null;
 let gcSubscription = null;
@@ -25,6 +27,7 @@ let gcRoomsSubscription = null;
 let gcSetupErrorShown = false;
 let gcRoomCache = [];
 let gcRoomMembersCache = [];
+let gcUserProfileCache = new Map();
 let gcCurrentRoomMessages = [];
 let gcKnownMessageIds = new Set();
 let gcPendingMessages = new Map();
@@ -39,6 +42,9 @@ const GC_PINNED_ROOMS_KEY = 'webos-gc-pinned-rooms';
 const GC_MAX_AVATAR_BYTES = 500 * 1024;
 const GC_AVATAR_PRIMARY_SIZE = 256;
 const GC_AVATAR_FALLBACK_SIZE = 128;
+const GC_MAX_COVER_BYTES = 1024 * 1024;
+const GC_COVER_PRIMARY = { width: 960, height: 320 };
+const GC_COVER_FALLBACK = { width: 640, height: 240 };
 const GC_SYNC_INTERVAL_MS = 3000;
 const gcTimeFormatter = new Intl.DateTimeFormat(undefined, {
     hour: '2-digit',
@@ -95,6 +101,8 @@ function initMessage(win) {
     const userName = localStorage.getItem('webos-gc-username');
     const userId = localStorage.getItem('webos-gc-userid');
     const userAvatarUrl = localStorage.getItem('webos-gc-avatar') || '';
+    const userCoverUrl = localStorage.getItem('webos-gc-cover') || '';
+    const userBio = localStorage.getItem('webos-gc-bio') || '';
 
     if (!userName || !userId) {
         gcShowSetup(win);
@@ -105,6 +113,8 @@ function initMessage(win) {
     gcUserName = userName;
     gcUserColor = localStorage.getItem('webos-gc-color') || GC_COLORS[0];
     gcUserAvatarUrl = userAvatarUrl;
+    gcUserCoverUrl = userCoverUrl;
+    gcUserBio = userBio;
     gcHideSetup(win);
     gcStartApp(win);
 }
@@ -234,7 +244,7 @@ async function gcLogin() {
             return;
         }
 
-        gcSetUserSession(data.username, data.id, data.color, data.avatar_url);
+        gcSetUserSession(data.username, data.id, data.color, data.avatar_url, data.cover_url, data.bio);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -319,7 +329,7 @@ async function gcRegister() {
             return;
         }
 
-        gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url);
+        gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url, newUser.cover_url, newUser.bio);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -328,15 +338,27 @@ async function gcRegister() {
     }
 }
 
-function gcSetUserSession(name, id, color, avatarUrl = '') {
+function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = '') {
     gcUserName = name;
     gcUserId = id;
     gcUserColor = color;
     gcUserAvatarUrl = avatarUrl || '';
+    gcUserCoverUrl = coverUrl || '';
+    gcUserBio = bio || '';
     localStorage.setItem('webos-gc-username', name);
     localStorage.setItem('webos-gc-userid', id);
     localStorage.setItem('webos-gc-color', color);
     localStorage.setItem('webos-gc-avatar', gcUserAvatarUrl);
+    localStorage.setItem('webos-gc-cover', gcUserCoverUrl);
+    localStorage.setItem('webos-gc-bio', gcUserBio);
+    gcCacheUserProfile({
+        id,
+        username: name,
+        color,
+        avatar_url: gcUserAvatarUrl,
+        cover_url: gcUserCoverUrl,
+        bio: gcUserBio
+    });
 }
 
 function gcLoadPinnedRooms() {
@@ -385,6 +407,106 @@ function gcGetRoleLabel(role) {
     if (role === 'owner') return 'Leader';
     if (role === 'deputy') return 'Deputy';
     return 'Member';
+}
+
+function gcCacheUserProfile(profile) {
+    if (!profile) return;
+    if (profile.id) {
+        gcUserProfileCache.set(`id:${profile.id}`, profile);
+    }
+    if (profile.username) {
+        gcUserProfileCache.set(`username:${String(profile.username).toLowerCase()}`, profile);
+    }
+}
+
+function gcGetCachedUserProfile(userId, userName = '') {
+    if (userId === gcUserId) {
+        return {
+            id: gcUserId,
+            username: gcUserName,
+            color: gcUserColor,
+            avatar_url: gcUserAvatarUrl,
+            cover_url: gcUserCoverUrl,
+            bio: gcUserBio
+        };
+    }
+
+    if (userId && gcUserProfileCache.has(`id:${userId}`)) {
+        return gcUserProfileCache.get(`id:${userId}`);
+    }
+
+    const lowered = String(userName || '').toLowerCase();
+    if (lowered && gcUserProfileCache.has(`username:${lowered}`)) {
+        return gcUserProfileCache.get(`username:${lowered}`);
+    }
+
+    const member = gcRoomMembersCache.find(item => item.user_id === userId || String(item.users?.username || '').toLowerCase() === lowered);
+    if (member?.users) {
+        gcCacheUserProfile(member.users);
+        return member.users;
+    }
+
+    return null;
+}
+
+function gcResolveUserAvatar(userId, userName = '') {
+    return gcGetCachedUserProfile(userId, userName)?.avatar_url || '';
+}
+
+function gcResolveUserCover(userId, userName = '') {
+    return gcGetCachedUserProfile(userId, userName)?.cover_url || '';
+}
+
+function gcResolveUserBio(userId, userName = '') {
+    return gcGetCachedUserProfile(userId, userName)?.bio || '';
+}
+
+async function gcHydrateMessagesWithAvatars(messages = []) {
+    if (!sbClient || !Array.isArray(messages) || messages.length === 0) return messages;
+
+    const missingIds = [...new Set(messages.filter(msg => !msg?.sender_avatar_url && msg?.sender_id).map(msg => msg.sender_id))];
+    const missingNames = [...new Set(
+        messages
+            .filter(msg => !msg?.sender_avatar_url && !msg?.sender_id && msg?.sender_name)
+            .map(msg => String(msg.sender_name).toLowerCase())
+    )];
+
+    if (missingIds.length === 0 && missingNames.length === 0) {
+        return messages.map(msg => ({
+            ...msg,
+            sender_avatar_url: msg.sender_avatar_url || gcResolveUserAvatar(msg.sender_id, msg.sender_name)
+        }));
+    }
+
+    try {
+        let profiles = [];
+        if (missingIds.length > 0) {
+            const { data } = await sbClient
+                .from(GC_TABLES.users)
+                .select('id, username, color, avatar_url, cover_url, bio')
+                .in('id', missingIds);
+            profiles = profiles.concat(data || []);
+        }
+        if (missingNames.length > 0) {
+            const { data } = await sbClient
+                .from(GC_TABLES.users)
+                .select('id, username, color, avatar_url, cover_url, bio')
+                .in('username', missingNames);
+            profiles = profiles.concat(data || []);
+        }
+
+        profiles.forEach(profile => gcCacheUserProfile(profile));
+        return messages.map(msg => ({
+            ...msg,
+            sender_avatar_url: msg.sender_avatar_url || gcResolveUserAvatar(msg.sender_id, msg.sender_name)
+        }));
+    } catch (error) {
+        gcDebugError('Hydrate message avatars error:', error);
+        return messages.map(msg => ({
+            ...msg,
+            sender_avatar_url: msg.sender_avatar_url || gcResolveUserAvatar(msg.sender_id, msg.sender_name)
+        }));
+    }
 }
 
 function gcBuildNameKey(value) {
@@ -589,7 +711,7 @@ async function gcSwitchRoom(roomId) {
 
     await gcLoadRoomMembers(roomId);
     gcRenderRoomList(gcWin, gcRoomCache);
-    const orderedMessages = (messages || []).slice().reverse();
+    const orderedMessages = await gcHydrateMessagesWithAvatars((messages || []).slice().reverse());
     gcCurrentRoomMessages = orderedMessages.slice();
     orderedMessages.forEach(msg => {
         if (msg.id) gcKnownMessageIds.add(msg.id);
@@ -634,7 +756,7 @@ async function gcLoadRoomMembers(roomId = gcCurrentRoom) {
 
     const { data, error } = await sbClient
         .from(GC_TABLES.roomMembers)
-        .select('room_id,user_id,role,users(id,username,color,avatar_url)')
+        .select('room_id,user_id,role,users(id,username,color,avatar_url,cover_url,bio)')
         .eq('room_id', roomId);
 
     if (error) {
@@ -645,6 +767,7 @@ async function gcLoadRoomMembers(roomId = gcCurrentRoom) {
     }
 
     gcRoomMembersCache = data || [];
+    gcRoomMembersCache.forEach(member => gcCacheUserProfile(member.users));
     const self = gcRoomMembersCache.find(member => member.user_id === gcUserId);
     gcCurrentUserRoomRole = self?.role || 'member';
 }
@@ -706,7 +829,8 @@ async function gcSyncLatestMessages(roomId = gcCurrentRoom) {
 
     let appended = false;
     const liveMessageIds = new Set((messages || []).map(msg => msg?.id).filter(Boolean));
-    (messages || []).slice().reverse().forEach(msg => {
+    const hydratedMessages = await gcHydrateMessagesWithAvatars(messages || []);
+    hydratedMessages.slice().reverse().forEach(msg => {
         if (!msg?.id || gcKnownMessageIds.has(msg.id)) return;
         gcKnownMessageIds.add(msg.id);
         gcAppendMessage(msgContainer, msg);
@@ -762,6 +886,7 @@ function gcAppendMessage(container, msg, options = {}) {
 
     const initials = (msg.sender_name || '?')[0].toUpperCase();
     const color = msg.sender_color || '#6c5ce7';
+    const avatarUrl = msg.sender_avatar_url || gcResolveUserAvatar(msg.sender_id, msg.sender_name);
     const timeText = options.statusText || gcFormatMessageTime(msg.created_at);
 
     let contentHtml = '';
@@ -787,7 +912,7 @@ function gcAppendMessage(container, msg, options = {}) {
     ` : '';
 
     div.innerHTML = `
-        <div class="gc-msg-avatar" style="background:${color}">${initials}</div>
+        <div class="gc-msg-avatar${avatarUrl ? ' has-image' : ''}" style="${avatarUrl ? '' : `background:${color}`}" title="View profile">${avatarUrl ? `<img src="${gcEscape(avatarUrl)}" alt="${gcEscape(msg.sender_name || 'User')}">` : initials}</div>
         <div class="gc-msg-body">
             <div class="gc-msg-sender" style="color:${color}">${gcEscape(msg.sender_name || 'Unknown')}</div>
             ${contentHtml}
@@ -800,12 +925,22 @@ function gcAppendMessage(container, msg, options = {}) {
     `;
 
     container.appendChild(div);
+    const avatarEl = div.querySelector('.gc-msg-avatar');
+    if (avatarEl) {
+        avatarEl.style.cursor = 'pointer';
+        avatarEl.addEventListener('click', () => {
+            gcShowUserProfile(msg.sender_id || '', msg.sender_name || '', msg.sender_color || '', avatarUrl || '');
+        });
+    }
     return div;
 }
 
 function gcHandleIncomingMessage(msg) {
     if (!msg || msg.room_id !== gcCurrentRoom) return;
     if (msg.id && gcKnownMessageIds.has(msg.id)) return;
+    if (!msg.sender_avatar_url) {
+        msg.sender_avatar_url = gcResolveUserAvatar(msg.sender_id, msg.sender_name);
+    }
 
     const pendingMatch = gcFindPendingMessageMatch(msg);
     if (pendingMatch) {
@@ -957,6 +1092,7 @@ async function gcSendMessage() {
         sender_id: gcUserId,
         sender_name: gcUserName,
         sender_color: gcUserColor,
+        sender_avatar_url: gcUserAvatarUrl,
         type: 'text',
         created_at: new Date().toISOString()
     };
@@ -1024,6 +1160,7 @@ async function gcSendAttachment(attachment, extraText = '') {
         sender_id: gcUserId,
         sender_name: gcUserName,
         sender_color: gcUserColor,
+        sender_avatar_url: gcUserAvatarUrl,
         type,
         created_at: new Date().toISOString()
     };
@@ -1059,6 +1196,7 @@ async function gcSendAttachment(attachment, extraText = '') {
             sender_id: gcUserId,
             sender_name: gcUserName,
             sender_color: gcUserColor,
+            sender_avatar_url: gcUserAvatarUrl,
             type
         };
 
@@ -1256,18 +1394,22 @@ function gcBindGroupModal(win) {
     const overlay = win.querySelector('.gc-modal-overlay');
     const modal = win.querySelector('.gc-modal');
     const input = win.querySelector('#gc-group-name');
-    if (!overlay || !modal || !input || overlay.dataset.gcBound) return;
+    if (!overlay || !modal) return;
 
-    overlay.dataset.gcBound = 'true';
+    if (!overlay.dataset.gcBound) {
+        overlay.dataset.gcBound = 'true';
 
-    overlay.addEventListener('click', event => {
-        if (event.target === overlay) gcHideModal();
-    });
+        overlay.addEventListener('click', event => {
+            if (event.target === overlay) gcHideModal();
+        });
 
-    modal.addEventListener('click', event => {
-        event.stopPropagation();
-    });
+        modal.addEventListener('click', event => {
+            event.stopPropagation();
+        });
+    }
 
+    if (!input || input.dataset.gcBound) return;
+    input.dataset.gcBound = 'true';
     input.addEventListener('keydown', event => {
         if (event.key === 'Escape') {
             event.preventDefault();
@@ -1348,13 +1490,17 @@ async function gcHandleAvatarFileSelect(input) {
         return;
     }
 
-    const processedFile = await gcPrepareAvatarFile(file);
+    const processedFile = gcAvatarUploadMode === 'cover'
+        ? await gcPrepareCoverFile(file)
+        : await gcPrepareAvatarFile(file);
     if (!processedFile) {
         input.value = '';
         return;
     }
 
-    if (gcAvatarUploadMode === 'group') {
+    if (gcAvatarUploadMode === 'cover') {
+        await gcUploadUserCover(processedFile);
+    } else if (gcAvatarUploadMode === 'group') {
         await gcUploadGroupAvatar(processedFile);
     } else {
         await gcUploadUserAvatar(processedFile);
@@ -1383,6 +1529,25 @@ async function gcPrepareAvatarFile(file) {
     } catch (error) {
         gcDebugError('Avatar resize error:', error);
         gcNotifyError('Could not process avatar image.');
+        return null;
+    }
+}
+
+async function gcPrepareCoverFile(file) {
+    if (file.size <= GC_MAX_COVER_BYTES) return file;
+
+    try {
+        const primary = await gcResizeCoverImage(file, GC_COVER_PRIMARY.width, GC_COVER_PRIMARY.height);
+        if (primary.size <= GC_MAX_COVER_BYTES) return primary;
+
+        const fallback = await gcResizeCoverImage(file, GC_COVER_FALLBACK.width, GC_COVER_FALLBACK.height);
+        if (fallback.size <= GC_MAX_COVER_BYTES) return fallback;
+
+        gcNotifyError('Cover image could not be reduced below 1 MB. Try a simpler image.');
+        return null;
+    } catch (error) {
+        gcDebugError('Cover resize error:', error);
+        gcNotifyError('Could not process cover image.');
         return null;
     }
 }
@@ -1462,6 +1627,66 @@ async function gcResizeAvatarImage(file, targetSize) {
     });
 }
 
+async function gcResizeCoverImage(file, targetWidth, targetHeight) {
+    const image = await gcLoadImageFile(file);
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas context is unavailable.');
+
+    const targetRatio = targetWidth / targetHeight;
+    const sourceRatio = image.width / image.height;
+    let sourceWidth = image.width;
+    let sourceHeight = image.height;
+    let sourceX = 0;
+    let sourceY = 0;
+
+    if (sourceRatio > targetRatio) {
+        sourceWidth = Math.floor(image.height * targetRatio);
+        sourceX = Math.floor((image.width - sourceWidth) / 2);
+    } else {
+        sourceHeight = Math.floor(image.width / targetRatio);
+        sourceY = Math.floor((image.height - sourceHeight) / 2);
+    }
+
+    context.clearRect(0, 0, targetWidth, targetHeight);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
+
+    const formats = [
+        { type: 'image/webp', qualities: [0.86, 0.76, 0.66] },
+        { type: 'image/jpeg', qualities: [0.86, 0.76, 0.66] }
+    ];
+
+    let bestBlob = null;
+    let bestType = 'image/jpeg';
+
+    for (const format of formats) {
+        for (const quality of format.qualities) {
+            const blob = await gcCanvasToBlob(canvas, format.type, quality);
+            if (!bestBlob || blob.size < bestBlob.size) {
+                bestBlob = blob;
+                bestType = format.type;
+            }
+            if (blob.size <= GC_MAX_COVER_BYTES) {
+                return new File([blob], `cover-${targetWidth}x${targetHeight}.${format.type === 'image/webp' ? 'webp' : 'jpg'}`, {
+                    type: format.type,
+                    lastModified: Date.now()
+                });
+            }
+        }
+    }
+
+    if (!bestBlob) throw new Error('No cover blob generated.');
+
+    return new File([bestBlob], `cover-${targetWidth}x${targetHeight}.${bestType === 'image/webp' ? 'webp' : 'jpg'}`, {
+        type: bestType,
+        lastModified: Date.now()
+    });
+}
+
 async function gcUploadUserAvatar(file) {
     if (!sbClient || !gcUserId) return;
 
@@ -1492,6 +1717,128 @@ async function gcUploadUserAvatar(file) {
         gcDebugError('User avatar upload error:', error);
         gcNotifyError(gcFormatStorageError(error));
     }
+}
+
+async function gcUploadUserCover(file) {
+    if (!sbClient || !gcUserId) return;
+
+    const filePath = `covers/users/${gcUserId}-${Date.now()}.${gcGetFileExtension(file)}`;
+
+    try {
+        await gcUploadFileWithProgress(file, filePath);
+        const { data: urlData } = sbClient.storage.from(GC_STORAGE_BUCKET).getPublicUrl(filePath);
+        const coverUrl = urlData?.publicUrl || '';
+
+        const { error } = await sbClient
+            .from(GC_TABLES.users)
+            .update({ cover_url: coverUrl })
+            .eq('id', gcUserId);
+
+        if (error) {
+            gcDebugError('User cover update error:', error);
+            gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
+            return;
+        }
+
+        gcUserCoverUrl = coverUrl;
+        localStorage.setItem('webos-gc-cover', coverUrl);
+        gcShowSettings();
+        showNotification('Zashi Messaging', 'Profile cover updated.');
+    } catch (error) {
+        gcDebugError('User cover upload error:', error);
+        gcNotifyError(gcFormatStorageError(error));
+    }
+}
+
+async function gcSaveProfileBio() {
+    if (!sbClient || !gcUserId || !gcWin) return;
+    const textarea = gcWin.querySelector('.gc-settings-bio-input');
+    if (!textarea) return;
+
+    const bio = textarea.value.trim().slice(0, 160);
+    const { error } = await sbClient
+        .from(GC_TABLES.users)
+        .update({ bio })
+        .eq('id', gcUserId);
+
+    if (error) {
+        gcDebugError('Save bio error:', error);
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
+        return;
+    }
+
+    gcUserBio = bio;
+    localStorage.setItem('webos-gc-bio', bio);
+    gcShowSettings();
+    showNotification('Zashi Messaging', 'Profile bio updated.');
+}
+
+async function gcShowUserProfile(userId, fallbackName = '', fallbackColor = '#6c5ce7', fallbackAvatar = '') {
+    const overlay = gcWin?.querySelector('.gc-modal-overlay');
+    const modal = gcWin?.querySelector('.gc-modal');
+    if (!overlay || !modal) return;
+
+    let profile = {
+        id: userId,
+        username: fallbackName || 'Unknown',
+        color: fallbackColor || '#6c5ce7',
+        avatar_url: fallbackAvatar || gcResolveUserAvatar(userId),
+        cover_url: gcResolveUserCover(userId),
+        bio: gcResolveUserBio(userId)
+    };
+
+    if (sbClient && userId) {
+        try {
+            const { data } = await sbClient
+                .from(GC_TABLES.users)
+                .select('id, username, color, avatar_url, cover_url, bio')
+                .eq('id', userId)
+                .maybeSingle();
+            if (data) profile = { ...profile, ...data };
+        } catch (error) {
+            gcDebugError('Load profile info error:', error);
+        }
+    }
+
+    const roleMember = gcRoomMembersCache.find(item => item.user_id === userId);
+    const roleText = roleMember ? gcGetRoleLabel(roleMember.role) : 'Member';
+
+    modal.classList.add('gc-settings-modal', 'gc-profile-modal');
+    modal.innerHTML = `
+        <div class="gc-settings-sheet">
+            <div class="gc-settings-header">
+                <div>
+                    <div class="gc-settings-eyebrow">Profile</div>
+                    <h3>${gcEscape(profile.username || 'Unknown')}</h3>
+                </div>
+                <button class="gc-settings-close" type="button" onclick="gcHideModal()" aria-label="Close profile">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="gc-profile-preview">
+                <div class="gc-settings-cover gc-profile-cover" style="${profile.cover_url ? `background-image:url('${gcEscape(profile.cover_url)}')` : ''}">
+                    <div class="gc-settings-profile-row">
+                        <div class="gc-settings-avatar${profile.avatar_url ? ' has-image' : ''}">
+                            ${profile.avatar_url ? `<img src="${gcEscape(profile.avatar_url)}" alt="${gcEscape(profile.username || 'User')}">` : gcEscape(gcGetInitials(profile.username))}
+                        </div>
+                        <div class="gc-settings-profile-meta">
+                            <div class="gc-settings-name">${gcEscape(profile.username || 'Unknown')}</div>
+                            <div class="gc-settings-subtitle">${gcEscape(roleText)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Bio</div>
+                <div class="gc-profile-bio">${gcEscape(profile.bio || 'No profile description yet.')}</div>
+            </div>
+            <div class="gc-settings-footer">
+                <button class="gc-btn-cancel" type="button" onclick="gcHideModal()">Close</button>
+            </div>
+        </div>
+    `;
+
+    overlay.classList.remove('hidden');
 }
 
 async function gcUploadGroupAvatar(file) {
@@ -1905,13 +2252,123 @@ function gcOpenExternalMedia(url) {
 }
 
 function gcShowSettings() {
-    if (confirm('Log out?')) {
-        localStorage.removeItem('webos-gc-username');
-        localStorage.removeItem('webos-gc-userid');
-        localStorage.removeItem('webos-gc-color');
-        localStorage.removeItem('webos-gc-avatar');
-        location.reload();
-    }
+    const overlay = gcWin?.querySelector('.gc-modal-overlay');
+    const modal = gcWin?.querySelector('.gc-modal');
+    if (!overlay || !modal) return;
+
+    const room = gcGetRoomById();
+    const roleText = gcIsGroupRoom() ? gcGetRoleLabel(gcCurrentUserRoomRole) : 'Community';
+    const roomText = room?.name || 'Zashi Messaging';
+
+    modal.classList.add('gc-settings-modal');
+    modal.innerHTML = `
+        <div class="gc-settings-sheet">
+            <div class="gc-settings-header">
+                <div>
+                    <div class="gc-settings-eyebrow">Account</div>
+                    <h3>Zashi Messaging Settings</h3>
+                </div>
+                <button class="gc-settings-close" type="button" onclick="gcHideModal()" aria-label="Close settings">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="gc-settings-profile">
+                <div class="gc-settings-cover" onclick="gcPromptAvatarUpload('cover')" title="Change profile cover" style="${gcUserCoverUrl ? `background-image:url('${gcEscape(gcUserCoverUrl)}')` : ''}">
+                    <div class="gc-settings-cover-badge">
+                        <span class="material-icons-round">photo</span>
+                        Cover max 1 MB
+                    </div>
+                    <div class="gc-settings-profile-row">
+                        <div class="gc-settings-avatar${gcUserAvatarUrl ? ' has-image' : ''}" onclick="event.stopPropagation(); gcPromptAvatarUpload('user')" title="Change your avatar">
+                            ${gcUserAvatarUrl ? `<img src="${gcEscape(gcUserAvatarUrl)}" alt="${gcEscape(gcUserName)}">` : gcEscape(gcGetInitials(gcUserName))}
+                        </div>
+                        <div class="gc-settings-profile-meta">
+                            <div class="gc-settings-name">${gcEscape(gcUserName)}</div>
+                            <div class="gc-settings-subtitle">Active now</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="gc-settings-grid">
+                <button class="gc-settings-tile" type="button" onclick="gcPromptAvatarUpload('user')">
+                    <span class="material-icons-round">photo_camera</span>
+                    <div>
+                        <div class="gc-settings-tile-title">Change Avatar</div>
+                        <div class="gc-settings-tile-text">Upload a profile image others can see</div>
+                    </div>
+                </button>
+                <button class="gc-settings-tile" type="button" onclick="gcPromptAvatarUpload('cover')">
+                    <span class="material-icons-round">image</span>
+                    <div>
+                        <div class="gc-settings-tile-title">Change Cover</div>
+                        <div class="gc-settings-tile-text">Upload a profile cover under 1 MB</div>
+                    </div>
+                </button>
+                <button class="gc-settings-tile" type="button" onclick="gcHideModal(); gcToggleMembers();">
+                    <span class="material-icons-round">group</span>
+                    <div>
+                        <div class="gc-settings-tile-title">Members</div>
+                        <div class="gc-settings-tile-text">Open the member list for this conversation</div>
+                    </div>
+                </button>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Current Conversation</div>
+                <div class="gc-settings-stat-row">
+                    <span>Room</span>
+                    <strong>${gcEscape(roomText)}</strong>
+                </div>
+                <div class="gc-settings-stat-row">
+                    <span>Your role</span>
+                    <strong>${gcEscape(roleText)}</strong>
+                </div>
+                <div class="gc-settings-stat-row">
+                    <span>Pinned</span>
+                    <strong>${gcIsRoomPinned(gcCurrentRoom) ? 'Yes' : 'No'}</strong>
+                </div>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Profile Bio</div>
+                <textarea class="gc-settings-bio-input" maxlength="160" placeholder="Write a short profile description...">${gcEscape(gcUserBio)}</textarea>
+                <div class="gc-settings-card-note">Visible when other people tap your avatar in chat.</div>
+                <div class="gc-settings-actions">
+                    <button class="gc-settings-link" type="button" onclick="gcSaveProfileBio()">
+                        <span class="material-icons-round">edit</span>
+                        Save profile bio
+                    </button>
+                </div>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Quick Actions</div>
+                <div class="gc-settings-actions">
+                    <a class="gc-settings-link" href="https://discord.gg/C2wnU8Vz6U" target="_blank" rel="noopener noreferrer">
+                        <span class="material-icons-round">groups</span>
+                        Join Discord
+                    </a>
+                    <button class="gc-settings-link" type="button" onclick="gcHideModal(); gcTogglePinRoom();">
+                        <span class="material-icons-round">push_pin</span>
+                        ${gcIsRoomPinned(gcCurrentRoom) ? 'Unpin conversation' : 'Pin conversation'}
+                    </button>
+                </div>
+            </div>
+            <div class="gc-settings-footer">
+                <button class="gc-btn-cancel" type="button" onclick="gcHideModal()">Close</button>
+                <button class="gc-settings-logout" type="button" onclick="gcLogout()">Log out</button>
+            </div>
+        </div>
+    `;
+
+    overlay.classList.remove('hidden');
+}
+
+function gcLogout() {
+    localStorage.removeItem('webos-gc-username');
+    localStorage.removeItem('webos-gc-userid');
+    localStorage.removeItem('webos-gc-color');
+    localStorage.removeItem('webos-gc-avatar');
+    localStorage.removeItem('webos-gc-cover');
+    localStorage.removeItem('webos-gc-bio');
+    location.reload();
 }
 
 function gcShowCreateGroup() {
@@ -1927,8 +2384,21 @@ function gcShowCreateGroup() {
 function gcHideModal() {
     const overlay = gcWin?.querySelector('.gc-modal-overlay');
     const input = gcWin?.querySelector('#gc-group-name');
+    const modal = gcWin?.querySelector('.gc-modal');
     if (overlay) overlay.classList.add('hidden');
     if (input) input.value = '';
+    if (modal) {
+        modal.classList.remove('gc-settings-modal');
+        modal.innerHTML = `
+            <h3>Create New Group</h3>
+            <input type="text" id="gc-group-name" class="gc-setup-input" placeholder="Group name...">
+            <div class="gc-modal-actions">
+                <button class="gc-btn-cancel" onclick="gcHideModal()">Cancel</button>
+                <button class="gc-btn-primary" onclick="gcCreateGroup()">Create</button>
+            </div>
+        `;
+        gcBindGroupModal(gcWin);
+    }
 }
 
 function gcBuildRoomId(name) {
