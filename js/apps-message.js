@@ -1066,6 +1066,15 @@ async function gcDeleteStorageObjectByUrl(fileUrl) {
     }
 }
 
+async function gcDeleteStorageObjectQuietly(fileUrl) {
+    if (!fileUrl) return;
+    try {
+        await gcDeleteStorageObjectByUrl(fileUrl);
+    } catch (error) {
+        gcDebugError('Storage cleanup error:', error);
+    }
+}
+
 /* ===== SEND & UPLOAD ===== */
 async function gcSendMessage() {
     if (!sbClient || !gcWin) return;
@@ -1690,6 +1699,7 @@ async function gcResizeCoverImage(file, targetWidth, targetHeight) {
 async function gcUploadUserAvatar(file) {
     if (!sbClient || !gcUserId) return;
 
+    const previousAvatarUrl = gcUserAvatarUrl || '';
     const filePath = `avatars/users/${gcUserId}-${Date.now()}.${gcGetFileExtension(file)}`;
 
     try {
@@ -1704,14 +1714,26 @@ async function gcUploadUserAvatar(file) {
 
         if (error) {
             gcDebugError('User avatar update error:', error);
+            await gcDeleteStorageObjectQuietly(avatarUrl);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
 
         gcUserAvatarUrl = avatarUrl;
         localStorage.setItem('webos-gc-avatar', avatarUrl);
+        gcCacheUserProfile({
+            id: gcUserId,
+            username: gcUserName,
+            color: gcUserColor,
+            avatar_url: gcUserAvatarUrl,
+            cover_url: gcUserCoverUrl,
+            bio: gcUserBio
+        });
         gcRenderUserIdentity();
         gcRefreshMembersPanel();
+        if (previousAvatarUrl && previousAvatarUrl !== avatarUrl) {
+            gcDeleteStorageObjectQuietly(previousAvatarUrl);
+        }
         showNotification('Zashi Messaging', 'User avatar updated.');
     } catch (error) {
         gcDebugError('User avatar upload error:', error);
@@ -1722,6 +1744,7 @@ async function gcUploadUserAvatar(file) {
 async function gcUploadUserCover(file) {
     if (!sbClient || !gcUserId) return;
 
+    const previousCoverUrl = gcUserCoverUrl || '';
     const filePath = `covers/users/${gcUserId}-${Date.now()}.${gcGetFileExtension(file)}`;
 
     try {
@@ -1736,18 +1759,92 @@ async function gcUploadUserCover(file) {
 
         if (error) {
             gcDebugError('User cover update error:', error);
+            await gcDeleteStorageObjectQuietly(coverUrl);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
             return;
         }
 
         gcUserCoverUrl = coverUrl;
         localStorage.setItem('webos-gc-cover', coverUrl);
+        gcCacheUserProfile({
+            id: gcUserId,
+            username: gcUserName,
+            color: gcUserColor,
+            avatar_url: gcUserAvatarUrl,
+            cover_url: gcUserCoverUrl,
+            bio: gcUserBio
+        });
         gcShowSettings();
+        if (previousCoverUrl && previousCoverUrl !== coverUrl) {
+            gcDeleteStorageObjectQuietly(previousCoverUrl);
+        }
         showNotification('Zashi Messaging', 'Profile cover updated.');
     } catch (error) {
         gcDebugError('User cover upload error:', error);
         gcNotifyError(gcFormatStorageError(error));
     }
+}
+
+async function gcRemoveUserAvatar() {
+    if (!sbClient || !gcUserId || !gcUserAvatarUrl) return;
+
+    const previousAvatarUrl = gcUserAvatarUrl;
+    const { error } = await sbClient
+        .from(GC_TABLES.users)
+        .update({ avatar_url: null })
+        .eq('id', gcUserId);
+
+    if (error) {
+        gcDebugError('Remove avatar error:', error);
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
+        return;
+    }
+
+    gcUserAvatarUrl = '';
+    localStorage.setItem('webos-gc-avatar', '');
+    gcCacheUserProfile({
+        id: gcUserId,
+        username: gcUserName,
+        color: gcUserColor,
+        avatar_url: '',
+        cover_url: gcUserCoverUrl,
+        bio: gcUserBio
+    });
+    gcRenderUserIdentity();
+    gcRefreshMembersPanel();
+    gcShowSettings();
+    gcDeleteStorageObjectQuietly(previousAvatarUrl);
+    showNotification('Zashi Messaging', 'User avatar removed.');
+}
+
+async function gcRemoveUserCover() {
+    if (!sbClient || !gcUserId || !gcUserCoverUrl) return;
+
+    const previousCoverUrl = gcUserCoverUrl;
+    const { error } = await sbClient
+        .from(GC_TABLES.users)
+        .update({ cover_url: null })
+        .eq('id', gcUserId);
+
+    if (error) {
+        gcDebugError('Remove cover error:', error);
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
+        return;
+    }
+
+    gcUserCoverUrl = '';
+    localStorage.setItem('webos-gc-cover', '');
+    gcCacheUserProfile({
+        id: gcUserId,
+        username: gcUserName,
+        color: gcUserColor,
+        avatar_url: gcUserAvatarUrl,
+        cover_url: '',
+        bio: gcUserBio
+    });
+    gcShowSettings();
+    gcDeleteStorageObjectQuietly(previousCoverUrl);
+    showNotification('Zashi Messaging', 'Profile cover removed.');
 }
 
 async function gcSaveProfileBio() {
@@ -1830,7 +1927,15 @@ async function gcShowUserProfile(userId, fallbackName = '', fallbackColor = '#6c
             </div>
             <div class="gc-settings-card">
                 <div class="gc-settings-card-title">Bio</div>
-                <div class="gc-profile-bio">${gcEscape(profile.bio || 'No profile description yet.')}</div>
+                <div class="gc-profile-bio-row">
+                    <div class="gc-profile-bio-icon" aria-hidden="true">
+                        <span class="material-icons-round">edit_note</span>
+                    </div>
+                    <div class="gc-profile-bio-block">
+                        <div class="gc-profile-bio-label">About</div>
+                        <div class="gc-profile-bio">${gcEscape(profile.bio || 'No profile description yet.')}</div>
+                    </div>
+                </div>
             </div>
             <div class="gc-settings-footer">
                 <button class="gc-btn-cancel" type="button" onclick="gcHideModal()">Close</button>
@@ -1851,6 +1956,7 @@ async function gcUploadGroupAvatar(file) {
         return;
     }
 
+    const previousAvatarUrl = room.avatar_url || '';
     const filePath = `avatars/rooms/${room.id}-${Date.now()}.${gcGetFileExtension(file)}`;
 
     try {
@@ -1867,6 +1973,7 @@ async function gcUploadGroupAvatar(file) {
 
         if (error) {
             gcDebugError('Group avatar update error:', error);
+            await gcDeleteStorageObjectQuietly(avatarUrl);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
             return;
         }
@@ -1874,6 +1981,9 @@ async function gcUploadGroupAvatar(file) {
         gcRoomCache = gcRoomCache.map(item => item.id === room.id ? { ...item, ...(data || {}), avatar_url: avatarUrl } : item);
         gcRenderRoomList(gcWin, gcRoomCache);
         gcUpdateHeader(room.id);
+        if (previousAvatarUrl && previousAvatarUrl !== avatarUrl) {
+            gcDeleteStorageObjectQuietly(previousAvatarUrl);
+        }
         showNotification('Zashi Messaging', 'Group avatar updated.');
     } catch (error) {
         gcDebugError('Group avatar upload error:', error);
@@ -2329,13 +2439,33 @@ function gcShowSettings() {
             </div>
             <div class="gc-settings-card">
                 <div class="gc-settings-card-title">Profile Bio</div>
+                <div class="gc-profile-bio-row">
+                    <div class="gc-profile-bio-icon" aria-hidden="true">
+                        <span class="material-icons-round">edit_note</span>
+                    </div>
+                    <div class="gc-profile-bio-block">
+                        <div class="gc-profile-bio-label">Short description</div>
+                        <div class="gc-settings-card-note">Visible when other people tap your avatar in chat.</div>
+                    </div>
+                </div>
                 <textarea class="gc-settings-bio-input" maxlength="160" placeholder="Write a short profile description...">${gcEscape(gcUserBio)}</textarea>
-                <div class="gc-settings-card-note">Visible when other people tap your avatar in chat.</div>
                 <div class="gc-settings-actions">
                     <button class="gc-settings-link" type="button" onclick="gcSaveProfileBio()">
                         <span class="material-icons-round">edit</span>
                         Save profile bio
                     </button>
+                    ${gcUserAvatarUrl ? `
+                    <button class="gc-settings-link gc-settings-link-danger" type="button" onclick="gcRemoveUserAvatar()">
+                        <span class="material-icons-round">delete</span>
+                        Remove avatar
+                    </button>
+                    ` : ''}
+                    ${gcUserCoverUrl ? `
+                    <button class="gc-settings-link gc-settings-link-danger" type="button" onclick="gcRemoveUserCover()">
+                        <span class="material-icons-round">delete_sweep</span>
+                        Remove cover
+                    </button>
+                    ` : ''}
                 </div>
             </div>
             <div class="gc-settings-card">

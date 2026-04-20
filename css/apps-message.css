@@ -1022,16 +1022,34 @@
 .gc-settings-cover {
     position: relative;
     min-height: 156px;
-    padding: 14px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     cursor: pointer;
     background:
-        linear-gradient(180deg, rgba(12, 26, 48, 0.18), rgba(12, 26, 48, 0.42)),
-        linear-gradient(135deg, #87d9f7 0%, #7a8cff 50%, #1f8bff 100%);
+        linear-gradient(180deg, rgba(11, 22, 40, 0.1), rgba(11, 22, 40, 0.28)),
+        linear-gradient(135deg, #c4efff 0%, #8fbbff 52%, #4d8fff 100%);
     background-size: cover;
     background-position: center;
+    isolation: isolate;
+}
+
+.gc-settings-cover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.34), transparent 40%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(8, 18, 34, 0.18));
+    backdrop-filter: blur(5px);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.gc-settings-cover>* {
+    position: relative;
+    z-index: 1;
 }
 
 .gc-settings-cover-badge {
@@ -1056,19 +1074,21 @@
 }
 
 .gc-settings-avatar {
-    width: 58px;
-    height: 58px;
+    width: 68px;
+    height: 68px;
     border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(180deg, #1f8bff 0%, #0d6df2 100%);
     color: #fff;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     cursor: pointer;
     overflow: hidden;
-    box-shadow: 0 14px 28px rgba(13, 109, 242, 0.18);
+    border: 3px solid rgba(255, 255, 255, 0.92);
+    box-shadow: 0 16px 34px rgba(9, 30, 66, 0.22), 0 6px 18px rgba(255, 255, 255, 0.22);
+    flex-shrink: 0;
 }
 
 .gc-settings-avatar img {
@@ -1091,7 +1111,7 @@
 
 .gc-settings-subtitle {
     margin-top: 4px;
-    color: rgba(255, 255, 255, 0.86);
+    color: rgba(255, 255, 255, 0.92);
     font-size: 12px;
 }
 
@@ -1126,8 +1146,39 @@
 }
 
 .gc-profile-bio {
-    color: #314761;
+    color: #18314f;
     font-size: 13px;
+    line-height: 1.65;
+    font-weight: 500;
+}
+
+.gc-profile-bio-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.gc-profile-bio-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    background: rgba(22, 119, 255, 0.1);
+    color: #1677ff;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.gc-profile-bio-block {
+    min-width: 0;
+    flex: 1;
+}
+
+.gc-profile-bio-label {
+    color: #0f2742;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .02em;
 }
 
 .gc-profile-modal {
@@ -1165,6 +1216,17 @@
     display: grid;
     place-items: center;
     flex-shrink: 0;
+}
+
+.gc-settings-link.gc-settings-link-danger {
+    border-color: rgba(255, 93, 111, 0.22);
+    background: rgba(255, 93, 111, 0.06);
+    color: #b42339;
+}
+
+.gc-settings-link.gc-settings-link-danger .material-icons-round {
+    background: rgba(255, 93, 111, 0.12);
+    color: #ff5d6f;
 }
 
 .gc-settings-tile-title,
