@@ -19,6 +19,9 @@ const GC_GLOBAL_RATE_LIMIT_MS = 5000;
 const GC_GLOBAL_MAX_MESSAGES = 100;
 const GC_GLOBAL_MAX_TEXT_LENGTH = 400;
 const GC_GLOBAL_FILTER_WORDS = ['dm me now', 'free nitro', 'discord.gg/', 'telegram.me/', 'sex', 'porn', 'nude', 'xxx', 'kill yourself'];
+const GC_GOOGLE_CLIENT_ID_KEY = 'webos-gc-google-client-id';
+const GC_GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const GC_GOOGLE_GSI_SCRIPT = 'https://accounts.google.com/gsi/client';
 
 let sbClient = null;
 let gcUserId = null;
@@ -48,6 +51,9 @@ let gcAvatarUploadMode = 'user';
 let gcCurrentUserRoomRole = 'member';
 let gcGlobalLastSentAt = 0;
 let gcGlobalLastPruneAt = 0;
+let gcGoogleTokenClient = null;
+let gcGoogleAccessToken = '';
+let gcGoogleTokenExpiresAt = 0;
 const GC_PINNED_ROOMS_KEY = 'webos-gc-pinned-rooms';
 const GC_MAX_AVATAR_BYTES = 500 * 1024;
 const GC_AVATAR_PRIMARY_SIZE = 256;
@@ -2824,6 +2830,297 @@ function gcFormatMessageTime(value) {
     return gcTimeFormatter.format(date);
 }
 
+function gcFormatExportDate(value) {
+    const date = value ? new Date(value) : new Date();
+    if (isNaN(date.getTime())) return 'unknown-date';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function gcBuildExportRoomSlug(room = gcGetRoomById()) {
+    const baseName = gcGetDisplayRoomName(room)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 40);
+    return baseName || 'chat-room';
+}
+
+function gcDownloadBlob(filename, content, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function gcGetGoogleClientId() {
+    return localStorage.getItem(GC_GOOGLE_CLIENT_ID_KEY) || '';
+}
+
+function gcSaveGoogleClientId() {
+    const input = gcWin?.querySelector('#gc-google-client-id');
+    const value = (input?.value || '').trim();
+    if (!value) {
+        gcNotifyError('Enter your Google OAuth Client ID first.');
+        return;
+    }
+    localStorage.setItem(GC_GOOGLE_CLIENT_ID_KEY, value);
+    showNotification('Zashi Messaging', 'Saved Google Drive Client ID.');
+    gcShowSettings();
+}
+
+function gcResetGoogleDriveSession() {
+    gcGoogleTokenClient = null;
+    gcGoogleAccessToken = '';
+    gcGoogleTokenExpiresAt = 0;
+}
+
+function gcLoadRemoteScript(src) {
+    return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+            if (existing.dataset.loaded === 'true') {
+                resolve();
+                return;
+            }
+            existing.addEventListener('load', () => resolve(), { once: true });
+            existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+            script.dataset.loaded = 'true';
+            resolve();
+        };
+        script.onerror = () => reject(new Error(`Failed to load ${src}`));
+        document.head.appendChild(script);
+    });
+}
+
+async function gcEnsureGoogleIdentityReady() {
+    await gcLoadRemoteScript(GC_GOOGLE_GSI_SCRIPT);
+    if (!window.google?.accounts?.oauth2) {
+        throw new Error('Google Identity Services is unavailable.');
+    }
+}
+
+async function gcGetGoogleDriveAccessToken(forcePrompt = false) {
+    const clientId = gcGetGoogleClientId();
+    if (!clientId) {
+        throw new Error('Missing Google OAuth Client ID.');
+    }
+
+    if (!forcePrompt && gcGoogleAccessToken && Date.now() < gcGoogleTokenExpiresAt - 15000) {
+        return gcGoogleAccessToken;
+    }
+
+    await gcEnsureGoogleIdentityReady();
+
+    return new Promise((resolve, reject) => {
+        gcGoogleTokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: GC_GOOGLE_DRIVE_SCOPE,
+            callback: response => {
+                if (response?.error) {
+                    reject(new Error(response.error));
+                    return;
+                }
+                gcGoogleAccessToken = response.access_token || '';
+                gcGoogleTokenExpiresAt = Date.now() + ((response.expires_in || 3600) * 1000);
+                resolve(gcGoogleAccessToken);
+            }
+        });
+
+        gcGoogleTokenClient.requestAccessToken({
+            prompt: forcePrompt || !gcGoogleAccessToken ? 'consent' : ''
+        });
+    });
+}
+
+function gcBuildExportPayload(format = 'txt') {
+    const room = gcGetRoomById();
+    if (format === 'json') {
+        return {
+            filename: gcBuildExportFilename('json'),
+            mimeType: 'application/json',
+            content: gcBuildChatExportJson(),
+            roomName: gcGetDisplayRoomName(room)
+        };
+    }
+    return {
+        filename: gcBuildExportFilename('txt'),
+        mimeType: 'text/plain',
+        content: gcBuildChatExportText(),
+        roomName: gcGetDisplayRoomName(room)
+    };
+}
+
+async function gcUploadBackupToGoogleDrive(format = 'txt') {
+    if (!gcCurrentRoomMessages.length) {
+        gcNotifyError('There are no messages to back up in this conversation.');
+        return;
+    }
+
+    const clientId = gcGetGoogleClientId();
+    if (!clientId) {
+        gcNotifyError('Set your Google OAuth Client ID in Settings before backing up.');
+        return;
+    }
+
+    const payload = gcBuildExportPayload(format);
+
+    try {
+        const accessToken = await gcGetGoogleDriveAccessToken(!gcGoogleAccessToken);
+        const boundary = `zashi-${Date.now().toString(36)}`;
+        const metadata = {
+            name: payload.filename,
+            mimeType: payload.mimeType
+        };
+        const multipartBody = [
+            `--${boundary}`,
+            'Content-Type: application/json; charset=UTF-8',
+            '',
+            JSON.stringify(metadata),
+            `--${boundary}`,
+            `Content-Type: ${payload.mimeType}; charset=UTF-8`,
+            '',
+            payload.content,
+            `--${boundary}--`
+        ].join('\r\n');
+
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': `multipart/related; boundary=${boundary}`
+            },
+            body: multipartBody
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                gcResetGoogleDriveSession();
+            }
+            throw new Error(`drive-upload-${response.status}`);
+        }
+
+        const data = await response.json();
+        showNotification('Zashi Messaging', `Backed up "${payload.roomName}" to Google Drive.`);
+        if (data?.webViewLink) {
+            window.open(data.webViewLink, '_blank', 'noopener,noreferrer');
+        }
+    } catch (error) {
+        gcDebugError('Google Drive backup error:', error);
+        if (`${error?.message || ''}`.includes('Missing Google OAuth Client ID')) {
+            gcNotifyError('Set your Google OAuth Client ID before using Google Drive backup.');
+            return;
+        }
+        if (`${error?.message || ''}`.includes('popup_closed') || `${error?.message || ''}`.includes('access_denied')) {
+            gcNotifyError('Google Drive backup was cancelled.');
+            return;
+        }
+        gcNotifyError('Could not back up to Google Drive.');
+    }
+}
+
+function gcBuildExportFilename(extension = 'txt') {
+    const room = gcGetRoomById();
+    const slug = gcBuildExportRoomSlug(room);
+    const stamp = gcFormatExportDate(new Date());
+    return `zashi-chat-${slug}-${stamp}.${extension}`;
+}
+
+function gcBuildChatExportText() {
+    const room = gcGetRoomById();
+    const lines = [
+        `Zashi Messaging Export`,
+        `Room: ${gcGetDisplayRoomName(room)}`,
+        `Exported: ${new Date().toISOString()}`,
+        `Messages: ${gcCurrentRoomMessages.length}`,
+        ''
+    ];
+
+    gcCurrentRoomMessages.forEach(msg => {
+        const timestamp = msg.created_at ? new Date(msg.created_at).toISOString() : '';
+        const author = msg.sender_name || 'Unknown';
+        const body = msg.text
+            ? String(msg.text)
+            : msg.type === 'image'
+                ? `[Image] ${msg.file_url || ''}`.trim()
+                : msg.type === 'video'
+                    ? `[Video] ${msg.file_url || ''}`.trim()
+                    : gcGetMessageSnapshot(msg);
+        const replyPrefix = msg.reply_to_sender_name
+            ? `\n  Reply to ${msg.reply_to_sender_name}: ${msg.reply_to_text || 'Message'}`
+            : '';
+        lines.push(`[${timestamp}] ${author}: ${body}${replyPrefix}`);
+    });
+
+    return lines.join('\n');
+}
+
+function gcBuildChatExportJson() {
+    const room = gcGetRoomById();
+    return JSON.stringify({
+        app: 'Zashi Messaging',
+        exportedAt: new Date().toISOString(),
+        room: room ? {
+            id: room.id,
+            name: gcGetDisplayRoomName(room),
+            type: room.type || 'group'
+        } : {
+            id: gcCurrentRoom,
+            name: gcGetDisplayRoomName(null),
+            type: gcIsGlobalRoom() ? 'global' : 'group'
+        },
+        messages: gcCurrentRoomMessages.map(msg => ({
+            id: msg.id || null,
+            room_id: msg.room_id || gcCurrentRoom,
+            type: msg.type || 'text',
+            text: msg.text || null,
+            file_url: msg.file_url || null,
+            sender_id: msg.sender_id || null,
+            sender_name: msg.sender_name || 'Unknown',
+            sender_color: msg.sender_color || null,
+            sender_avatar_url: msg.sender_avatar_url || null,
+            reply_to_message_id: msg.reply_to_message_id || null,
+            reply_to_user_id: msg.reply_to_user_id || null,
+            reply_to_sender_name: msg.reply_to_sender_name || null,
+            reply_to_text: msg.reply_to_text || null,
+            created_at: msg.created_at || null
+        }))
+    }, null, 2);
+}
+
+function gcExportCurrentChat(format = 'txt') {
+    if (!gcCurrentRoomMessages.length) {
+        gcNotifyError('There are no messages to export in this conversation.');
+        return;
+    }
+
+    if (format === 'json') {
+        gcDownloadBlob(gcBuildExportFilename('json'), gcBuildChatExportJson(), 'application/json;charset=utf-8');
+        showNotification('Zashi Messaging', 'Exported chat as JSON.');
+        return;
+    }
+
+    gcDownloadBlob(gcBuildExportFilename('txt'), gcBuildChatExportText(), 'text/plain;charset=utf-8');
+    showNotification('Zashi Messaging', 'Exported chat as TXT.');
+}
+
 function gcOpenExternalMedia(url) {
     if (!url) return;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -2971,6 +3268,39 @@ function gcShowSettings() {
                     <button class="gc-settings-link" type="button" onclick="gcShowLegalModal('privacy')">
                         <span class="material-icons-round">shield</span>
                         Privacy Policy
+                    </button>
+                </div>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Export Chat</div>
+                <div class="gc-settings-card-note">Download the current conversation to your device. TXT is lighter, JSON keeps more metadata.</div>
+                <div class="gc-settings-actions">
+                    <button class="gc-settings-link" type="button" onclick="gcExportCurrentChat('txt')">
+                        <span class="material-icons-round">description</span>
+                        Export as TXT
+                    </button>
+                    <button class="gc-settings-link" type="button" onclick="gcExportCurrentChat('json')">
+                        <span class="material-icons-round">data_object</span>
+                        Export as JSON
+                    </button>
+                </div>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Google Drive Backup</div>
+                <div class="gc-settings-card-note">Use your own Google Drive for chat backups. OAuth stays in the browser session and is not sent to Supabase.</div>
+                <input id="gc-google-client-id" class="gc-setup-input" type="text" placeholder="Paste your Google OAuth Client ID..." value="${gcEscape(gcGetGoogleClientId())}">
+                <div class="gc-settings-actions">
+                    <button class="gc-settings-link" type="button" onclick="gcSaveGoogleClientId()">
+                        <span class="material-icons-round">key</span>
+                        Save Google Client ID
+                    </button>
+                    <button class="gc-settings-link" type="button" onclick="gcUploadBackupToGoogleDrive('txt')">
+                        <span class="material-icons-round">cloud_upload</span>
+                        Backup TXT to Google Drive
+                    </button>
+                    <button class="gc-settings-link" type="button" onclick="gcUploadBackupToGoogleDrive('json')">
+                        <span class="material-icons-round">backup</span>
+                        Backup JSON to Google Drive
                     </button>
                 </div>
             </div>
