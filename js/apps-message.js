@@ -17,8 +17,14 @@ const GC_GLOBAL_ROOM_ID = 'global';
 const GC_GLOBAL_ROOM_LABEL = 'Global Chat (Public room)';
 const GC_GLOBAL_RATE_LIMIT_MS = 5000;
 const GC_GLOBAL_MAX_MESSAGES = 100;
-const GC_GLOBAL_MAX_TEXT_LENGTH = 400;
+const GC_GLOBAL_MAX_TEXT_LENGTH = 500;
 const GC_GLOBAL_FILTER_WORDS = ['dm me now', 'free nitro', 'discord.gg/', 'telegram.me/', 'sex', 'porn', 'nude', 'xxx', 'kill yourself'];
+const GC_USERNAME_MIN_LENGTH = 3;
+const GC_USERNAME_MAX_LENGTH = 32;
+const GC_ROOM_NAME_MIN_LENGTH = 3;
+const GC_ROOM_NAME_MAX_LENGTH = 32;
+const GC_BIO_MAX_LENGTH = 160;
+const GC_SAFE_NAME_REGEX = /^[A-Za-z0-9_ ]{3,32}$/;
 const GC_GOOGLE_CLIENT_ID_KEY = 'webos-gc-google-client-id';
 const GC_GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const GC_GOOGLE_GSI_SCRIPT = 'https://accounts.google.com/gsi/client';
@@ -84,6 +90,47 @@ function gcGetGlobalRoomPreview() {
 function gcHasBlockedGlobalContent(text) {
     const lowered = String(text || '').toLowerCase();
     return GC_GLOBAL_FILTER_WORDS.find(word => lowered.includes(word)) || '';
+}
+
+function gcStripUnsafeText(value) {
+    return String(value || '')
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+        .replace(/[\u200B-\u200D\u2060\uFEFF\u180E]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function gcNormalizeUsernameInput(value) {
+    return gcStripUnsafeText(value).toLowerCase();
+}
+
+function gcNormalizeRoomNameInput(value) {
+    return gcStripUnsafeText(value);
+}
+
+function gcValidateSafeName(value, kind = 'Username') {
+    const label = kind === 'Room' ? 'Group name' : 'Username';
+    const minLength = kind === 'Room' ? GC_ROOM_NAME_MIN_LENGTH : GC_USERNAME_MIN_LENGTH;
+    const maxLength = kind === 'Room' ? GC_ROOM_NAME_MAX_LENGTH : GC_USERNAME_MAX_LENGTH;
+    const normalized = kind === 'Room' ? gcNormalizeRoomNameInput(value) : gcNormalizeUsernameInput(value);
+
+    if (!normalized) {
+        return { normalized: '', error: `${label} cannot be empty.` };
+    }
+    if (normalized.length < minLength) {
+        return { normalized, error: `${label} must be at least ${minLength} characters.` };
+    }
+    if (normalized.length > maxLength) {
+        return { normalized, error: `${label} must be at most ${maxLength} characters.` };
+    }
+    if (!GC_SAFE_NAME_REGEX.test(normalized)) {
+        return { normalized, error: `${label} can only use letters, numbers, spaces, and underscores.` };
+    }
+    return { normalized, error: '' };
+}
+
+function gcNormalizeBioInput(value) {
+    return gcStripUnsafeText(value).slice(0, GC_BIO_MAX_LENGTH);
 }
 
 function gcGetGlobalSlowmodeError(roomId = gcCurrentRoom) {
@@ -310,11 +357,17 @@ async function gcLogin() {
 
     const userInp = gcWin.querySelector('#gc-login-user');
     const passInp = gcWin.querySelector('#gc-login-pass');
-    const username = userInp?.value.trim().toLowerCase();
+    const validation = gcValidateSafeName(userInp?.value || '', 'Username');
+    const username = validation.normalized;
     const usernameKey = gcBuildNameKey(username);
     const password = passInp?.value.trim();
 
     if (!username || !password || !usernameKey) return;
+    if (validation.error) {
+        gcNotifyError(validation.error);
+        userInp?.focus();
+        return;
+    }
 
     try {
         const { data, error } = await sbClient
@@ -353,14 +406,20 @@ async function gcRegister() {
     const passInp = gcWin.querySelector('#gc-reg-pass');
     const confirmInp = gcWin.querySelector('#gc-reg-confirm');
 
-    const username = userInp?.value.trim().toLowerCase();
+    const validation = gcValidateSafeName(userInp?.value || '', 'Username');
+    const username = validation.normalized;
     const usernameKey = gcBuildNameKey(username);
     const password = passInp?.value.trim();
     const confirmation = confirmInp?.value.trim();
 
     if (!username || !password || !usernameKey) return;
-    if (usernameKey.length < 3 || password.length < 6) {
-        gcNotifyError('Username must be at least 3 characters and password at least 6 characters.');
+    if (validation.error) {
+        gcNotifyError(validation.error);
+        userInp?.focus();
+        return;
+    }
+    if (password.length < 6) {
+        gcNotifyError('Password must be at least 6 characters.');
         return;
     }
     if (password !== confirmation) {
@@ -2142,7 +2201,7 @@ async function gcSaveProfileBio() {
     const textarea = gcWin.querySelector('.gc-settings-bio-input');
     if (!textarea) return;
 
-    const bio = textarea.value.trim().slice(0, 160);
+    const bio = gcNormalizeBioInput(textarea.value || '');
     const { error } = await sbClient
         .from(GC_TABLES.users)
         .update({ bio })
@@ -2452,6 +2511,15 @@ function gcApplyEnglishCopy(win) {
     const searchInput = win.querySelector('.gc-sidebar-search input');
     if (searchInput) searchInput.placeholder = 'Search conversations';
 
+    const loginUser = win.querySelector('#gc-login-user');
+    if (loginUser) loginUser.maxLength = GC_USERNAME_MAX_LENGTH;
+
+    const registerUser = win.querySelector('#gc-reg-user');
+    if (registerUser) registerUser.maxLength = GC_USERNAME_MAX_LENGTH;
+
+    const groupName = win.querySelector('#gc-group-name');
+    if (groupName) groupName.maxLength = GC_ROOM_NAME_MAX_LENGTH;
+
     const searchBtn = win.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(2)');
     if (searchBtn) searchBtn.title = 'Search in chat';
 
@@ -2548,7 +2616,7 @@ function gcShowSetup(win) {
 function gcBuildDefaultModalHtml() {
     return `
         <h3>Create New Group</h3>
-        <input type="text" id="gc-group-name" class="gc-setup-input" placeholder="Group name...">
+        <input type="text" id="gc-group-name" class="gc-setup-input" maxlength="${GC_ROOM_NAME_MAX_LENGTH}" placeholder="Group name...">
         <div class="gc-modal-actions">
             <button class="gc-btn-cancel" onclick="gcHideModal()">Cancel</button>
             <button class="gc-btn-primary" onclick="gcCreateGroup()">Create</button>
@@ -3364,8 +3432,8 @@ async function gcCreateGroup() {
 
     const input = gcWin.querySelector('#gc-group-name');
     const createBtn = gcWin.querySelector('.gc-btn-primary');
-    const rawName = input?.value || '';
-    const name = rawName.trim().replace(/\s+/g, ' ');
+    const validation = gcValidateSafeName(input?.value || '', 'Room');
+    const name = validation.normalized;
     const nameKey = gcBuildNameKey(name);
 
     if (!name || !nameKey) {
@@ -3374,8 +3442,8 @@ async function gcCreateGroup() {
         return;
     }
 
-    if (nameKey.length < 3) {
-        gcNotifyError('Group name must be at least 3 characters.');
+    if (validation.error) {
+        gcNotifyError(validation.error);
         input?.focus();
         return;
     }
