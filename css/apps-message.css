@@ -1557,6 +1557,27 @@
     line-height: 1.45;
 }
 
+.gc-admin-report-snapshot.is-flagged {
+    border-color: rgba(255, 93, 111, 0.28);
+    background: rgba(255, 244, 246, 0.95);
+}
+
+.gc-admin-report-preview {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.gc-admin-report-preview-image {
+    width: min(220px, 100%);
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 1px solid #dce8f8;
+    background: #eef4ff;
+}
+
 .gc-admin-report-details {
     margin-top: 8px;
     color: #5f748f;
@@ -1569,6 +1590,43 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.gc-system-notice {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gc-system-notice-badge {
+    align-self: flex-start;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.gc-system-notice-info .gc-system-notice-badge,
+.gc-system-notice-update .gc-system-notice-badge {
+    background: rgba(33, 150, 243, 0.14);
+    color: #0f4b92;
+}
+
+.gc-system-notice-warning .gc-system-notice-badge {
+    background: rgba(255, 179, 0, 0.18);
+    color: #8a4d00;
+}
+
+.gc-system-notice-mute .gc-system-notice-badge {
+    background: rgba(255, 117, 24, 0.18);
+    color: #a14405;
+}
+
+.gc-system-notice-ban .gc-system-notice-badge {
+    background: rgba(255, 93, 111, 0.18);
+    color: #a21633;
 }
 
 .gc-settings-tile-title,

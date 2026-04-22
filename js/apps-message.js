@@ -23,6 +23,7 @@ const GC_GLOBAL_RATE_LIMIT_MS = 5000;
 const GC_GLOBAL_MAX_MESSAGES = 100;
 const GC_GLOBAL_MAX_TEXT_LENGTH = 500;
 const GC_GLOBAL_FILTER_WORDS = ['dm me now', 'free nitro', 'discord.gg/', 'telegram.me/', 'sex', 'porn', 'nude', 'xxx', 'kill yourself'];
+const GC_REPORT_RATE_LIMIT_MS = 30000;
 const GC_USERNAME_MIN_LENGTH = 3;
 const GC_USERNAME_MAX_LENGTH = 32;
 const GC_ROOM_NAME_MIN_LENGTH = 3;
@@ -42,6 +43,8 @@ let gcUserCoverUrl = '';
 let gcUserBio = '';
 let gcUserIsAdmin = false;
 let gcUserMutedUntil = '';
+let gcUserWarningsCount = 0;
+let gcUserGlobalChatBanned = false;
 let gcCurrentRoom = 'global';
 let gcWin = null;
 let gcSubscription = null;
@@ -118,6 +121,10 @@ function gcGetMuteRemainingText() {
     if (minutes < 60) return `${minutes} minute(s)`;
     const hours = Math.ceil(minutes / 60);
     return `${hours} hour(s)`;
+}
+
+function gcIsGlobalChatBanned() {
+    return !!gcUserGlobalChatBanned;
 }
 
 function gcIsAdminOnlyRoom(room) {
@@ -337,6 +344,8 @@ function initMessage(win) {
     const userBio = localStorage.getItem('webos-gc-bio') || '';
     const userIsAdmin = localStorage.getItem(GC_IS_ADMIN_KEY) === 'true';
     const userMutedUntil = localStorage.getItem('webos-gc-muted-until') || '';
+    const userWarningsCount = Number(localStorage.getItem('webos-gc-warnings-count') || 0);
+    const userGlobalChatBanned = localStorage.getItem('webos-gc-global-chat-banned') === 'true';
 
     if (!userName || !userId) {
         gcShowSetup(win);
@@ -351,6 +360,8 @@ function initMessage(win) {
     gcUserBio = userBio;
     gcUserIsAdmin = userIsAdmin;
     gcUserMutedUntil = userMutedUntil;
+    gcUserWarningsCount = Number.isFinite(userWarningsCount) ? userWarningsCount : 0;
+    gcUserGlobalChatBanned = userGlobalChatBanned;
     gcHideSetup(win);
     gcStartApp(win);
 }
@@ -488,7 +499,7 @@ async function gcLogin() {
             return;
         }
 
-        gcSetUserSession(data.username, data.id, data.color, data.avatar_url, data.cover_url, data.bio, data.is_admin, data.muted_until);
+        gcSetUserSession(data.username, data.id, data.color, data.avatar_url, data.cover_url, data.bio, data.is_admin, data.muted_until, data.warnings_count, data.global_chat_banned);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -580,7 +591,7 @@ async function gcRegister() {
         }
 
         await gcCreateWelcomeNoticeForUser(newUser.id, newUser.username);
-        gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url, newUser.cover_url, newUser.bio, newUser.is_admin, newUser.muted_until);
+        gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url, newUser.cover_url, newUser.bio, newUser.is_admin, newUser.muted_until, newUser.warnings_count, newUser.global_chat_banned);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -595,7 +606,8 @@ async function gcCreateWelcomeNoticeForUser(userId, username = '') {
     const payload = {
         user_id: userId,
         title: 'Welcome to Zashi Messaging',
-        body: `Welcome ${safeName}! Your account is ready. Open System Inbox anytime to see personal notices.`
+        body: `Welcome ${safeName}! Your account is ready. Open System Inbox anytime to see personal notices.`,
+        type: 'info'
     };
 
     try {
@@ -608,13 +620,14 @@ async function gcCreateWelcomeNoticeForUser(userId, username = '') {
     }
 }
 
-async function gcCreateSystemNotice(userId, title, body) {
+async function gcCreateSystemNotice(userId, title, body, type = 'info') {
     if (!sbClient || !userId) return false;
 
     const payload = {
         user_id: userId,
         title: gcStripUnsafeText(title || 'System Notice').slice(0, 120),
-        body: gcStripUnsafeText(body || '').slice(0, 500)
+        body: gcStripUnsafeText(body || '').slice(0, 500),
+        type: ['info', 'warning', 'mute', 'ban', 'update'].includes(type) ? type : 'info'
     };
 
     try {
@@ -632,7 +645,7 @@ async function gcCreateSystemNotice(userId, title, body) {
     }
 }
 
-function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = '', isAdmin = false, mutedUntil = '') {
+function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = '', isAdmin = false, mutedUntil = '', warningsCount = 0, globalChatBanned = false) {
     gcUserName = name;
     gcUserId = id;
     gcUserColor = color;
@@ -641,6 +654,8 @@ function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = 
     gcUserBio = bio || '';
     gcUserIsAdmin = !!isAdmin;
     gcUserMutedUntil = mutedUntil || '';
+    gcUserWarningsCount = Number(warningsCount) || 0;
+    gcUserGlobalChatBanned = !!globalChatBanned;
     localStorage.setItem('webos-gc-username', name);
     localStorage.setItem('webos-gc-userid', id);
     localStorage.setItem('webos-gc-color', color);
@@ -649,6 +664,8 @@ function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = 
     localStorage.setItem('webos-gc-bio', gcUserBio);
     localStorage.setItem(GC_IS_ADMIN_KEY, String(gcUserIsAdmin));
     localStorage.setItem('webos-gc-muted-until', gcUserMutedUntil);
+    localStorage.setItem('webos-gc-warnings-count', String(gcUserWarningsCount));
+    localStorage.setItem('webos-gc-global-chat-banned', String(gcUserGlobalChatBanned));
     gcCacheUserProfile({
         id,
         username: name,
@@ -657,7 +674,9 @@ function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = 
         cover_url: gcUserCoverUrl,
         bio: gcUserBio,
         is_admin: gcUserIsAdmin,
-        muted_until: gcUserMutedUntil
+        muted_until: gcUserMutedUntil,
+        warnings_count: gcUserWarningsCount,
+        global_chat_banned: gcUserGlobalChatBanned
     });
 }
 
@@ -729,7 +748,9 @@ function gcGetCachedUserProfile(userId, userName = '') {
             cover_url: gcUserCoverUrl,
             bio: gcUserBio,
             is_admin: gcUserIsAdmin,
-            muted_until: gcUserMutedUntil
+            muted_until: gcUserMutedUntil,
+            warnings_count: gcUserWarningsCount,
+            global_chat_banned: gcUserGlobalChatBanned
         };
     }
 
@@ -921,7 +942,7 @@ async function gcRefreshCurrentUserSession() {
     try {
         const { data, error } = await sbClient
             .from(GC_TABLES.users)
-            .select('id, username, color, avatar_url, cover_url, bio, is_admin, muted_until')
+            .select('id, username, color, avatar_url, cover_url, bio, is_admin, muted_until, warnings_count, global_chat_banned')
             .eq('id', gcUserId)
             .maybeSingle();
 
@@ -934,7 +955,9 @@ async function gcRefreshCurrentUserSession() {
             data.cover_url,
             data.bio,
             data.is_admin,
-            data.muted_until
+            data.muted_until,
+            data.warnings_count,
+            data.global_chat_banned
         );
     } catch (error) {
         gcDebugError('Refresh current user session error:', error);
@@ -1093,12 +1116,14 @@ function gcApplyRoomInteractionState(roomId = gcCurrentRoom) {
     const toolButtons = gcWin?.querySelectorAll('.gc-composer-tools .gc-tool-btn, .gc-input-box .gc-header-btn');
     if (!inputArea || !textarea || !sendBtn || !fileInput) return;
 
-    const isReadOnly = gcIsSystemRoom(roomId);
+    const isReadOnly = gcIsSystemRoom(roomId) || (gcIsGlobalRoom(roomId) && gcIsGlobalChatBanned());
     inputArea.classList.toggle('gc-readonly-room', isReadOnly);
     textarea.disabled = isReadOnly;
     sendBtn.disabled = isReadOnly;
     fileInput.disabled = isReadOnly;
-    textarea.placeholder = isReadOnly ? 'System inbox is read-only.' : 'Type a message...';
+    textarea.placeholder = gcIsSystemRoom(roomId)
+        ? 'System inbox is read-only.'
+        : (gcIsGlobalRoom(roomId) && gcIsGlobalChatBanned() ? 'You are banned from Global Chat.' : 'Type a message...');
 
     if (toolButtons?.length) {
         toolButtons.forEach(btn => {
@@ -1120,7 +1145,10 @@ function gcBuildSystemNoticeMessage(notice) {
         type: 'text',
         text: body ? `${title}\n${body}` : title,
         created_at: notice?.created_at || new Date().toISOString(),
-        system_notice: true
+        system_notice: true,
+        notice_type: notice?.type || 'info',
+        source_message_id: notice?.source_message_id || null,
+        source_room_id: notice?.source_room_id || null
     };
 }
 
@@ -1131,7 +1159,7 @@ async function gcLoadSystemNotices(roomId = GC_SYSTEM_ROOM_ID) {
 
     const { data, error } = await sbClient
         .from(GC_TABLES.userNotices)
-        .select('id,title,body,created_at')
+        .select('id,title,body,type,created_at')
         .eq('user_id', gcUserId)
         .order('created_at', { ascending: true })
         .limit(100);
@@ -1146,7 +1174,8 @@ async function gcLoadSystemNotices(roomId = GC_SYSTEM_ROOM_ID) {
     if (notices.length === 0) {
         const emptyMsg = gcBuildSystemNoticeMessage({
             title: 'No notifications yet',
-            body: 'When the system sends updates for your account, they will appear here.'
+            body: 'When the system sends updates for your account, they will appear here.',
+            type: 'info'
         });
         gcCurrentRoomMessages = [emptyMsg];
         gcAppendMessage(msgContainer, emptyMsg);
@@ -1442,6 +1471,13 @@ function gcScrollToMessage(messageId) {
     window.setTimeout(() => target.classList.remove('gc-msg-flash'), 1800);
 }
 
+async function gcOpenReportedMessage(roomId, messageId) {
+    if (!roomId || !messageId) return;
+    gcHideModal();
+    await gcSwitchRoom(roomId);
+    window.setTimeout(() => gcScrollToMessage(messageId), 220);
+}
+
 function gcBuildMessageReplyHtml(msg) {
     if (!msg?.reply_to_message_id) return '';
     const replyName = gcEscape(msg.reply_to_sender_name || 'Unknown');
@@ -1474,6 +1510,15 @@ function gcBuildMessageBodyHtml(msg, options = {}) {
         contentHtml = `<video src="${gcEscape(msg.file_url || '')}" controls class="gc-msg-media"></video>`;
     } else {
         contentHtml = gcRenderMessageTextContent(msg.text || '');
+    }
+    if (msg.system_notice) {
+        const noticeType = ['info', 'warning', 'mute', 'ban', 'update'].includes(msg.notice_type) ? msg.notice_type : 'info';
+        contentHtml = `
+            <div class="gc-system-notice gc-system-notice-${noticeType}">
+                <div class="gc-system-notice-badge">${gcEscape(noticeType)}</div>
+                ${contentHtml}
+            </div>
+        `;
     }
 
     const progressHtml = options.progress === true ? `
@@ -1703,6 +1748,10 @@ async function gcSendMessage() {
         gcNotifyError('System inbox is read-only. You can only view notifications.');
         return;
     }
+    if (gcIsGlobalRoom() && gcIsGlobalChatBanned()) {
+        gcNotifyError('You are banned from Global Chat.');
+        return;
+    }
     if (gcIsUserMuted()) {
         gcNotifyError(`You are muted and cannot send messages for ${gcGetMuteRemainingText()}.`);
         return;
@@ -1807,6 +1856,10 @@ async function gcSendAttachment(attachment, extraText = '') {
     if (!sbClient || !gcWin || !attachment?.file) return;
     if (gcIsSystemRoom()) {
         gcNotifyError('System inbox is read-only. You can only view notifications.');
+        return;
+    }
+    if (gcIsGlobalRoom() && gcIsGlobalChatBanned()) {
+        gcNotifyError('You are banned from Global Chat.');
         return;
     }
     if (gcIsUserMuted()) {
@@ -3166,6 +3219,7 @@ async function gcRenderAdminReportsList() {
 
     const userMap = new Map();
     const roomMap = new Map();
+    const messageMap = new Map();
     try {
         const userIds = [...userIdSet];
         if (userIds.length) {
@@ -3183,6 +3237,14 @@ async function gcRenderAdminReportsList() {
                 .in('id', roomIds);
             (rooms || []).forEach(room => roomMap.set(room.id, gcGetDisplayRoomName(room)));
         }
+        const messageIds = reports.map(item => item.message_id).filter(Boolean);
+        if (messageIds.length) {
+            const { data: messages } = await sbClient
+                .from(GC_TABLES.messages)
+                .select('id,text,file_url,type,sender_name')
+                .in('id', messageIds);
+            (messages || []).forEach(message => messageMap.set(message.id, message));
+        }
     } catch (resolveError) {
         gcDebugError('Resolve report metadata error:', resolveError);
     }
@@ -3193,8 +3255,12 @@ async function gcRenderAdminReportsList() {
         const reportedName = userMap.get(item.reported_user_id) || 'Unknown';
         const roomName = roomMap.get(item.room_id) || (item.room_id || 'Unknown');
         const details = gcEscape(item.details || '');
-        const snapshot = gcEscape(item.message_snapshot || 'No snapshot');
         const createdText = gcFormatMessageTime(item.created_at);
+        const liveMessage = item.message_id ? messageMap.get(item.message_id) : null;
+        const previewText = gcEscape(String(liveMessage?.text || item.message_snapshot || 'No snapshot').trim() || 'No snapshot');
+        const previewImage = liveMessage?.type === 'image' && liveMessage?.file_url
+            ? `<img class="gc-admin-report-preview-image" src="${gcEscape(liveMessage.file_url)}" alt="Reported image preview">`
+            : '';
 
         return `
             <div class="gc-admin-report-item">
@@ -3208,11 +3274,16 @@ async function gcRenderAdminReportsList() {
                     <span>Room: <strong>${gcEscape(roomName)}</strong></span>
                     <span>Time: <strong>${gcEscape(createdText)}</strong></span>
                 </div>
-                <div class="gc-admin-report-snapshot">${snapshot}</div>
+                <div class="gc-admin-report-preview">
+                    ${previewImage}
+                    <div class="gc-admin-report-snapshot is-flagged">${previewText}</div>
+                </div>
                 ${details ? `<div class="gc-admin-report-details">${details}</div>` : ''}
                 <div class="gc-admin-report-actions">
-                    ${item.message_id ? `<button class="gc-member-action danger" type="button" onclick="gcDeleteReportedMessage('${gcEscape(item.id)}')">Delete violating message</button>` : ''}
+                    ${item.message_id && item.room_id ? `<button class="gc-member-action" type="button" onclick="gcOpenReportedMessage('${gcEscape(item.room_id)}','${gcEscape(item.message_id)}')">Jump to message</button>` : ''}
+                    ${item.message_id ? `<button class="gc-member-action danger" type="button" onclick="gcDeleteReportedMessage('${gcEscape(item.id)}')">Delete message</button>` : ''}
                     <button class="gc-member-action" type="button" onclick="gcWarnReportedUser('${gcEscape(item.id)}')">Warn only</button>
+                    ${item.message_id ? `<button class="gc-member-action danger" type="button" onclick="gcDeleteReportedMessageAndWarn('${gcEscape(item.id)}')">Delete + warn</button>` : ''}
                     ${item.message_id ? `<button class="gc-member-action danger" type="button" onclick="gcDeleteReportedMessageAndMute('${gcEscape(item.id)}')">Delete + mute 24h</button>` : ''}
                     <button class="gc-member-action" type="button" onclick="gcUpdateReportStatus('${gcEscape(item.id)}','reviewed')">Mark reviewed</button>
                     <button class="gc-member-action danger" type="button" onclick="gcUpdateReportStatus('${gcEscape(item.id)}','closed')">Close</button>
@@ -3245,13 +3316,67 @@ async function gcUpdateReportStatus(reportId, nextStatus) {
     await gcRenderAdminReportsList();
 }
 
+async function gcApplyModerationWarning(userId, reason = 'policy violation') {
+    if (!sbClient || !userId) return null;
+
+    const { data: user, error: userError } = await sbClient
+        .from(GC_TABLES.users)
+        .select('id,warnings_count,global_chat_banned')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (userError || !user) {
+        gcNotifyError('Could not update moderation warnings.');
+        return null;
+    }
+
+    const nextWarnings = Math.max(0, Number(user.warnings_count) || 0) + 1;
+    const shouldGlobalBan = nextWarnings >= 5;
+    const { error: updateError } = await sbClient
+        .from(GC_TABLES.users)
+        .update({
+            warnings_count: nextWarnings,
+            global_chat_banned: shouldGlobalBan ? true : !!user.global_chat_banned
+        })
+        .eq('id', userId);
+
+    if (updateError) {
+        gcNotifyError(gcFormatSupabaseError(updateError, GC_TABLES.users));
+        return null;
+    }
+
+    if (nextWarnings >= 3) {
+        await gcMuteUserFor24Hours(userId, reason);
+    }
+
+    if (shouldGlobalBan) {
+        await gcCreateSystemNotice(
+            userId,
+            'Global chat ban',
+            `You have been banned from Global Chat because your account reached ${nextWarnings} warnings.`,
+            'ban'
+        );
+    }
+
+    if (userId === gcUserId) {
+        await gcRefreshCurrentUserSession();
+        gcApplyRoomInteractionState(gcCurrentRoom);
+    }
+
+    return {
+        warningsCount: nextWarnings,
+        globalChatBanned: shouldGlobalBan || !!user.global_chat_banned
+    };
+}
+
 async function gcDeleteReportedMessageCore(reportId, options = {}) {
     if (!sbClient || !gcUserIsAdmin || !reportId) return false;
 
     const {
         skipConfirm = false,
-        confirmationText = 'Delete the reported message and send a warning notice to this user?',
-        successText = 'Reported message deleted and warning sent.'
+        confirmationText = 'Delete the reported message?',
+        successText = 'Reported message deleted.',
+        sendWarning = false
     } = options;
 
     if (!skipConfirm) {
@@ -3311,12 +3436,14 @@ async function gcDeleteReportedMessageCore(reportId, options = {}) {
     }
 
     const warnedUserId = report.reported_user_id || message.sender_id || null;
-    if (warnedUserId) {
+    if (sendWarning && warnedUserId) {
         await gcCreateSystemNotice(
             warnedUserId,
             'Content warning',
-            `One of your messages was removed by an admin for "${report.reason || 'policy violation'}". Please review the chat rules before posting again.`
+            `One of your messages was removed by an admin for "${report.reason || 'policy violation'}". Please review the chat rules before posting again.`,
+            'warning'
         );
+        await gcApplyModerationWarning(warnedUserId, report.reason || 'policy violation');
     }
 
     const { error: updateError } = await sbClient
@@ -3357,9 +3484,19 @@ async function gcWarnReportedUser(reportId) {
     await gcCreateSystemNotice(
         report.reported_user_id,
         'Account warning',
-        `Your content was reported for "${report.reason || 'policy violation'}". Please follow the community rules to avoid stronger action.`
+        `Your content was reported for "${report.reason || 'policy violation'}". Please follow the community rules to avoid stronger action.`,
+        'warning'
     );
+    await gcApplyModerationWarning(report.reported_user_id, report.reason || 'policy violation');
     await gcUpdateReportStatus(reportId, 'reviewed');
+}
+
+async function gcDeleteReportedMessageAndWarn(reportId) {
+    await gcDeleteReportedMessageCore(reportId, {
+        confirmationText: 'Delete the reported message and issue a warning to this user?',
+        successText: 'Reported message deleted and warning sent.',
+        sendWarning: true
+    });
 }
 
 async function gcMuteUserFor24Hours(userId, reason = 'policy violation') {
@@ -3379,7 +3516,8 @@ async function gcMuteUserFor24Hours(userId, reason = 'policy violation') {
     await gcCreateSystemNotice(
         userId,
         'Temporary mute',
-        `You have been muted for 24 hours for "${reason}". During this time you cannot send messages or uploads.`
+        `You have been muted for 24 hours for "${reason}". During this time you cannot send messages or uploads.`,
+        'mute'
     );
     return true;
 }
@@ -3403,7 +3541,8 @@ async function gcDeleteReportedMessageAndMute(reportId) {
 
     const deleted = await gcDeleteReportedMessageCore(reportId, {
         skipConfirm: true,
-        successText: 'Reported message deleted.'
+        successText: 'Reported message deleted.',
+        sendWarning: true
     });
     if (deleted && report.reported_user_id) {
         const muted = await gcMuteUserFor24Hours(report.reported_user_id, report.reason || 'policy violation');
@@ -3412,6 +3551,59 @@ async function gcDeleteReportedMessageAndMute(reportId) {
         }
     }
     await gcRenderAdminReportsList();
+}
+
+async function gcCheckReportRateLimit(messageId) {
+    if (!sbClient || !gcUserId) return { blocked: false, duplicate: false };
+
+    const { data: duplicate } = await sbClient
+        .from(GC_TABLES.reports)
+        .select('id')
+        .eq('reporter_user_id', gcUserId)
+        .eq('message_id', messageId)
+        .limit(1);
+
+    const { data: recentReports } = await sbClient
+        .from(GC_TABLES.reports)
+        .select('id,created_at')
+        .eq('reporter_user_id', gcUserId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+    const lastCreatedAt = recentReports?.[0]?.created_at ? new Date(recentReports[0].created_at).getTime() : 0;
+    const blocked = !!lastCreatedAt && (Date.now() - lastCreatedAt < GC_REPORT_RATE_LIMIT_MS);
+    return {
+        blocked,
+        duplicate: !!duplicate?.length
+    };
+}
+
+async function gcHandleAutoReportEscalation(reportedUserId, reason = 'policy violation') {
+    if (!sbClient || !reportedUserId) return;
+
+    const { count, error } = await sbClient
+        .from(GC_TABLES.reports)
+        .select('id', { count: 'exact', head: true })
+        .eq('reported_user_id', reportedUserId);
+
+    if (error || !count) return;
+
+    if (count === 3) {
+        await gcCreateSystemNotice(
+            reportedUserId,
+            'Automatic warning',
+            `Your account reached 3 reports for "${reason}". Please fix your behavior to avoid stronger action.`,
+            'warning'
+        );
+        await gcApplyModerationWarning(reportedUserId, reason);
+    }
+
+    if (count === 5) {
+        const muted = await gcMuteUserFor24Hours(reportedUserId, `automatic report threshold for "${reason}"`);
+        if (muted) {
+            showNotification('Zashi Messaging', 'Auto moderation muted a user after 5 reports.');
+        }
+    }
 }
 
 async function gcSubmitReport(messageId) {
@@ -3428,6 +3620,16 @@ async function gcSubmitReport(messageId) {
     const details = (detailsInput?.value || '').trim().slice(0, 300);
     if (!reason) {
         gcNotifyError('Choose a reason for the report.');
+        return;
+    }
+
+    const reportGuard = await gcCheckReportRateLimit(messageId);
+    if (reportGuard.duplicate) {
+        gcNotifyError('You already reported this message.');
+        return;
+    }
+    if (reportGuard.blocked) {
+        gcNotifyError(`Please wait ${Math.ceil(GC_REPORT_RATE_LIMIT_MS / 1000)}s before sending another report.`);
         return;
     }
 
@@ -3449,6 +3651,10 @@ async function gcSubmitReport(messageId) {
         gcDebugError('Submit report error:', error);
         gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.reports));
         return;
+    }
+
+    if (payload.reported_user_id) {
+        await gcHandleAutoReportEscalation(payload.reported_user_id, reason);
     }
 
     gcHideModal();
@@ -4097,6 +4303,8 @@ function gcLogout() {
     localStorage.removeItem('webos-gc-bio');
     localStorage.removeItem(GC_IS_ADMIN_KEY);
     localStorage.removeItem('webos-gc-muted-until');
+    localStorage.removeItem('webos-gc-warnings-count');
+    localStorage.removeItem('webos-gc-global-chat-banned');
     location.reload();
 }
 
