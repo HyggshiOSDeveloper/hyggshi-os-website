@@ -15,6 +15,7 @@ const GC_STORAGE_BUCKET = 'chat-files';
 const GC_COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#fd79a8', '#e84393', '#00cec9', '#ff7675', '#74b9ff', '#55efc4', '#ffeaa7', '#fab1a0'];
 const GC_GLOBAL_ROOM_ID = 'global';
 const GC_GLOBAL_ROOM_LABEL = 'Global Chat (Public room)';
+const GC_ADMIN_TEST_ROOM_ID = 'admin-test-room';
 const GC_GLOBAL_RATE_LIMIT_MS = 5000;
 const GC_GLOBAL_MAX_MESSAGES = 100;
 const GC_GLOBAL_MAX_TEXT_LENGTH = 500;
@@ -36,6 +37,7 @@ let gcUserColor = '';
 let gcUserAvatarUrl = '';
 let gcUserCoverUrl = '';
 let gcUserBio = '';
+let gcUserIsAdmin = false;
 let gcCurrentRoom = 'global';
 let gcWin = null;
 let gcSubscription = null;
@@ -61,6 +63,7 @@ let gcGoogleTokenClient = null;
 let gcGoogleAccessToken = '';
 let gcGoogleTokenExpiresAt = 0;
 const GC_PINNED_ROOMS_KEY = 'webos-gc-pinned-rooms';
+const GC_IS_ADMIN_KEY = 'webos-gc-is-admin';
 const GC_MAX_AVATAR_BYTES = 500 * 1024;
 const GC_AVATAR_PRIMARY_SIZE = 256;
 const GC_AVATAR_FALLBACK_SIZE = 128;
@@ -85,6 +88,69 @@ function gcGetDisplayRoomName(room) {
 
 function gcGetGlobalRoomPreview() {
     return 'Public room for signed-in users only';
+}
+
+function gcIsAdminOnlyRoom(room) {
+    return !!room?.is_admin_only;
+}
+
+function gcIsRoomExpired(room) {
+    if (!room?.expires_at) return false;
+    const expiresAt = new Date(room.expires_at).getTime();
+    return Number.isFinite(expiresAt) && expiresAt <= Date.now();
+}
+
+function gcCanAccessRoom(room) {
+    if (!room) return false;
+    if (gcIsRoomExpired(room)) return false;
+    if (gcIsAdminOnlyRoom(room) && !gcUserIsAdmin) return false;
+    return true;
+}
+
+function gcGetVisibleRooms(rooms = gcRoomCache) {
+    return (rooms || []).filter(room => gcCanAccessRoom(room));
+}
+
+function gcGetRoomPreview(room) {
+    if (!room) return 'Group conversation';
+    if (room.type === 'global') return gcGetGlobalRoomPreview();
+    if (gcIsAdminOnlyRoom(room)) return 'Hidden admin-only test room';
+    return 'Group conversation';
+}
+
+async function gcDeleteExpiredAdminRooms() {
+    if (!sbClient) return false;
+
+    try {
+        const { data, error } = await sbClient
+            .from(GC_TABLES.rooms)
+            .select('id')
+            .eq('is_admin_only', true)
+            .lt('expires_at', new Date().toISOString());
+
+        if (error || !data?.length) return false;
+
+        const ids = data
+            .map(item => item.id)
+            .filter(id => !!id && id === GC_ADMIN_TEST_ROOM_ID);
+
+        if (ids.length === 0) return false;
+
+        const { error: deleteError } = await sbClient
+            .from(GC_TABLES.rooms)
+            .delete()
+            .in('id', ids);
+
+        if (deleteError) {
+            gcDebugError('Delete expired admin rooms error:', deleteError);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        gcDebugError('Delete expired admin rooms error:', error);
+        return false;
+    }
 }
 
 function gcHasBlockedGlobalContent(text) {
@@ -238,6 +304,7 @@ function initMessage(win) {
     const userAvatarUrl = localStorage.getItem('webos-gc-avatar') || '';
     const userCoverUrl = localStorage.getItem('webos-gc-cover') || '';
     const userBio = localStorage.getItem('webos-gc-bio') || '';
+    const userIsAdmin = localStorage.getItem(GC_IS_ADMIN_KEY) === 'true';
 
     if (!userName || !userId) {
         gcShowSetup(win);
@@ -250,6 +317,7 @@ function initMessage(win) {
     gcUserAvatarUrl = userAvatarUrl;
     gcUserCoverUrl = userCoverUrl;
     gcUserBio = userBio;
+    gcUserIsAdmin = userIsAdmin;
     gcHideSetup(win);
     gcStartApp(win);
 }
@@ -387,7 +455,7 @@ async function gcLogin() {
             return;
         }
 
-        gcSetUserSession(data.username, data.id, data.color, data.avatar_url, data.cover_url, data.bio);
+        gcSetUserSession(data.username, data.id, data.color, data.avatar_url, data.cover_url, data.bio, data.is_admin);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -478,7 +546,7 @@ async function gcRegister() {
             return;
         }
 
-        gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url, newUser.cover_url, newUser.bio);
+        gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url, newUser.cover_url, newUser.bio, newUser.is_admin);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -487,26 +555,29 @@ async function gcRegister() {
     }
 }
 
-function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = '') {
+function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = '', isAdmin = false) {
     gcUserName = name;
     gcUserId = id;
     gcUserColor = color;
     gcUserAvatarUrl = avatarUrl || '';
     gcUserCoverUrl = coverUrl || '';
     gcUserBio = bio || '';
+    gcUserIsAdmin = !!isAdmin;
     localStorage.setItem('webos-gc-username', name);
     localStorage.setItem('webos-gc-userid', id);
     localStorage.setItem('webos-gc-color', color);
     localStorage.setItem('webos-gc-avatar', gcUserAvatarUrl);
     localStorage.setItem('webos-gc-cover', gcUserCoverUrl);
     localStorage.setItem('webos-gc-bio', gcUserBio);
+    localStorage.setItem(GC_IS_ADMIN_KEY, String(gcUserIsAdmin));
     gcCacheUserProfile({
         id,
         username: name,
         color,
         avatar_url: gcUserAvatarUrl,
         cover_url: gcUserCoverUrl,
-        bio: gcUserBio
+        bio: gcUserBio,
+        is_admin: gcUserIsAdmin
     });
 }
 
@@ -576,7 +647,8 @@ function gcGetCachedUserProfile(userId, userName = '') {
             color: gcUserColor,
             avatar_url: gcUserAvatarUrl,
             cover_url: gcUserCoverUrl,
-            bio: gcUserBio
+            bio: gcUserBio,
+            is_admin: gcUserIsAdmin
         };
     }
 
@@ -632,14 +704,14 @@ async function gcHydrateMessagesWithAvatars(messages = []) {
         if (missingIds.length > 0) {
             const { data } = await sbClient
                 .from(GC_TABLES.users)
-                .select('id, username, color, avatar_url, cover_url, bio')
+                .select('id, username, color, avatar_url, cover_url, bio, is_admin')
                 .in('id', missingIds);
             profiles = profiles.concat(data || []);
         }
         if (missingNames.length > 0) {
             const { data } = await sbClient
                 .from(GC_TABLES.users)
-                .select('id, username, color, avatar_url, cover_url, bio')
+                .select('id, username, color, avatar_url, cover_url, bio, is_admin')
                 .in('username', missingNames);
             profiles = profiles.concat(data || []);
         }
@@ -751,16 +823,44 @@ function gcSortRooms(rooms) {
 /* ===== APP LOGIC ===== */
 async function gcStartApp(win) {
     if (!await gcEnsureBackendReady()) return;
+    await gcRefreshCurrentUserSession();
     gcClearReplyTarget();
     gcRenderUserIdentity(win);
 
+    await gcDeleteExpiredAdminRooms();
     gcListenRooms(win);
     gcSwitchRoom('global');
+}
+
+async function gcRefreshCurrentUserSession() {
+    if (!sbClient || !gcUserId) return;
+
+    try {
+        const { data, error } = await sbClient
+            .from(GC_TABLES.users)
+            .select('id, username, color, avatar_url, cover_url, bio, is_admin')
+            .eq('id', gcUserId)
+            .maybeSingle();
+
+        if (error || !data) return;
+        gcSetUserSession(
+            data.username,
+            data.id,
+            data.color,
+            data.avatar_url,
+            data.cover_url,
+            data.bio,
+            data.is_admin
+        );
+    } catch (error) {
+        gcDebugError('Refresh current user session error:', error);
+    }
 }
 
 async function gcListenRooms(win) {
     if (!sbClient) return;
 
+    await gcDeleteExpiredAdminRooms();
     const { data, error } = await sbClient.from(GC_TABLES.rooms).select('*');
     if (error) {
         gcDebugError('Supabase SQL Error:', error);
@@ -770,9 +870,9 @@ async function gcListenRooms(win) {
 
     gcRoomCache = data || [];
     gcRoomCache = gcSortRooms(gcRoomCache);
-    gcRenderRoomList(win, gcRoomCache);
+    gcRenderRoomList(win, gcGetVisibleRooms(gcRoomCache));
 
-    if (gcCurrentRoom !== 'global' && !gcRoomCache.some(room => room.id === gcCurrentRoom)) {
+    if (gcCurrentRoom !== 'global' && !gcCanAccessRoom(gcGetRoomById(gcCurrentRoom))) {
         gcSwitchRoom('global');
         return;
     }
@@ -796,11 +896,12 @@ function gcRenderRoomList(win, rooms) {
 
     list.innerHTML = '';
 
-    if (!rooms.find(room => room.id === GC_GLOBAL_ROOM_ID)) {
-        rooms.unshift({ id: GC_GLOBAL_ROOM_ID, name: GC_GLOBAL_ROOM_LABEL, type: 'global' });
+    const visibleRooms = [...(rooms || [])];
+    if (!visibleRooms.find(room => room.id === GC_GLOBAL_ROOM_ID)) {
+        visibleRooms.unshift({ id: GC_GLOBAL_ROOM_ID, name: GC_GLOBAL_ROOM_LABEL, type: 'global' });
     }
 
-    gcSortRooms(rooms).forEach(room => {
+    gcSortRooms(visibleRooms).forEach(room => {
         const div = document.createElement('div');
         const isPinned = gcIsRoomPinned(room.id);
         div.className = `gc-room-item${gcCurrentRoom === room.id ? ' active' : ''}${isPinned ? ' pinned' : ''}`;
@@ -808,9 +909,7 @@ function gcRenderRoomList(win, rooms) {
 
         const icon = room.type === 'global' ? 'public' : 'group';
         const roomName = gcGetDisplayRoomName(room);
-        const preview = room.type === 'global'
-            ? gcGetGlobalRoomPreview()
-            : 'Group conversation';
+        const preview = gcGetRoomPreview(room);
         const meta = room.id === gcCurrentRoom ? 'Open now' : (isPinned ? 'Pinned' : 'Today');
 
         div.innerHTML = `
@@ -831,6 +930,15 @@ function gcRenderRoomList(win, rooms) {
 
 async function gcSwitchRoom(roomId) {
     if (!sbClient) return;
+    const room = gcGetRoomById(roomId) || (roomId === GC_GLOBAL_ROOM_ID ? { id: GC_GLOBAL_ROOM_ID, type: 'global' } : null);
+    if (roomId !== GC_GLOBAL_ROOM_ID && !gcCanAccessRoom(room)) {
+        gcNotifyError('You cannot view this room.');
+        if (gcCurrentRoom !== GC_GLOBAL_ROOM_ID) {
+            gcSwitchRoom(GC_GLOBAL_ROOM_ID);
+        }
+        return;
+    }
+
     const requestId = ++gcActiveRoomRequestId;
 
     gcStopRoomSync();
@@ -861,8 +969,9 @@ async function gcSwitchRoom(roomId) {
     }
     if (requestId !== gcActiveRoomRequestId || roomId !== gcCurrentRoom) return;
 
+    await gcEnsureAdminTestOwnership(roomId);
     await gcLoadRoomMembers(roomId);
-    gcRenderRoomList(gcWin, gcRoomCache);
+    gcRenderRoomList(gcWin, gcGetVisibleRooms(gcRoomCache));
     const orderedMessages = await gcHydrateMessagesWithAvatars((messages || []).slice().reverse());
     gcCurrentRoomMessages = orderedMessages.slice();
     orderedMessages.forEach(msg => {
@@ -897,6 +1006,22 @@ async function gcEnsureRoomMembership(roomId = gcCurrentRoom) {
     }
 }
 
+async function gcEnsureAdminTestOwnership(roomId = gcCurrentRoom) {
+    if (!sbClient || !gcUserId || !gcUserIsAdmin || roomId !== GC_ADMIN_TEST_ROOM_ID) return;
+
+    const { error } = await sbClient
+        .from(GC_TABLES.roomMembers)
+        .upsert([{
+            room_id: roomId,
+            user_id: gcUserId,
+            role: 'owner'
+        }], { onConflict: 'room_id,user_id' });
+
+    if (error) {
+        gcDebugError('Ensure admin test ownership error:', error);
+    }
+}
+
 async function gcLoadRoomMembers(roomId = gcCurrentRoom) {
     if (!sbClient) return;
 
@@ -908,7 +1033,7 @@ async function gcLoadRoomMembers(roomId = gcCurrentRoom) {
 
     const { data, error } = await sbClient
         .from(GC_TABLES.roomMembers)
-        .select('room_id,user_id,role,users(id,username,color,avatar_url,cover_url,bio)')
+        .select('room_id,user_id,role,users(id,username,color,avatar_url,cover_url,bio,is_admin)')
         .eq('room_id', roomId);
 
     if (error) {
@@ -1015,9 +1140,13 @@ function gcUpdateHeader(roomId) {
 
     if (headerName) headerName.textContent = gcGetDisplayRoomName(room);
     if (headerStatus) {
-        headerStatus.textContent = room.type === 'global'
-            ? 'Public room for signed-in users. Slowmode is enabled.'
-            : 'This group is active';
+        if (room.type === 'global') {
+            headerStatus.textContent = 'Public room for signed-in users. Slowmode is enabled.';
+        } else if (gcIsAdminOnlyRoom(room)) {
+            headerStatus.textContent = 'Hidden admin-only test room. Auto deletes after 1 day.';
+        } else {
+            headerStatus.textContent = 'This group is active';
+        }
     }
     if (headerIcon) {
         gcSetAvatarContent(headerIcon, {
@@ -2072,7 +2201,8 @@ async function gcUploadUserAvatar(file) {
             color: gcUserColor,
             avatar_url: gcUserAvatarUrl,
             cover_url: gcUserCoverUrl,
-            bio: gcUserBio
+            bio: gcUserBio,
+            is_admin: gcUserIsAdmin
         });
         gcRenderUserIdentity();
         gcRefreshMembersPanel();
@@ -2117,7 +2247,8 @@ async function gcUploadUserCover(file) {
             color: gcUserColor,
             avatar_url: gcUserAvatarUrl,
             cover_url: gcUserCoverUrl,
-            bio: gcUserBio
+            bio: gcUserBio,
+            is_admin: gcUserIsAdmin
         });
         gcShowSettings();
         if (previousCoverUrl && previousCoverUrl !== coverUrl) {
@@ -2155,7 +2286,8 @@ async function gcRemoveUserAvatar() {
         color: gcUserColor,
         avatar_url: '',
         cover_url: gcUserCoverUrl,
-        bio: gcUserBio
+        bio: gcUserBio,
+        is_admin: gcUserIsAdmin
     });
     gcRenderUserIdentity();
     gcRefreshMembersPanel();
@@ -2189,7 +2321,8 @@ async function gcRemoveUserCover() {
         color: gcUserColor,
         avatar_url: gcUserAvatarUrl,
         cover_url: '',
-        bio: gcUserBio
+        bio: gcUserBio,
+        is_admin: gcUserIsAdmin
     });
     gcShowSettings();
     gcDeleteStorageObjectQuietly(previousCoverUrl);
@@ -2215,6 +2348,15 @@ async function gcSaveProfileBio() {
 
     gcUserBio = bio;
     localStorage.setItem('webos-gc-bio', bio);
+    gcCacheUserProfile({
+        id: gcUserId,
+        username: gcUserName,
+        color: gcUserColor,
+        avatar_url: gcUserAvatarUrl,
+        cover_url: gcUserCoverUrl,
+        bio: gcUserBio,
+        is_admin: gcUserIsAdmin
+    });
     gcShowSettings();
     showNotification('Zashi Messaging', 'Profile bio updated.');
 }
@@ -2328,7 +2470,7 @@ async function gcUploadGroupAvatar(file) {
         }
 
         gcRoomCache = gcRoomCache.map(item => item.id === room.id ? { ...item, ...(data || {}), avatar_url: avatarUrl } : item);
-        gcRenderRoomList(gcWin, gcRoomCache);
+        gcRenderRoomList(gcWin, gcGetVisibleRooms(gcRoomCache));
         gcUpdateHeader(room.id);
         if (previousAvatarUrl && previousAvatarUrl !== avatarUrl) {
             gcDeleteStorageObjectQuietly(previousAvatarUrl);
@@ -2368,7 +2510,7 @@ async function gcRemoveGroupAvatar() {
     }
 
     gcRoomCache = gcRoomCache.map(item => item.id === room.id ? { ...item, ...(data || {}), avatar_url: '' } : item);
-    gcRenderRoomList(gcWin, gcRoomCache);
+    gcRenderRoomList(gcWin, gcGetVisibleRooms(gcRoomCache));
     gcUpdateHeader(room.id);
     gcShowSettings();
     gcDeleteStorageObjectQuietly(previousAvatarUrl);
@@ -2389,7 +2531,7 @@ function gcTogglePinRoom() {
 
     gcSavePinnedRooms();
     gcRoomCache = gcSortRooms(gcRoomCache);
-    gcRenderRoomList(gcWin, gcRoomCache);
+    gcRenderRoomList(gcWin, gcGetVisibleRooms(gcRoomCache));
     gcUpdateHeader(roomId);
 }
 
@@ -3202,6 +3344,7 @@ function gcShowSettings() {
     const room = gcGetRoomById();
     const roleText = gcIsGroupRoom() ? gcGetRoleLabel(gcCurrentUserRoomRole) : 'Community';
     const roomText = gcGetDisplayRoomName(room);
+    const expiryText = room?.expires_at ? new Date(room.expires_at).toLocaleString() : '';
 
     modal.classList.add('gc-settings-modal');
     modal.innerHTML = `
@@ -3269,6 +3412,22 @@ function gcShowSettings() {
                     <span>Pinned</span>
                     <strong>${gcIsRoomPinned(gcCurrentRoom) ? 'Yes' : 'No'}</strong>
                 </div>
+                ${gcUserIsAdmin ? `
+                <div class="gc-settings-stat-row">
+                    <span>Account level</span>
+                    <strong>Admin</strong>
+                </div>
+                ` : ''}
+                ${gcIsAdminOnlyRoom(room) ? `
+                <div class="gc-settings-stat-row">
+                    <span>Visibility</span>
+                    <strong>Admin only</strong>
+                </div>
+                <div class="gc-settings-stat-row">
+                    <span>Expires</span>
+                    <strong>${gcEscape(expiryText || 'In 1 day')}</strong>
+                </div>
+                ` : ''}
             </div>
             ${gcIsGroupRoom() && gcCanManageGroup() ? `
             <div class="gc-settings-card">
@@ -3389,6 +3548,7 @@ function gcLogout() {
     localStorage.removeItem('webos-gc-avatar');
     localStorage.removeItem('webos-gc-cover');
     localStorage.removeItem('webos-gc-bio');
+    localStorage.removeItem(GC_IS_ADMIN_KEY);
     location.reload();
 }
 
@@ -3509,7 +3669,7 @@ async function gcCreateGroup() {
             gcRoomCache = gcRoomCache.filter(room => room.id !== data.id);
             gcRoomCache.push(data);
             gcRoomCache = gcSortRooms(gcRoomCache);
-            gcRenderRoomList(gcWin, gcRoomCache);
+            gcRenderRoomList(gcWin, gcGetVisibleRooms(gcRoomCache));
             gcHideModal();
             gcSwitchRoom(data.id);
             showNotification('Zashi Messaging', `Created group "${data.name}".`);
@@ -3551,7 +3711,7 @@ async function gcDeleteCurrentRoom() {
     gcSavePinnedRooms();
     gcRoomCache = gcRoomCache.filter(item => item.id !== room.id);
     gcRoomCache = gcSortRooms(gcRoomCache);
-    gcRenderRoomList(gcWin, gcRoomCache);
+    gcRenderRoomList(gcWin, gcGetVisibleRooms(gcRoomCache));
     gcHideMembersPanel();
     gcSwitchRoom('global');
     showNotification('Zashi Messaging', `Deleted group "${room.name}".`);
