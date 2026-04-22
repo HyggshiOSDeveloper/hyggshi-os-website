@@ -33,6 +33,23 @@ const GC_SAFE_NAME_REGEX = /^[A-Za-z0-9_ ]{3,32}$/;
 const GC_GOOGLE_CLIENT_ID_KEY = 'webos-gc-google-client-id';
 const GC_GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const GC_GOOGLE_GSI_SCRIPT = 'https://accounts.google.com/gsi/client';
+const GC_THEME_KEY = 'webos-gc-theme';
+const GC_STICKERS = [
+    { id: 'hi', label: 'HI', accent: '#2f80ed' },
+    { id: 'ok', label: 'OK', accent: '#12b886' },
+    { id: 'gg', label: 'GG', accent: '#8e59ff' },
+    { id: 'wow', label: 'WOW', accent: '#ff8a00' },
+    { id: 'lol', label: 'LOL', accent: '#ff5d6f' },
+    { id: 'nice', label: 'NICE', accent: '#00a6a6' },
+    { id: 'brb', label: 'BRB', accent: '#667eea' },
+    { id: 'bye', label: 'BYE', accent: '#ef4444' }
+];
+const GC_THEMES = [
+    { id: 'default', name: 'Sky Glass', description: 'Light blue default look' },
+    { id: 'sunset', name: 'Sunset Pop', description: 'Warm coral and peach panels' },
+    { id: 'forest', name: 'Forest Mint', description: 'Soft green layered workspace' },
+    { id: 'midnight', name: 'Midnight Ink', description: 'Dark blue focus mode' }
+];
 
 let sbClient = null;
 let gcUserId = null;
@@ -45,6 +62,7 @@ let gcUserIsAdmin = false;
 let gcUserMutedUntil = '';
 let gcUserWarningsCount = 0;
 let gcUserGlobalChatBanned = false;
+let gcThemeId = 'default';
 let gcCurrentRoom = 'global';
 let gcWin = null;
 let gcSubscription = null;
@@ -154,6 +172,29 @@ function gcGetRoomPreview(room) {
     if (room.type === 'system' || room.id === GC_SYSTEM_ROOM_ID) return gcGetSystemRoomPreview();
     if (gcIsAdminOnlyRoom(room)) return 'Hidden admin-only test room';
     return 'Group conversation';
+}
+
+function gcApplyTheme(themeId = gcThemeId, win = gcWin) {
+    if (!win) return;
+    const nextTheme = GC_THEMES.some(item => item.id === themeId) ? themeId : 'default';
+    gcThemeId = nextTheme;
+    localStorage.setItem(GC_THEME_KEY, nextTheme);
+
+    const root = win.querySelector('.app-globalchat');
+    if (!root) return;
+    root.classList.remove(...GC_THEMES.map(item => `gc-theme-${item.id}`));
+    root.classList.add(`gc-theme-${nextTheme}`);
+}
+
+function gcEncodeStickerToken(stickerId) {
+    return `[[sticker:${String(stickerId || '').trim().toLowerCase()}]]`;
+}
+
+function gcParseStickerToken(text) {
+    const match = String(text || '').trim().match(/^\[\[sticker:([a-z0-9_-]+)\]\]$/i);
+    if (!match) return null;
+    const stickerId = match[1].toLowerCase();
+    return GC_STICKERS.find(item => item.id === stickerId) || null;
 }
 
 async function gcDeleteExpiredAdminRooms() {
@@ -346,6 +387,7 @@ function initMessage(win) {
     const userMutedUntil = localStorage.getItem('webos-gc-muted-until') || '';
     const userWarningsCount = Number(localStorage.getItem('webos-gc-warnings-count') || 0);
     const userGlobalChatBanned = localStorage.getItem('webos-gc-global-chat-banned') === 'true';
+    const savedThemeId = localStorage.getItem(GC_THEME_KEY) || 'default';
 
     if (!userName || !userId) {
         gcShowSetup(win);
@@ -362,6 +404,8 @@ function initMessage(win) {
     gcUserMutedUntil = userMutedUntil;
     gcUserWarningsCount = Number.isFinite(userWarningsCount) ? userWarningsCount : 0;
     gcUserGlobalChatBanned = userGlobalChatBanned;
+    gcThemeId = GC_THEMES.some(item => item.id === savedThemeId) ? savedThemeId : 'default';
+    gcApplyTheme(gcThemeId, win);
     gcHideSetup(win);
     gcStartApp(win);
 }
@@ -959,6 +1003,9 @@ async function gcRefreshCurrentUserSession() {
             data.warnings_count,
             data.global_chat_banned
         );
+        if (!data.is_admin) {
+            gcApplyTheme('default');
+        }
     } catch (error) {
         gcDebugError('Refresh current user session error:', error);
     }
@@ -1405,6 +1452,8 @@ function gcBuildReplyPayload(sourceMessage) {
 
 function gcGetMessageSnapshot(msg) {
     if (!msg) return '';
+    const sticker = gcParseStickerToken(msg.text || '');
+    if (sticker) return `[Sticker: ${sticker.label}]`;
     if (msg.text) return String(msg.text).trim().slice(0, 280);
     if (msg.reply_to_text) return String(msg.reply_to_text).trim().slice(0, 280);
     if (msg.type === 'image') return '[Image]';
@@ -2024,7 +2073,8 @@ function gcBindComposer(win) {
     const textarea = win.querySelector('.gc-input-box textarea');
     const inputArea = win.querySelector('.gc-input-area');
     const fileInput = win.querySelector('#gc-file-input');
-    const imageTool = win.querySelector('.gc-tool-btn[data-role="image"]') || win.querySelector('.gc-composer-tools .gc-tool-btn');
+    const imageTool = win.querySelector('.gc-composer-tools .gc-tool-btn:nth-of-type(1)');
+    const stickerTool = win.querySelector('.gc-composer-tools .gc-tool-btn:nth-of-type(2)');
 
     if (textarea && !textarea.dataset.gcBound) {
         textarea.dataset.gcBound = 'true';
@@ -2075,6 +2125,11 @@ function gcBindComposer(win) {
     if (imageTool && !imageTool.dataset.gcBound) {
         imageTool.dataset.gcBound = 'true';
         imageTool.addEventListener('click', () => fileInput?.click());
+    }
+
+    if (stickerTool && !stickerTool.dataset.gcBound) {
+        stickerTool.dataset.gcBound = 'true';
+        stickerTool.addEventListener('click', () => gcShowStickerPicker());
     }
 }
 
@@ -3033,6 +3088,65 @@ function gcBuildDefaultModalHtml() {
     `;
 }
 
+function gcShowStickerPicker() {
+    if (!gcWin) return;
+    if (gcIsSystemRoom()) {
+        gcNotifyError('System inbox is read-only. You can only view notifications.');
+        return;
+    }
+    if (gcIsGlobalRoom() && gcIsGlobalChatBanned()) {
+        gcNotifyError('You are banned from Global Chat.');
+        return;
+    }
+    if (gcIsUserMuted()) {
+        gcNotifyError(`You are muted and cannot send stickers for ${gcGetMuteRemainingText()}.`);
+        return;
+    }
+
+    const overlay = gcWin.querySelector('.gc-modal-overlay');
+    const modal = gcWin.querySelector('.gc-modal');
+    if (!overlay || !modal) return;
+
+    modal.classList.add('gc-settings-modal');
+    modal.innerHTML = `
+        <div class="gc-settings-sheet">
+            <div class="gc-settings-header">
+                <div>
+                    <div class="gc-settings-eyebrow">Sticker</div>
+                    <h3>Choose a sticker</h3>
+                </div>
+                <button class="gc-settings-close" type="button" onclick="gcHideModal()" aria-label="Close sticker picker">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="gc-sticker-grid">
+                ${GC_STICKERS.map(sticker => `
+                    <button class="gc-sticker-tile" type="button" onclick="gcSendSticker('${gcEscape(sticker.id)}')" style="--gc-sticker-accent:${gcEscape(sticker.accent)}">
+                        <div class="gc-sticker-tile-art">${gcEscape(sticker.label)}</div>
+                        <div class="gc-sticker-tile-name">${gcEscape(sticker.id.toUpperCase())}</div>
+                    </button>
+                `).join('')}
+            </div>
+            <div class="gc-settings-footer">
+                <button class="gc-btn-cancel" type="button" onclick="gcHideModal()">Close</button>
+            </div>
+        </div>
+    `;
+
+    overlay.classList.remove('hidden');
+}
+
+async function gcSendSticker(stickerId) {
+    const sticker = GC_STICKERS.find(item => item.id === String(stickerId || '').toLowerCase());
+    if (!sticker || !gcWin) return;
+
+    const textarea = gcWin.querySelector('.gc-input-box textarea');
+    if (!textarea) return;
+    textarea.value = gcEncodeStickerToken(sticker.id);
+    gcHideModal();
+    await gcSendMessage();
+}
+
 function gcHideSetup(win) {
     win?.querySelector('.gc-setup-overlay')?.classList.add('hidden');
 }
@@ -3257,7 +3371,11 @@ async function gcRenderAdminReportsList() {
         const details = gcEscape(item.details || '');
         const createdText = gcFormatMessageTime(item.created_at);
         const liveMessage = item.message_id ? messageMap.get(item.message_id) : null;
-        const previewText = gcEscape(String(liveMessage?.text || item.message_snapshot || 'No snapshot').trim() || 'No snapshot');
+        const liveSticker = gcParseStickerToken(liveMessage?.text || '');
+        const previewBaseText = liveSticker
+            ? `[Sticker: ${liveSticker.label}]`
+            : String(liveMessage?.text || item.message_snapshot || 'No snapshot').trim() || 'No snapshot';
+        const previewText = gcEscape(previewBaseText);
         const previewImage = liveMessage?.type === 'image' && liveMessage?.file_url
             ? `<img class="gc-admin-report-preview-image" src="${gcEscape(liveMessage.file_url)}" alt="Reported image preview">`
             : '';
@@ -3662,6 +3780,16 @@ async function gcSubmitReport(messageId) {
 }
 
 function gcRenderMessageTextContent(text) {
+    const sticker = gcParseStickerToken(text);
+    if (sticker) {
+        return `
+            <div class="gc-sticker-message" style="--gc-sticker-accent:${gcEscape(sticker.accent)}">
+                <div class="gc-sticker-message-art">${gcEscape(sticker.label)}</div>
+                <div class="gc-sticker-message-tag">Sticker</div>
+            </div>
+        `;
+    }
+
     const preview = gcExtractSupportedVideoLink(text);
     const safeText = gcLinkifyText(text);
     const previewHtml = preview ? gcBuildLinkPreviewHtml(preview) : '';
@@ -4078,6 +4206,17 @@ function gcExportCurrentChat(format = 'txt') {
     showNotification('Zashi Messaging', 'Exported chat as TXT.');
 }
 
+function gcChangeTheme(themeId) {
+    if (!gcUserIsAdmin) {
+        gcApplyTheme('default');
+        gcNotifyError('Only admins can change the interface theme.');
+        return;
+    }
+    gcApplyTheme(themeId);
+    showNotification('Zashi Messaging', 'Theme updated.');
+    gcShowSettings();
+}
+
 function gcOpenExternalMedia(url) {
     if (!url) return;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -4251,6 +4390,26 @@ function gcShowSettings() {
                     ` : ''}
                 </div>
             </div>
+            ${gcUserIsAdmin ? `
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Appearance</div>
+                <div class="gc-settings-card-note">Pick a visual style for Zashi Messaging on this device.</div>
+                <div class="gc-theme-grid">
+                    ${GC_THEMES.map(theme => `
+                        <button class="gc-theme-tile${gcThemeId === theme.id ? ' active' : ''}" type="button" onclick="gcChangeTheme('${gcEscape(theme.id)}')">
+                            <div class="gc-theme-preview gc-theme-preview-${gcEscape(theme.id)}"></div>
+                            <div class="gc-theme-name">${gcEscape(theme.name)}</div>
+                            <div class="gc-theme-desc">${gcEscape(theme.description)}</div>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+            ` : `
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Appearance</div>
+                <div class="gc-settings-card-note">Theme controls are admin-only on this build.</div>
+            </div>
+            `}
             <div class="gc-settings-card">
                 <div class="gc-settings-card-title">Export Chat</div>
                 <div class="gc-settings-card-note">Download the current conversation to your device. TXT is lighter, JSON keeps more metadata.</div>
@@ -4291,6 +4450,7 @@ function gcShowSettings() {
         </div>
     `;
 
+    modal.scrollTop = 0;
     overlay.classList.remove('hidden');
 }
 
