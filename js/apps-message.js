@@ -8,13 +8,16 @@ const GC_TABLES = {
     rooms: 'rooms',
     messages: 'messages',
     roomMembers: 'room_members',
-    reports: 'reports'
+    reports: 'reports',
+    userNotices: 'user_notices'
 };
 
 const GC_STORAGE_BUCKET = 'chat-files';
 const GC_COLORS = ['#6c5ce7', '#0984e3', '#00b894', '#e17055', '#fd79a8', '#e84393', '#00cec9', '#ff7675', '#74b9ff', '#55efc4', '#ffeaa7', '#fab1a0'];
 const GC_GLOBAL_ROOM_ID = 'global';
 const GC_GLOBAL_ROOM_LABEL = 'Global Chat (Public room)';
+const GC_SYSTEM_ROOM_ID = 'system-inbox';
+const GC_SYSTEM_ROOM_LABEL = 'System Inbox';
 const GC_ADMIN_TEST_ROOM_ID = 'admin-test-room';
 const GC_GLOBAL_RATE_LIMIT_MS = 5000;
 const GC_GLOBAL_MAX_MESSAGES = 100;
@@ -81,13 +84,23 @@ function gcIsGlobalRoom(roomId = gcCurrentRoom) {
     return roomId === GC_GLOBAL_ROOM_ID;
 }
 
+function gcIsSystemRoom(roomId = gcCurrentRoom) {
+    return roomId === GC_SYSTEM_ROOM_ID;
+}
+
 function gcGetDisplayRoomName(room) {
     if (!room) return GC_GLOBAL_ROOM_LABEL;
-    return room.id === GC_GLOBAL_ROOM_ID ? GC_GLOBAL_ROOM_LABEL : (room.name || 'Group Chat');
+    if (room.id === GC_GLOBAL_ROOM_ID) return GC_GLOBAL_ROOM_LABEL;
+    if (room.id === GC_SYSTEM_ROOM_ID) return GC_SYSTEM_ROOM_LABEL;
+    return room.name || 'Group Chat';
 }
 
 function gcGetGlobalRoomPreview() {
     return 'Public room for signed-in users only';
+}
+
+function gcGetSystemRoomPreview() {
+    return 'Private notices for your account only';
 }
 
 function gcIsAdminOnlyRoom(room) {
@@ -114,6 +127,7 @@ function gcGetVisibleRooms(rooms = gcRoomCache) {
 function gcGetRoomPreview(room) {
     if (!room) return 'Group conversation';
     if (room.type === 'global') return gcGetGlobalRoomPreview();
+    if (room.type === 'system' || room.id === GC_SYSTEM_ROOM_ID) return gcGetSystemRoomPreview();
     if (gcIsAdminOnlyRoom(room)) return 'Hidden admin-only test room';
     return 'Group conversation';
 }
@@ -546,12 +560,32 @@ async function gcRegister() {
             return;
         }
 
+        await gcCreateWelcomeNoticeForUser(newUser.id, newUser.username);
         gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url, newUser.cover_url, newUser.bio, newUser.is_admin);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
         gcDebugError('Register error:', error);
         gcNotifyError('System error while creating the account.');
+    }
+}
+
+async function gcCreateWelcomeNoticeForUser(userId, username = '') {
+    if (!sbClient || !userId) return;
+    const safeName = gcStripUnsafeText(username || 'there');
+    const payload = {
+        user_id: userId,
+        title: 'Welcome to Zashi Messaging',
+        body: `Welcome ${safeName}! Your account is ready. Open System Inbox anytime to see personal notices.`
+    };
+
+    try {
+        const { error } = await sbClient
+            .from(GC_TABLES.userNotices)
+            .insert([payload]);
+        if (error) gcDebugError('Create welcome notice error:', error);
+    } catch (error) {
+        gcDebugError('Create welcome notice error:', error);
     }
 }
 
@@ -812,6 +846,8 @@ function gcSortRooms(rooms) {
     return [...rooms].sort((a, b) => {
         if (a.id === 'global') return -1;
         if (b.id === 'global') return 1;
+        if (a.id === GC_SYSTEM_ROOM_ID) return -1;
+        if (b.id === GC_SYSTEM_ROOM_ID) return 1;
 
         const pinnedDelta = Number(gcIsRoomPinned(b.id)) - Number(gcIsRoomPinned(a.id));
         if (pinnedDelta !== 0) return pinnedDelta;
@@ -872,7 +908,9 @@ async function gcListenRooms(win) {
     gcRoomCache = gcSortRooms(gcRoomCache);
     gcRenderRoomList(win, gcGetVisibleRooms(gcRoomCache));
 
-    if (gcCurrentRoom !== 'global' && !gcCanAccessRoom(gcGetRoomById(gcCurrentRoom))) {
+    const currentRoomMeta = gcGetRoomById(gcCurrentRoom)
+        || (gcCurrentRoom === GC_SYSTEM_ROOM_ID ? { id: GC_SYSTEM_ROOM_ID, type: 'system' } : null);
+    if (gcCurrentRoom !== GC_GLOBAL_ROOM_ID && !gcCanAccessRoom(currentRoomMeta)) {
         gcSwitchRoom('global');
         return;
     }
@@ -900,6 +938,9 @@ function gcRenderRoomList(win, rooms) {
     if (!visibleRooms.find(room => room.id === GC_GLOBAL_ROOM_ID)) {
         visibleRooms.unshift({ id: GC_GLOBAL_ROOM_ID, name: GC_GLOBAL_ROOM_LABEL, type: 'global' });
     }
+    if (!visibleRooms.find(room => room.id === GC_SYSTEM_ROOM_ID)) {
+        visibleRooms.unshift({ id: GC_SYSTEM_ROOM_ID, name: GC_SYSTEM_ROOM_LABEL, type: 'system' });
+    }
 
     gcSortRooms(visibleRooms).forEach(room => {
         const div = document.createElement('div');
@@ -907,7 +948,7 @@ function gcRenderRoomList(win, rooms) {
         div.className = `gc-room-item${gcCurrentRoom === room.id ? ' active' : ''}${isPinned ? ' pinned' : ''}`;
         div.onclick = () => gcSwitchRoom(room.id);
 
-        const icon = room.type === 'global' ? 'public' : 'group';
+        const icon = room.type === 'global' ? 'public' : (room.type === 'system' ? 'notifications' : 'group');
         const roomName = gcGetDisplayRoomName(room);
         const preview = gcGetRoomPreview(room);
         const meta = room.id === gcCurrentRoom ? 'Open now' : (isPinned ? 'Pinned' : 'Today');
@@ -930,7 +971,9 @@ function gcRenderRoomList(win, rooms) {
 
 async function gcSwitchRoom(roomId) {
     if (!sbClient) return;
-    const room = gcGetRoomById(roomId) || (roomId === GC_GLOBAL_ROOM_ID ? { id: GC_GLOBAL_ROOM_ID, type: 'global' } : null);
+    const room = gcGetRoomById(roomId)
+        || (roomId === GC_GLOBAL_ROOM_ID ? { id: GC_GLOBAL_ROOM_ID, type: 'global' } : null)
+        || (roomId === GC_SYSTEM_ROOM_ID ? { id: GC_SYSTEM_ROOM_ID, type: 'system' } : null);
     if (roomId !== GC_GLOBAL_ROOM_ID && !gcCanAccessRoom(room)) {
         gcNotifyError('You cannot view this room.');
         if (gcCurrentRoom !== GC_GLOBAL_ROOM_ID) {
@@ -954,6 +997,15 @@ async function gcSwitchRoom(roomId) {
     if (!msgContainer) return;
     msgContainer.innerHTML = '';
     gcCurrentRoomMessages = [];
+
+    gcApplyRoomInteractionState(roomId);
+    if (gcIsSystemRoom(roomId)) {
+        await gcLoadSystemNotices(roomId);
+        gcRenderRoomList(gcWin, gcGetVisibleRooms(gcRoomCache));
+        gcUpdateHeader(roomId);
+        gcRefreshMembersPanel();
+        return;
+    }
 
     const { data: messages, error } = await sbClient
         .from(GC_TABLES.messages)
@@ -983,6 +1035,81 @@ async function gcSwitchRoom(roomId) {
     gcStartRoomSync(roomId);
     gcUpdateHeader(roomId);
     gcRefreshMembersPanel();
+}
+
+function gcApplyRoomInteractionState(roomId = gcCurrentRoom) {
+    const inputArea = gcWin?.querySelector('.gc-input-area');
+    const textarea = gcWin?.querySelector('.gc-input-box textarea');
+    const sendBtn = gcWin?.querySelector('.gc-send-btn');
+    const fileInput = gcWin?.querySelector('#gc-file-input');
+    const toolButtons = gcWin?.querySelectorAll('.gc-composer-tools .gc-tool-btn, .gc-input-box .gc-header-btn');
+    if (!inputArea || !textarea || !sendBtn || !fileInput) return;
+
+    const isReadOnly = gcIsSystemRoom(roomId);
+    inputArea.classList.toggle('gc-readonly-room', isReadOnly);
+    textarea.disabled = isReadOnly;
+    sendBtn.disabled = isReadOnly;
+    fileInput.disabled = isReadOnly;
+    textarea.placeholder = isReadOnly ? 'System inbox is read-only.' : 'Type a message...';
+
+    if (toolButtons?.length) {
+        toolButtons.forEach(btn => {
+            btn.disabled = isReadOnly;
+            btn.classList.toggle('is-disabled', isReadOnly);
+        });
+    }
+}
+
+function gcBuildSystemNoticeMessage(notice) {
+    const title = gcStripUnsafeText(notice?.title || 'System Notice');
+    const body = gcStripUnsafeText(notice?.body || '');
+    return {
+        room_id: GC_SYSTEM_ROOM_ID,
+        sender_id: null,
+        sender_name: 'Zashi System',
+        sender_color: '#2563eb',
+        sender_avatar_url: '',
+        type: 'text',
+        text: body ? `${title}\n${body}` : title,
+        created_at: notice?.created_at || new Date().toISOString(),
+        system_notice: true
+    };
+}
+
+async function gcLoadSystemNotices(roomId = GC_SYSTEM_ROOM_ID) {
+    if (!sbClient || !gcWin) return;
+    const msgContainer = gcWin.querySelector('.gc-messages');
+    if (!msgContainer) return;
+
+    const { data, error } = await sbClient
+        .from(GC_TABLES.userNotices)
+        .select('id,title,body,created_at')
+        .eq('user_id', gcUserId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+    if (error) {
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.userNotices));
+        return;
+    }
+
+    msgContainer.innerHTML = '';
+    const notices = data || [];
+    if (notices.length === 0) {
+        const emptyMsg = gcBuildSystemNoticeMessage({
+            title: 'No notifications yet',
+            body: 'When the system sends updates for your account, they will appear here.'
+        });
+        gcCurrentRoomMessages = [emptyMsg];
+        gcAppendMessage(msgContainer, emptyMsg);
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+        return;
+    }
+
+    const mapped = notices.map(item => gcBuildSystemNoticeMessage(item));
+    gcCurrentRoomMessages = mapped;
+    mapped.forEach(item => gcAppendMessage(msgContainer, item));
+    msgContainer.scrollTop = msgContainer.scrollHeight;
 }
 
 async function gcEnsureRoomMembership(roomId = gcCurrentRoom) {
@@ -1130,6 +1257,7 @@ function gcUpdateHeader(roomId) {
     const headerStatus = gcWin?.querySelector('.gc-chat-header-status');
     const headerIcon = gcWin?.querySelector('.gc-chat-header-icon');
     const deleteBtn = gcWin?.querySelector('.gc-delete-room-btn');
+    const searchBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(1)');
     const pinBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(3)');
     const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
     const room = gcRoomCache.find(item => item.id === roomId) || {
@@ -1142,6 +1270,8 @@ function gcUpdateHeader(roomId) {
     if (headerStatus) {
         if (room.type === 'global') {
             headerStatus.textContent = 'Public room for signed-in users. Slowmode is enabled.';
+        } else if (room.type === 'system' || room.id === GC_SYSTEM_ROOM_ID) {
+            headerStatus.textContent = 'Read-only personal notifications for your account.';
         } else if (gcIsAdminOnlyRoom(room)) {
             headerStatus.textContent = 'Hidden admin-only test room. Auto deletes after 1 day.';
         } else {
@@ -1153,13 +1283,22 @@ function gcUpdateHeader(roomId) {
             avatarUrl: room.avatar_url || '',
             initials: gcGetInitials(room.name),
             color: '#6c5ce7',
-            icon: room.type === 'global' ? 'forum' : 'groups'
+            icon: room.type === 'global' ? 'forum' : (room.type === 'system' ? 'notifications_active' : 'groups')
         });
-        headerIcon.title = room.type === 'group' ? 'Change group avatar' : 'Public room';
+        headerIcon.title = room.type === 'group' ? 'Change group avatar' : (room.type === 'system' ? 'System inbox' : 'Public room');
     }
-    if (deleteBtn) deleteBtn.style.display = room.type === 'group' && gcCanDeleteGroup(roomId) ? 'grid' : 'none';
-    if (pinBtn) pinBtn.classList.toggle('active', gcIsRoomPinned(roomId));
-    if (membersBtn) membersBtn.classList.toggle('active', gcMembersPanelOpen);
+    const isSystem = room.type === 'system' || room.id === GC_SYSTEM_ROOM_ID;
+    if (deleteBtn) deleteBtn.style.display = !isSystem && room.type === 'group' && gcCanDeleteGroup(roomId) ? 'grid' : 'none';
+    if (searchBtn) searchBtn.style.display = isSystem ? 'none' : 'grid';
+    if (pinBtn) {
+        pinBtn.style.display = isSystem ? 'none' : 'grid';
+        pinBtn.classList.toggle('active', gcIsRoomPinned(roomId));
+    }
+    if (membersBtn) {
+        membersBtn.style.display = isSystem ? 'none' : 'grid';
+        membersBtn.classList.toggle('active', gcMembersPanelOpen);
+    }
+    if (isSystem) gcHideMembersPanel();
 }
 
 function gcGetMessageById(messageId) {
@@ -1294,18 +1433,19 @@ function gcBuildMessageBodyHtml(msg, options = {}) {
             <div class="gc-upload-progress-bar" style="width:${Math.max(0, Math.min(100, options.progressValue || 0))}%"></div>
         </div>
     ` : '';
+    const isSystemNotice = !!msg.system_notice || gcIsSystemRoom(msg.room_id);
     const canDeleteMessage = msg.id && !options.pending && ((msg.sender_id === gcUserId || options.forceSent) || (gcCanManageGroup(msg.room_id) && gcIsGroupRoom(msg.room_id)));
     const deleteButtonHtml = canDeleteMessage ? `
         <button class="gc-msg-action gc-msg-delete" type="button" data-action="delete" title="Delete message">
             <span class="material-icons-round">delete</span>
         </button>
     ` : '';
-    const replyButtonHtml = !options.pending && msg.id ? `
+    const replyButtonHtml = !isSystemNotice && !options.pending && msg.id ? `
         <button class="gc-msg-action gc-msg-reply" type="button" data-action="reply" title="Reply to message">
             <span class="material-icons-round">reply</span>
         </button>
     ` : '';
-    const reportButtonHtml = !options.pending && msg.id ? `
+    const reportButtonHtml = !isSystemNotice && !options.pending && msg.id ? `
         <button class="gc-msg-action gc-msg-report" type="button" data-action="report" title="Report message">
             <span class="material-icons-round">flag</span>
         </button>
@@ -1330,6 +1470,8 @@ function gcBuildMessageBodyHtml(msg, options = {}) {
 
 function gcBindMessageInteractions(element, msg, options = {}) {
     if (!element) return;
+    if (msg.system_notice || gcIsSystemRoom(msg.room_id)) return;
+
     const avatarUrl = msg.sender_avatar_url || gcResolveUserAvatar(msg.sender_id, msg.sender_name);
     const avatarEl = element.querySelector('.gc-msg-avatar');
     if (avatarEl) {
@@ -1509,6 +1651,10 @@ async function gcDeleteStorageObjectQuietly(fileUrl) {
 /* ===== SEND & UPLOAD ===== */
 async function gcSendMessage() {
     if (!sbClient || !gcWin) return;
+    if (gcIsSystemRoom()) {
+        gcNotifyError('System inbox is read-only. You can only view notifications.');
+        return;
+    }
 
     const textarea = gcWin.querySelector('.gc-input-box textarea');
     const text = textarea?.value.trim() || '';
@@ -1607,6 +1753,10 @@ async function gcHandleFileSelect(input) {
 
 async function gcSendAttachment(attachment, extraText = '') {
     if (!sbClient || !gcWin || !attachment?.file) return;
+    if (gcIsSystemRoom()) {
+        gcNotifyError('System inbox is read-only. You can only view notifications.');
+        return;
+    }
     const trimmedExtraText = String(extraText || '').trim();
     const validationError = trimmedExtraText ? gcValidateOutgoingMessage(trimmedExtraText, gcCurrentRoom) : null;
     if (validationError) {
@@ -1827,6 +1977,10 @@ function gcResizeTextarea(textarea) {
 
 function gcPrepareAttachment(file) {
     if (!gcWin) return;
+    if (gcIsSystemRoom()) {
+        gcNotifyError('System inbox is read-only. Upload is disabled here.');
+        return;
+    }
 
     if (file.size > 5 * 1024 * 1024) {
         gcNotifyError('Maximum file size is 5 MB.');
@@ -2538,6 +2692,10 @@ function gcTogglePinRoom() {
 async function gcRefreshMembersPanel() {
     const list = gcWin?.querySelector('.gc-members-list');
     if (!list) return;
+    if (gcIsSystemRoom()) {
+        list.innerHTML = '';
+        return;
+    }
 
     await gcEnsureRoomMembership();
     await gcLoadRoomMembers();
@@ -2871,6 +3029,161 @@ function gcShowReportModal(messageId) {
         </div>
     `;
     overlay.classList.remove('hidden');
+}
+
+function gcGetReportStatusMeta(status) {
+    const safeStatus = String(status || 'open').toLowerCase();
+    if (safeStatus === 'reviewed') return { label: 'Reviewed', css: 'reviewed' };
+    if (safeStatus === 'closed') return { label: 'Closed', css: 'closed' };
+    return { label: 'Open', css: 'open' };
+}
+
+async function gcOpenAdminReportWorkspace() {
+    if (!gcUserIsAdmin) {
+        gcNotifyError('Only admins can access the report workspace.');
+        return;
+    }
+
+    const overlay = gcWin?.querySelector('.gc-modal-overlay');
+    const modal = gcWin?.querySelector('.gc-modal');
+    if (!overlay || !modal) return;
+
+    modal.classList.add('gc-settings-modal');
+    modal.innerHTML = `
+        <div class="gc-settings-sheet">
+            <div class="gc-settings-header">
+                <div>
+                    <div class="gc-settings-eyebrow">Moderation</div>
+                    <h3>Admin Report Workspace</h3>
+                </div>
+                <button class="gc-settings-close" type="button" onclick="gcHideModal()" aria-label="Close report workspace">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Reports</div>
+                <div class="gc-settings-card-note">Review user reports and update handling status.</div>
+                <div id="gc-admin-reports-list" class="gc-admin-reports-list">
+                    <div class="gc-admin-reports-empty">Loading reports...</div>
+                </div>
+            </div>
+            <div class="gc-settings-footer">
+                <button class="gc-btn-cancel" type="button" onclick="gcShowSettings()">Back</button>
+                <button class="gc-btn-primary" type="button" onclick="gcOpenAdminReportWorkspace()">Refresh</button>
+            </div>
+        </div>
+    `;
+    overlay.classList.remove('hidden');
+    await gcRenderAdminReportsList();
+}
+
+async function gcRenderAdminReportsList() {
+    if (!sbClient || !gcUserIsAdmin) return;
+    const list = gcWin?.querySelector('#gc-admin-reports-list');
+    if (!list) return;
+
+    const { data, error } = await sbClient
+        .from(GC_TABLES.reports)
+        .select('id,room_id,message_id,reporter_user_id,reported_user_id,reason,details,message_snapshot,status,created_at')
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+    if (error) {
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.reports));
+        list.innerHTML = '<div class="gc-admin-reports-empty">Could not load reports.</div>';
+        return;
+    }
+
+    const reports = data || [];
+    if (reports.length === 0) {
+        list.innerHTML = '<div class="gc-admin-reports-empty">No reports yet.</div>';
+        return;
+    }
+
+    const userIdSet = new Set();
+    const roomIdSet = new Set();
+    reports.forEach(item => {
+        if (item.reporter_user_id) userIdSet.add(item.reporter_user_id);
+        if (item.reported_user_id) userIdSet.add(item.reported_user_id);
+        if (item.room_id) roomIdSet.add(item.room_id);
+    });
+
+    const userMap = new Map();
+    const roomMap = new Map();
+    try {
+        const userIds = [...userIdSet];
+        if (userIds.length) {
+            const { data: users } = await sbClient
+                .from(GC_TABLES.users)
+                .select('id,username')
+                .in('id', userIds);
+            (users || []).forEach(user => userMap.set(user.id, user.username || 'Unknown'));
+        }
+        const roomIds = [...roomIdSet];
+        if (roomIds.length) {
+            const { data: rooms } = await sbClient
+                .from(GC_TABLES.rooms)
+                .select('id,name,type')
+                .in('id', roomIds);
+            (rooms || []).forEach(room => roomMap.set(room.id, gcGetDisplayRoomName(room)));
+        }
+    } catch (resolveError) {
+        gcDebugError('Resolve report metadata error:', resolveError);
+    }
+
+    list.innerHTML = reports.map(item => {
+        const statusMeta = gcGetReportStatusMeta(item.status);
+        const reporterName = userMap.get(item.reporter_user_id) || 'Unknown';
+        const reportedName = userMap.get(item.reported_user_id) || 'Unknown';
+        const roomName = roomMap.get(item.room_id) || (item.room_id || 'Unknown');
+        const details = gcEscape(item.details || '');
+        const snapshot = gcEscape(item.message_snapshot || 'No snapshot');
+        const createdText = gcFormatMessageTime(item.created_at);
+
+        return `
+            <div class="gc-admin-report-item">
+                <div class="gc-admin-report-top">
+                    <div class="gc-admin-report-reason">${gcEscape(item.reason || 'other')}</div>
+                    <div class="gc-admin-report-status ${statusMeta.css}">${statusMeta.label}</div>
+                </div>
+                <div class="gc-admin-report-meta">
+                    <span>Reporter: <strong>${gcEscape(reporterName)}</strong></span>
+                    <span>Reported: <strong>${gcEscape(reportedName)}</strong></span>
+                    <span>Room: <strong>${gcEscape(roomName)}</strong></span>
+                    <span>Time: <strong>${gcEscape(createdText)}</strong></span>
+                </div>
+                <div class="gc-admin-report-snapshot">${snapshot}</div>
+                ${details ? `<div class="gc-admin-report-details">${details}</div>` : ''}
+                <div class="gc-admin-report-actions">
+                    <button class="gc-member-action" type="button" onclick="gcUpdateReportStatus('${gcEscape(item.id)}','reviewed')">Mark reviewed</button>
+                    <button class="gc-member-action danger" type="button" onclick="gcUpdateReportStatus('${gcEscape(item.id)}','closed')">Close</button>
+                    <button class="gc-member-action" type="button" onclick="gcUpdateReportStatus('${gcEscape(item.id)}','open')">Reopen</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function gcUpdateReportStatus(reportId, nextStatus) {
+    if (!sbClient || !gcUserIsAdmin || !reportId) return;
+    const status = String(nextStatus || '').toLowerCase();
+    if (!['open', 'reviewed', 'closed'].includes(status)) {
+        gcNotifyError('Invalid report status.');
+        return;
+    }
+
+    const { error } = await sbClient
+        .from(GC_TABLES.reports)
+        .update({ status })
+        .eq('id', reportId);
+
+    if (error) {
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.reports));
+        return;
+    }
+
+    showNotification('Zashi Messaging', `Report marked as ${status}.`);
+    await gcRenderAdminReportsList();
 }
 
 async function gcSubmitReport(messageId) {
@@ -3496,6 +3809,12 @@ function gcShowSettings() {
                         <span class="material-icons-round">shield</span>
                         Privacy Policy
                     </button>
+                    ${gcUserIsAdmin ? `
+                    <button class="gc-settings-link" type="button" onclick="gcOpenAdminReportWorkspace()">
+                        <span class="material-icons-round">admin_panel_settings</span>
+                        Admin Report Workspace
+                    </button>
+                    ` : ''}
                 </div>
             </div>
             <div class="gc-settings-card">
@@ -3553,6 +3872,10 @@ function gcLogout() {
 }
 
 function gcShowCreateGroup() {
+    if (gcIsSystemRoom()) {
+        gcNotifyError('System inbox is read-only. Switch to another room to create groups.');
+        return;
+    }
     const overlay = gcWin?.querySelector('.gc-modal-overlay');
     const input = gcWin?.querySelector('#gc-group-name');
     if (!overlay || !input) return;
@@ -3726,6 +4049,7 @@ function gcHideMembersPanel() {
 }
 
 async function gcToggleMembers() {
+    if (gcIsSystemRoom()) return;
     const panel = gcWin?.querySelector('.gc-members-panel');
     const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
     if (!panel) return;
