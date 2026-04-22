@@ -41,6 +41,7 @@ let gcUserAvatarUrl = '';
 let gcUserCoverUrl = '';
 let gcUserBio = '';
 let gcUserIsAdmin = false;
+let gcUserMutedUntil = '';
 let gcCurrentRoom = 'global';
 let gcWin = null;
 let gcSubscription = null;
@@ -101,6 +102,22 @@ function gcGetGlobalRoomPreview() {
 
 function gcGetSystemRoomPreview() {
     return 'Private notices for your account only';
+}
+
+function gcIsUserMuted() {
+    if (!gcUserMutedUntil) return false;
+    const muteUntil = new Date(gcUserMutedUntil).getTime();
+    return Number.isFinite(muteUntil) && muteUntil > Date.now();
+}
+
+function gcGetMuteRemainingText() {
+    if (!gcIsUserMuted()) return '';
+    const muteUntil = new Date(gcUserMutedUntil).getTime();
+    const remainingMs = Math.max(0, muteUntil - Date.now());
+    const minutes = Math.ceil(remainingMs / 60000);
+    if (minutes < 60) return `${minutes} minute(s)`;
+    const hours = Math.ceil(minutes / 60);
+    return `${hours} hour(s)`;
 }
 
 function gcIsAdminOnlyRoom(room) {
@@ -319,6 +336,7 @@ function initMessage(win) {
     const userCoverUrl = localStorage.getItem('webos-gc-cover') || '';
     const userBio = localStorage.getItem('webos-gc-bio') || '';
     const userIsAdmin = localStorage.getItem(GC_IS_ADMIN_KEY) === 'true';
+    const userMutedUntil = localStorage.getItem('webos-gc-muted-until') || '';
 
     if (!userName || !userId) {
         gcShowSetup(win);
@@ -332,6 +350,7 @@ function initMessage(win) {
     gcUserCoverUrl = userCoverUrl;
     gcUserBio = userBio;
     gcUserIsAdmin = userIsAdmin;
+    gcUserMutedUntil = userMutedUntil;
     gcHideSetup(win);
     gcStartApp(win);
 }
@@ -469,7 +488,7 @@ async function gcLogin() {
             return;
         }
 
-        gcSetUserSession(data.username, data.id, data.color, data.avatar_url, data.cover_url, data.bio, data.is_admin);
+        gcSetUserSession(data.username, data.id, data.color, data.avatar_url, data.cover_url, data.bio, data.is_admin, data.muted_until);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -561,7 +580,7 @@ async function gcRegister() {
         }
 
         await gcCreateWelcomeNoticeForUser(newUser.id, newUser.username);
-        gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url, newUser.cover_url, newUser.bio, newUser.is_admin);
+        gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url, newUser.cover_url, newUser.bio, newUser.is_admin, newUser.muted_until);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
     } catch (error) {
@@ -589,7 +608,31 @@ async function gcCreateWelcomeNoticeForUser(userId, username = '') {
     }
 }
 
-function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = '', isAdmin = false) {
+async function gcCreateSystemNotice(userId, title, body) {
+    if (!sbClient || !userId) return false;
+
+    const payload = {
+        user_id: userId,
+        title: gcStripUnsafeText(title || 'System Notice').slice(0, 120),
+        body: gcStripUnsafeText(body || '').slice(0, 500)
+    };
+
+    try {
+        const { error } = await sbClient
+            .from(GC_TABLES.userNotices)
+            .insert([payload]);
+        if (error) {
+            gcDebugError('Create system notice error:', error);
+            return false;
+        }
+        return true;
+    } catch (error) {
+        gcDebugError('Create system notice error:', error);
+        return false;
+    }
+}
+
+function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = '', isAdmin = false, mutedUntil = '') {
     gcUserName = name;
     gcUserId = id;
     gcUserColor = color;
@@ -597,6 +640,7 @@ function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = 
     gcUserCoverUrl = coverUrl || '';
     gcUserBio = bio || '';
     gcUserIsAdmin = !!isAdmin;
+    gcUserMutedUntil = mutedUntil || '';
     localStorage.setItem('webos-gc-username', name);
     localStorage.setItem('webos-gc-userid', id);
     localStorage.setItem('webos-gc-color', color);
@@ -604,6 +648,7 @@ function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = 
     localStorage.setItem('webos-gc-cover', gcUserCoverUrl);
     localStorage.setItem('webos-gc-bio', gcUserBio);
     localStorage.setItem(GC_IS_ADMIN_KEY, String(gcUserIsAdmin));
+    localStorage.setItem('webos-gc-muted-until', gcUserMutedUntil);
     gcCacheUserProfile({
         id,
         username: name,
@@ -611,7 +656,8 @@ function gcSetUserSession(name, id, color, avatarUrl = '', coverUrl = '', bio = 
         avatar_url: gcUserAvatarUrl,
         cover_url: gcUserCoverUrl,
         bio: gcUserBio,
-        is_admin: gcUserIsAdmin
+        is_admin: gcUserIsAdmin,
+        muted_until: gcUserMutedUntil
     });
 }
 
@@ -682,7 +728,8 @@ function gcGetCachedUserProfile(userId, userName = '') {
             avatar_url: gcUserAvatarUrl,
             cover_url: gcUserCoverUrl,
             bio: gcUserBio,
-            is_admin: gcUserIsAdmin
+            is_admin: gcUserIsAdmin,
+            muted_until: gcUserMutedUntil
         };
     }
 
@@ -874,7 +921,7 @@ async function gcRefreshCurrentUserSession() {
     try {
         const { data, error } = await sbClient
             .from(GC_TABLES.users)
-            .select('id, username, color, avatar_url, cover_url, bio, is_admin')
+            .select('id, username, color, avatar_url, cover_url, bio, is_admin, muted_until')
             .eq('id', gcUserId)
             .maybeSingle();
 
@@ -886,7 +933,8 @@ async function gcRefreshCurrentUserSession() {
             data.avatar_url,
             data.cover_url,
             data.bio,
-            data.is_admin
+            data.is_admin,
+            data.muted_until
         );
     } catch (error) {
         gcDebugError('Refresh current user session error:', error);
@@ -1655,6 +1703,10 @@ async function gcSendMessage() {
         gcNotifyError('System inbox is read-only. You can only view notifications.');
         return;
     }
+    if (gcIsUserMuted()) {
+        gcNotifyError(`You are muted and cannot send messages for ${gcGetMuteRemainingText()}.`);
+        return;
+    }
 
     const textarea = gcWin.querySelector('.gc-input-box textarea');
     const text = textarea?.value.trim() || '';
@@ -1755,6 +1807,10 @@ async function gcSendAttachment(attachment, extraText = '') {
     if (!sbClient || !gcWin || !attachment?.file) return;
     if (gcIsSystemRoom()) {
         gcNotifyError('System inbox is read-only. You can only view notifications.');
+        return;
+    }
+    if (gcIsUserMuted()) {
+        gcNotifyError(`You are muted and cannot send messages for ${gcGetMuteRemainingText()}.`);
         return;
     }
     const trimmedExtraText = String(extraText || '').trim();
@@ -3155,6 +3211,9 @@ async function gcRenderAdminReportsList() {
                 <div class="gc-admin-report-snapshot">${snapshot}</div>
                 ${details ? `<div class="gc-admin-report-details">${details}</div>` : ''}
                 <div class="gc-admin-report-actions">
+                    ${item.message_id ? `<button class="gc-member-action danger" type="button" onclick="gcDeleteReportedMessage('${gcEscape(item.id)}')">Delete violating message</button>` : ''}
+                    <button class="gc-member-action" type="button" onclick="gcWarnReportedUser('${gcEscape(item.id)}')">Warn only</button>
+                    ${item.message_id ? `<button class="gc-member-action danger" type="button" onclick="gcDeleteReportedMessageAndMute('${gcEscape(item.id)}')">Delete + mute 24h</button>` : ''}
                     <button class="gc-member-action" type="button" onclick="gcUpdateReportStatus('${gcEscape(item.id)}','reviewed')">Mark reviewed</button>
                     <button class="gc-member-action danger" type="button" onclick="gcUpdateReportStatus('${gcEscape(item.id)}','closed')">Close</button>
                     <button class="gc-member-action" type="button" onclick="gcUpdateReportStatus('${gcEscape(item.id)}','open')">Reopen</button>
@@ -3183,6 +3242,175 @@ async function gcUpdateReportStatus(reportId, nextStatus) {
     }
 
     showNotification('Zashi Messaging', `Report marked as ${status}.`);
+    await gcRenderAdminReportsList();
+}
+
+async function gcDeleteReportedMessageCore(reportId, options = {}) {
+    if (!sbClient || !gcUserIsAdmin || !reportId) return false;
+
+    const {
+        skipConfirm = false,
+        confirmationText = 'Delete the reported message and send a warning notice to this user?',
+        successText = 'Reported message deleted and warning sent.'
+    } = options;
+
+    if (!skipConfirm) {
+        const confirmed = confirm(confirmationText);
+        if (!confirmed) return false;
+    }
+
+    const { data: report, error: reportError } = await sbClient
+        .from(GC_TABLES.reports)
+        .select('id, room_id, message_id, reported_user_id, reason, status')
+        .eq('id', reportId)
+        .maybeSingle();
+
+    if (reportError || !report?.message_id) {
+        gcNotifyError('Could not load the reported message.');
+        return false;
+    }
+
+    const { data: message, error: messageError } = await sbClient
+        .from(GC_TABLES.messages)
+        .select('id, room_id, sender_id, sender_name, text, file_url')
+        .eq('id', report.message_id)
+        .maybeSingle();
+
+    if (messageError) {
+        gcNotifyError(gcFormatSupabaseError(messageError, GC_TABLES.messages));
+        return false;
+    }
+
+    if (!message?.id) {
+        await gcUpdateReportStatus(reportId, 'closed');
+        gcNotifyError('That message was already removed.');
+        return false;
+    }
+
+    const deleteError = await (async () => {
+        const { error } = await sbClient
+            .from(GC_TABLES.messages)
+            .delete()
+            .eq('id', message.id);
+        return error;
+    })();
+
+    if (deleteError) {
+        gcNotifyError(gcFormatSupabaseError(deleteError, GC_TABLES.messages));
+        return false;
+    }
+
+    if (message.file_url) {
+        gcDeleteStorageObjectByUrl(message.file_url).catch(storageError => {
+            gcDebugError('Delete reported message file error:', storageError);
+        });
+    }
+
+    if (gcCurrentRoom === message.room_id) {
+        gcRemoveMessageFromUi(message.id);
+    }
+
+    const warnedUserId = report.reported_user_id || message.sender_id || null;
+    if (warnedUserId) {
+        await gcCreateSystemNotice(
+            warnedUserId,
+            'Content warning',
+            `One of your messages was removed by an admin for "${report.reason || 'policy violation'}". Please review the chat rules before posting again.`
+        );
+    }
+
+    const { error: updateError } = await sbClient
+        .from(GC_TABLES.reports)
+        .update({ status: 'closed' })
+        .eq('id', reportId);
+
+    if (updateError) {
+        gcDebugError('Close report after deletion error:', updateError);
+    }
+
+    showNotification('Zashi Messaging', successText);
+    await gcRenderAdminReportsList();
+    return true;
+}
+
+async function gcDeleteReportedMessage(reportId) {
+    await gcDeleteReportedMessageCore(reportId);
+}
+
+async function gcWarnReportedUser(reportId) {
+    if (!sbClient || !gcUserIsAdmin || !reportId) return;
+
+    const confirmed = confirm('Send a warning notice to this user and mark the report as reviewed?');
+    if (!confirmed) return;
+
+    const { data: report, error } = await sbClient
+        .from(GC_TABLES.reports)
+        .select('id, reported_user_id, reason')
+        .eq('id', reportId)
+        .maybeSingle();
+
+    if (error || !report?.reported_user_id) {
+        gcNotifyError('Could not load the reported user.');
+        return;
+    }
+
+    await gcCreateSystemNotice(
+        report.reported_user_id,
+        'Account warning',
+        `Your content was reported for "${report.reason || 'policy violation'}". Please follow the community rules to avoid stronger action.`
+    );
+    await gcUpdateReportStatus(reportId, 'reviewed');
+}
+
+async function gcMuteUserFor24Hours(userId, reason = 'policy violation') {
+    if (!sbClient || !userId) return false;
+    const mutedUntil = new Date(Date.now() + (24 * 60 * 60 * 1000)).toISOString();
+
+    const { error } = await sbClient
+        .from(GC_TABLES.users)
+        .update({ muted_until: mutedUntil })
+        .eq('id', userId);
+
+    if (error) {
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
+        return false;
+    }
+
+    await gcCreateSystemNotice(
+        userId,
+        'Temporary mute',
+        `You have been muted for 24 hours for "${reason}". During this time you cannot send messages or uploads.`
+    );
+    return true;
+}
+
+async function gcDeleteReportedMessageAndMute(reportId) {
+    if (!sbClient || !gcUserIsAdmin || !reportId) return;
+
+    const confirmed = confirm('Delete the reported message, mute this user for 24 hours, and send a warning?');
+    if (!confirmed) return;
+
+    const { data: report, error } = await sbClient
+        .from(GC_TABLES.reports)
+        .select('id, reported_user_id, reason')
+        .eq('id', reportId)
+        .maybeSingle();
+
+    if (error || !report) {
+        gcNotifyError('Could not load the report.');
+        return;
+    }
+
+    const deleted = await gcDeleteReportedMessageCore(reportId, {
+        skipConfirm: true,
+        successText: 'Reported message deleted.'
+    });
+    if (deleted && report.reported_user_id) {
+        const muted = await gcMuteUserFor24Hours(report.reported_user_id, report.reason || 'policy violation');
+        if (muted) {
+            showNotification('Zashi Messaging', 'User muted for 24 hours.');
+        }
+    }
     await gcRenderAdminReportsList();
 }
 
@@ -3868,6 +4096,7 @@ function gcLogout() {
     localStorage.removeItem('webos-gc-cover');
     localStorage.removeItem('webos-gc-bio');
     localStorage.removeItem(GC_IS_ADMIN_KEY);
+    localStorage.removeItem('webos-gc-muted-until');
     location.reload();
 }
 
@@ -3912,6 +4141,10 @@ function gcBuildRoomId(name) {
 
 async function gcCreateGroup() {
     if (!sbClient || !gcWin) return;
+    if (gcIsUserMuted()) {
+        gcNotifyError(`You are muted and cannot create groups for ${gcGetMuteRemainingText()}.`);
+        return;
+    }
 
     const input = gcWin.querySelector('#gc-group-name');
     const createBtn = gcWin.querySelector('.gc-btn-primary');
