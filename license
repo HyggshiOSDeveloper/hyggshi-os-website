@@ -1,27 +1,35 @@
-HOSL-1.0 – Hyggshi OS License v1.0
+HOSL-1.2 – Hyggshi OS License v1.2
+Copyright © 2025–2026 Hyggshi-os-website
 
-Copyright © 2025 - 2026 Hyggshi-os-website
+1. PERMISSIONS
+You may use, copy, modify, and distribute this software and its
+source code, free of charge, for non-commercial purposes only.
 
- 
+2. COMMERCIAL USE RESTRICTION
+This software may not be used, in whole or in part, in any product,
+service, or activity intended to generate revenue, monetary compensation,
+or commercial advantage — whether directly or indirectly.
 
-1. Usage Rights
-This software is licensed as open source. You may use, copy, modify, and distribute the source code free of charge, subject to the following conditions.
+3. ATTRIBUTION REQUIREMENT
+If you use this software to create an operating system (OS) or graphical
+user interface (GUI) in Roblox Studio, the following credit must be
+displayed prominently in the product or its documentation:
 
-2. Commercial Restrictions
-This software may not be used for commercial purposes or for direct or indirect profit, in any form.
+    "Based on work by hyggshi-os-website"
 
-3. Special Conditions
-a) It is not required to use this source code for AI projects.
+4. AI TRAINING RESTRICTION  ← nếu ý bạn là muốn cấm
+This software and its source code may not be used as training data
+for machine learning or AI models without explicit written permission
+from the copyright holder.
 
-b) If you use this source code to create an operating system (OS) or graphical interface (GUI) in Roblox Studio, you must clearly indicate the line:
+5. DERIVATIVE WORKS
+Any derivative work must be distributed under the same HOSL-1.0 license.
+You may not sublicense this software under any other license.
 
-By hyggshi-os-website
+6. DISCLAIMER
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED. THE AUTHOR SHALL NOT BE LIABLE FOR ANY DAMAGES
+ARISING FROM THE USE OF THIS SOFTWARE.
 
-in a prominent place in the product or accompanying documentation.
-
-4. Disclaimer
-The software is provided "AS IS", without any warranties, either express or implied. The author is not responsible for any damages, losses or consequences arising from the use of the software.
-
-5. License Acceptance
-By using or distributing this software, you are deemed to have read, understood and agreed to abide by the terms of the HOSL-1.0 license.
-
+7. ACCEPTANCE
+Use or distribution of this software constitutes acceptance of these terms.
