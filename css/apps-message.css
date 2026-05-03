@@ -2145,6 +2145,10 @@
     margin-top: 6px;
 }
 
+.gc-member-actions-top {
+    margin: 0 0 12px;
+}
+
 .gc-member-action {
     border: none;
     border-radius: 999px;

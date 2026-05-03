@@ -79,6 +79,7 @@ let gcReplyDraft = null;
 let gcSyncInterval = null;
 let gcActiveRoomRequestId = 0;
 let gcPinnedRoomIds = new Set();
+let gcLeftGroupIds = new Set();
 let gcMembersPanelOpen = false;
 let gcAvatarUploadMode = 'user';
 let gcCurrentUserRoomRole = 'member';
@@ -88,6 +89,7 @@ let gcGoogleTokenClient = null;
 let gcGoogleAccessToken = '';
 let gcGoogleTokenExpiresAt = 0;
 const GC_PINNED_ROOMS_KEY = 'webos-gc-pinned-rooms';
+const GC_LEFT_GROUPS_KEY = 'webos-gc-left-groups';
 const GC_IS_ADMIN_KEY = 'webos-gc-is-admin';
 const GC_MAX_AVATAR_BYTES = 500 * 1024;
 const GC_AVATAR_PRIMARY_SIZE = 256;
@@ -159,6 +161,7 @@ function gcCanAccessRoom(room) {
     if (!room) return false;
     if (gcIsRoomExpired(room)) return false;
     if (gcIsAdminOnlyRoom(room) && !gcUserIsAdmin) return false;
+    if (room.type === 'group' && gcLeftGroupIds.has(room.id)) return false;
     return true;
 }
 
@@ -388,6 +391,7 @@ function initMessage(win) {
     const userWarningsCount = Number(localStorage.getItem('webos-gc-warnings-count') || 0);
     const userGlobalChatBanned = localStorage.getItem('webos-gc-global-chat-banned') === 'true';
     const savedThemeId = localStorage.getItem(GC_THEME_KEY) || 'default';
+    gcLeftGroupIds = gcLoadLeftGroups();
 
     if (!userName || !userId) {
         gcShowSetup(win);
@@ -738,6 +742,33 @@ function gcSavePinnedRooms() {
     localStorage.setItem(GC_PINNED_ROOMS_KEY, JSON.stringify([...gcPinnedRoomIds]));
 }
 
+function gcLoadLeftGroups() {
+    try {
+        const raw = localStorage.getItem(GC_LEFT_GROUPS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return new Set(Array.isArray(parsed) ? parsed : []);
+    } catch (error) {
+        return new Set();
+    }
+}
+
+function gcSaveLeftGroups() {
+    localStorage.setItem(GC_LEFT_GROUPS_KEY, JSON.stringify([...gcLeftGroupIds]));
+}
+
+function gcMarkGroupLeft(roomId) {
+    if (!roomId) return;
+    gcLeftGroupIds.add(roomId);
+    gcSaveLeftGroups();
+}
+
+function gcMarkGroupJoined(roomId) {
+    if (!roomId) return;
+    if (!gcLeftGroupIds.has(roomId)) return;
+    gcLeftGroupIds.delete(roomId);
+    gcSaveLeftGroups();
+}
+
 function gcIsRoomPinned(roomId) {
     return gcPinnedRoomIds.has(roomId);
 }
@@ -764,6 +795,48 @@ function gcCanDeleteGroup(roomId = gcCurrentRoom) {
 function gcCanAppointDeputy(roomId = gcCurrentRoom) {
     if (!gcIsGroupRoom(roomId)) return false;
     return gcCurrentUserRoomRole === 'owner';
+}
+
+function gcCanLeaveGroup(roomId = gcCurrentRoom) {
+    if (!gcIsGroupRoom(roomId)) return false;
+    return gcCurrentUserRoomRole !== 'owner';
+}
+
+function gcCanShareGroupLink(roomId = gcCurrentRoom) {
+    return gcIsGroupRoom(roomId);
+}
+
+function gcBuildGroupInviteLink(roomId = gcCurrentRoom) {
+    const room = gcGetRoomById(roomId);
+    if (!room || room.type !== 'group') return '';
+
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('gc_join', room.id);
+        return url.toString();
+    } catch (error) {
+        const base = window.location.href.split('?')[0];
+        return `${base}?gc_join=${encodeURIComponent(room.id)}`;
+    }
+}
+
+function gcGetInviteRoomIdFromUrl() {
+    try {
+        const url = new URL(window.location.href);
+        return gcStripUnsafeText(url.searchParams.get('gc_join') || '');
+    } catch (error) {
+        return '';
+    }
+}
+
+function gcClearInviteRoomIdFromUrl() {
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('gc_join');
+        window.history.replaceState({}, document.title, url.toString());
+    } catch (error) {
+        gcDebugError('Clear invite link error:', error);
+    }
 }
 
 function gcGetRoleLabel(role) {
@@ -976,8 +1049,11 @@ async function gcStartApp(win) {
     gcRenderUserIdentity(win);
 
     await gcDeleteExpiredAdminRooms();
-    gcListenRooms(win);
-    gcSwitchRoom('global');
+    await gcListenRooms(win);
+    const joinedFromInvite = await gcHandleInviteLink();
+    if (!joinedFromInvite) {
+        gcSwitchRoom('global');
+    }
 }
 
 async function gcRefreshCurrentUserSession() {
@@ -1044,6 +1120,43 @@ async function gcListenRooms(win) {
             gcListenRooms(win);
         })
         .subscribe();
+}
+
+async function gcHandleInviteLink() {
+    const roomId = gcGetInviteRoomIdFromUrl();
+    if (!roomId || !sbClient || !gcUserId) return false;
+
+    try {
+        const room = gcGetRoomById(roomId);
+        if (!room || room.type !== 'group') {
+            gcClearInviteRoomIdFromUrl();
+            return false;
+        }
+
+        const { error } = await sbClient
+            .from(GC_TABLES.roomMembers)
+            .upsert([{
+                room_id: roomId,
+                user_id: gcUserId,
+                role: 'member'
+            }], { onConflict: 'room_id,user_id' });
+
+        if (error) {
+            gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.roomMembers));
+            gcClearInviteRoomIdFromUrl();
+            return false;
+        }
+
+        gcMarkGroupJoined(roomId);
+        gcClearInviteRoomIdFromUrl();
+        await gcSwitchRoom(roomId);
+        showNotification('Zashi Messaging', `Joined group "${room.name}".`);
+        return true;
+    } catch (error) {
+        gcDebugError('Handle invite link error:', error);
+        gcClearInviteRoomIdFromUrl();
+        return false;
+    }
 }
 
 function gcRenderRoomList(win, rooms) {
@@ -1253,6 +1366,7 @@ async function gcEnsureRoomMembership(roomId = gcCurrentRoom) {
         .upsert([payload], { onConflict: 'room_id,user_id' });
 
     if (!error) {
+        gcMarkGroupJoined(roomId);
         await gcLoadRoomMembers(roomId);
     }
 }
@@ -1270,7 +1384,9 @@ async function gcEnsureAdminTestOwnership(roomId = gcCurrentRoom) {
 
     if (error) {
         gcDebugError('Ensure admin test ownership error:', error);
+        return;
     }
+    gcMarkGroupJoined(roomId);
 }
 
 async function gcLoadRoomMembers(roomId = gcCurrentRoom) {
@@ -1381,9 +1497,11 @@ function gcUpdateHeader(roomId) {
     const headerStatus = gcWin?.querySelector('.gc-chat-header-status');
     const headerIcon = gcWin?.querySelector('.gc-chat-header-icon');
     const deleteBtn = gcWin?.querySelector('.gc-delete-room-btn');
-    const searchBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(1)');
-    const pinBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(3)');
-    const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
+    const shareBtn = gcWin?.querySelector('.gc-header-actions .gc-share-room-btn');
+    const leaveBtn = gcWin?.querySelector('.gc-header-actions .gc-leave-room-btn');
+    const searchBtn = gcWin?.querySelector('.gc-header-actions .gc-search-btn');
+    const pinBtn = gcWin?.querySelector('.gc-header-actions .gc-pin-room-btn');
+    const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-members-toggle-btn');
     const room = gcRoomCache.find(item => item.id === roomId) || {
         id: roomId,
         name: roomId === GC_GLOBAL_ROOM_ID ? GC_GLOBAL_ROOM_LABEL : 'Group Chat',
@@ -1413,6 +1531,8 @@ function gcUpdateHeader(roomId) {
     }
     const isSystem = room.type === 'system' || room.id === GC_SYSTEM_ROOM_ID;
     if (deleteBtn) deleteBtn.style.display = !isSystem && room.type === 'group' && gcCanDeleteGroup(roomId) ? 'grid' : 'none';
+    if (shareBtn) shareBtn.style.display = !isSystem && room.type === 'group' && gcCanShareGroupLink(roomId) ? 'grid' : 'none';
+    if (leaveBtn) leaveBtn.style.display = !isSystem && room.type === 'group' && gcCanLeaveGroup(roomId) ? 'grid' : 'none';
     if (searchBtn) searchBtn.style.display = isSystem ? 'none' : 'grid';
     if (pinBtn) {
         pinBtn.style.display = isSystem ? 'none' : 'grid';
@@ -2241,10 +2361,58 @@ function gcEnsureAvatarInput(win = gcWin) {
 }
 
 function gcBindHeaderActions(win) {
-    const pinBtn = win.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(3)');
+    const actions = win.querySelector('.gc-header-actions');
+    if (actions && !actions.querySelector('.gc-share-room-btn')) {
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'gc-header-btn gc-share-room-btn';
+        shareBtn.style.display = 'none';
+        shareBtn.title = 'Share group link';
+        shareBtn.innerHTML = '<span class="material-icons-round">share</span>';
+        shareBtn.addEventListener('click', () => gcShareCurrentGroupLink());
+        const searchBtn = actions.querySelector('.gc-header-btn');
+        if (searchBtn) {
+            actions.insertBefore(shareBtn, searchBtn);
+        } else {
+            actions.appendChild(shareBtn);
+        }
+    }
+
+    if (actions && !actions.querySelector('.gc-leave-room-btn')) {
+        const leaveBtn = document.createElement('button');
+        leaveBtn.className = 'gc-header-btn gc-leave-room-btn';
+        leaveBtn.style.display = 'none';
+        leaveBtn.title = 'Leave group';
+        leaveBtn.innerHTML = '<span class="material-icons-round">logout</span>';
+        leaveBtn.addEventListener('click', () => gcLeaveCurrentGroup());
+        const searchBtn = actions.querySelector('.gc-header-btn');
+        if (searchBtn) {
+            actions.insertBefore(leaveBtn, searchBtn);
+        } else {
+            actions.appendChild(leaveBtn);
+        }
+    }
+
+    const headerButtons = actions?.querySelectorAll('.gc-header-btn') || [];
+    if (headerButtons[0] && !headerButtons[0].classList.contains('gc-leave-room-btn')) {
+        headerButtons[0].classList.add('gc-search-btn');
+    } else {
+        headerButtons[1]?.classList.add('gc-search-btn');
+    }
+    headerButtons.forEach(btn => {
+        const icon = btn.querySelector('.material-icons-round')?.textContent?.trim();
+        if (icon === 'share') btn.classList.add('gc-share-room-btn');
+        if (icon === 'search') btn.classList.add('gc-search-btn');
+        if (icon === 'push_pin') btn.classList.add('gc-pin-room-btn');
+        if (icon === 'people') btn.classList.add('gc-members-toggle-btn');
+    });
+
+    const shareBtn = win.querySelector('.gc-header-actions .gc-share-room-btn');
+    if (shareBtn) shareBtn.title = 'Share group link';
+
+    const pinBtn = win.querySelector('.gc-header-actions .gc-pin-room-btn');
     if (pinBtn) pinBtn.title = 'Pin conversation';
 
-    const membersBtn = win.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
+    const membersBtn = win.querySelector('.gc-header-actions .gc-members-toggle-btn');
     if (membersBtn) membersBtn.title = 'Members';
 }
 
@@ -2865,6 +3033,12 @@ async function gcRefreshMembersPanel() {
     await gcLoadRoomMembers();
 
     if (gcIsGroupRoom()) {
+        const shareActionHtml = gcCanShareGroupLink()
+            ? `<div class="gc-member-actions gc-member-actions-top"><button class="gc-member-action" onclick="gcShareCurrentGroupLink()">Share link</button></div>`
+            : '';
+        const leaveActionHtml = gcCanLeaveGroup()
+            ? `<div class="gc-member-actions gc-member-actions-top"><button class="gc-member-action danger" onclick="gcLeaveCurrentGroup()">Leave group</button></div>`
+            : '';
         const memberList = gcRoomMembersCache.map(member => {
             const user = member.users || {};
             return {
@@ -2876,7 +3050,7 @@ async function gcRefreshMembersPanel() {
             };
         });
 
-        list.innerHTML = memberList.map(member => {
+        list.innerHTML = `${shareActionHtml}${leaveActionHtml}${memberList.map(member => {
             const canPromote = gcCanAppointDeputy() && member.id !== gcUserId && member.role === 'member';
             const canDemote = gcCanAppointDeputy() && member.id !== gcUserId && member.role === 'deputy';
             const canRemove = gcCanManageGroup() && member.id !== gcUserId && member.role !== 'owner';
@@ -2901,7 +3075,7 @@ async function gcRefreshMembersPanel() {
                     <div class="gc-member-online"></div>
                 </div>
             `;
-        }).join('');
+        }).join('')}`;
         return;
     }
 
@@ -4332,6 +4506,30 @@ function gcShowSettings() {
                 </div>
             </div>
             ` : ''}
+            ${gcIsGroupRoom() && gcCanLeaveGroup() ? `
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Membership</div>
+                <div class="gc-settings-card-note">Leave this group and remove it from your conversation list on this device.</div>
+                <div class="gc-settings-actions">
+                    <button class="gc-settings-link gc-settings-link-danger" type="button" onclick="gcLeaveCurrentGroup()">
+                        <span class="material-icons-round">logout</span>
+                        Leave group
+                    </button>
+                </div>
+            </div>
+            ` : ''}
+            ${gcCanShareGroupLink() ? `
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Invite</div>
+                <div class="gc-settings-card-note">Copy a share link so other signed-in users can join this group directly.</div>
+                <div class="gc-settings-actions">
+                    <button class="gc-settings-link" type="button" onclick="gcShareCurrentGroupLink()">
+                        <span class="material-icons-round">share</span>
+                        Share group link
+                    </button>
+                </div>
+            </div>
+            ` : ''}
             <div class="gc-settings-card">
                 <div class="gc-settings-card-title">Profile Bio</div>
                 <div class="gc-profile-bio-row">
@@ -4465,6 +4663,7 @@ function gcLogout() {
     localStorage.removeItem('webos-gc-muted-until');
     localStorage.removeItem('webos-gc-warnings-count');
     localStorage.removeItem('webos-gc-global-chat-banned');
+    localStorage.removeItem(GC_LEFT_GROUPS_KEY);
     location.reload();
 }
 
@@ -4590,6 +4789,7 @@ async function gcCreateGroup() {
                     user_id: gcUserId,
                     role: 'owner'
                 }], { onConflict: 'room_id,user_id' });
+            gcMarkGroupJoined(data.id);
             gcRoomCache = gcRoomCache.filter(room => room.id !== data.id);
             gcRoomCache.push(data);
             gcRoomCache = gcSortRooms(gcRoomCache);
@@ -4641,9 +4841,70 @@ async function gcDeleteCurrentRoom() {
     showNotification('Zashi Messaging', `Deleted group "${room.name}".`);
 }
 
+async function gcLeaveCurrentGroup() {
+    const room = gcGetRoomById();
+    if (!sbClient || !room || room.type !== 'group' || !gcUserId) return;
+
+    if (!gcCanLeaveGroup(room.id)) {
+        gcNotifyError('The group leader cannot leave directly. Delete the group or transfer leadership first.');
+        return;
+    }
+
+    const confirmed = confirm(`Leave group "${room.name}"?`);
+    if (!confirmed) return;
+
+    const { error } = await sbClient
+        .from(GC_TABLES.roomMembers)
+        .delete()
+        .eq('room_id', room.id)
+        .eq('user_id', gcUserId);
+
+    if (error) {
+        gcDebugError('Leave group error:', error);
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.roomMembers));
+        return;
+    }
+
+    gcPinnedRoomIds.delete(room.id);
+    gcSavePinnedRooms();
+    gcMarkGroupLeft(room.id);
+    gcRoomMembersCache = [];
+    gcCurrentUserRoomRole = 'member';
+    gcHideMembersPanel();
+    gcHideModal();
+    gcRenderRoomList(gcWin, gcGetVisibleRooms(gcRoomCache));
+    gcSwitchRoom(GC_GLOBAL_ROOM_ID);
+    showNotification('Zashi Messaging', `Left group "${room.name}".`);
+}
+
+async function gcShareCurrentGroupLink() {
+    const room = gcGetRoomById();
+    if (!room || room.type !== 'group') {
+        gcNotifyError('Only group chats can be shared by link.');
+        return;
+    }
+
+    const inviteLink = gcBuildGroupInviteLink(room.id);
+    if (!inviteLink) {
+        gcNotifyError('Could not build the group link.');
+        return;
+    }
+
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(inviteLink);
+        } else {
+            throw new Error('clipboard-unavailable');
+        }
+        showNotification('Zashi Messaging', 'Group link copied to clipboard.');
+    } catch (error) {
+        prompt('Copy this group link:', inviteLink);
+    }
+}
+
 function gcHideMembersPanel() {
     const panel = gcWin?.querySelector('.gc-members-panel');
-    const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
+    const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-members-toggle-btn');
     gcMembersPanelOpen = false;
     panel?.classList.remove('show');
     membersBtn?.classList.remove('active');
@@ -4652,7 +4913,7 @@ function gcHideMembersPanel() {
 async function gcToggleMembers() {
     if (gcIsSystemRoom()) return;
     const panel = gcWin?.querySelector('.gc-members-panel');
-    const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
+    const membersBtn = gcWin?.querySelector('.gc-header-actions .gc-members-toggle-btn');
     if (!panel) return;
 
     gcMembersPanelOpen = !gcMembersPanelOpen;
