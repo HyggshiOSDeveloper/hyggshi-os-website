@@ -155,8 +155,15 @@
 .app-globalchat.gc-theme-midnight .gc-theme-desc,
 .app-globalchat.gc-theme-midnight .gc-profile-bio,
 .app-globalchat.gc-theme-midnight .gc-settings-stat-row,
+.app-globalchat.gc-theme-midnight .gc-invite-preview-label,
 .app-globalchat.gc-theme-midnight .gc-settings-eyebrow {
     color: #9fb0cc;
+}
+
+.app-globalchat.gc-theme-midnight .gc-invite-preview-input {
+    background: rgba(10, 18, 34, 0.92);
+    border-color: rgba(130, 152, 190, 0.18);
+    color: #e6eefb;
 }
 
 .app-globalchat.gc-theme-midnight .gc-settings-stat-row strong,
@@ -2009,6 +2016,40 @@
     flex-direction: column;
     gap: 8px;
     margin-top: 10px;
+}
+
+.gc-invite-preview {
+    margin-top: 12px;
+}
+
+.gc-invite-preview-label {
+    margin-bottom: 8px;
+    color: #6f819a;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.gc-invite-preview-input {
+    width: 100%;
+    min-height: 76px;
+    resize: vertical;
+    border: 1px solid #dbe7f8;
+    border-radius: 16px;
+    background: #f7fbff;
+    color: #28415f;
+    padding: 12px 14px;
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+
+.gc-invite-preview-input:focus {
+    outline: none;
+    border-color: #8cb8ff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
 .gc-settings-footer {
