@@ -1502,14 +1502,28 @@ function gcShowSettings() {
             <div class="gc-settings-card">
                 <div class="gc-settings-card-title">Invite</div>
                 <div class="gc-settings-card-note">Copy a share link so other signed-in users can join this group directly.</div>
+                <div class="gc-settings-stat-row">
+                    <span>Expires</span>
+                    <strong>${gcEscape(gcGetInviteExpiryLabel(gcCurrentRoom))}</strong>
+                </div>
+                <div class="gc-settings-stat-row">
+                    <span>Join limit</span>
+                    <strong>${room?.invite_max_joins ? `${room.invite_join_count || 0} / ${room.invite_max_joins}` : 'Unlimited'}</strong>
+                </div>
                 <div class="gc-invite-preview">
                     <div class="gc-invite-preview-label">Invite Link Preview</div>
                     <textarea class="gc-invite-preview-input" rows="3" readonly onclick="this.focus(); this.select();">${gcEscape(inviteLink)}</textarea>
+                    <div class="gc-settings-card-note">Uses a short join code. If the user is not signed in yet, the app keeps the link and joins after login.</div>
+                    ${gcCanManageGroup() ? '' : `<div class="gc-settings-card-note">Invite settings are leader/deputy-only for this group.</div>`}
                 </div>
                 <div class="gc-settings-actions">
                     <button class="gc-settings-link" type="button" onclick="gcShareCurrentGroupLink()">
                         <span class="material-icons-round">share</span>
                         Share group link
+                    </button>
+                    <button class="gc-settings-link" type="button" onclick="gcShowInviteConfigModal()">
+                        <span class="material-icons-round">tune</span>
+                        Configure invite link
                     </button>
                 </div>
             </div>
@@ -1665,6 +1679,118 @@ function gcShowCreateGroup() {
     window.setTimeout(() => input.focus(), 0);
 }
 
+function gcShowSystemNoticeComposer() {
+    const overlay = gcWin?.querySelector('.gc-modal-overlay');
+    const modal = gcWin?.querySelector('.gc-modal');
+    if (!overlay || !modal) return;
+    if (!gcUserIsAdmin) {
+        gcNotifyError('Only admins can write system notices.');
+        return;
+    }
+
+    modal.classList.add('gc-settings-modal');
+    modal.innerHTML = `
+        <div class="gc-settings-sheet">
+            <div class="gc-settings-header">
+                <div>
+                    <div class="gc-settings-eyebrow">System Inbox</div>
+                    <h3>Write System Notice</h3>
+                </div>
+                <button class="gc-settings-close" type="button" onclick="gcHideModal()" aria-label="Close composer">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Recipient</div>
+                <div class="gc-settings-card-note">Send a private system notice to one account.</div>
+                <input id="gc-system-notice-user" class="gc-setup-input" type="text" maxlength="32" placeholder="Username...">
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Notice Content</div>
+                <div class="gc-invite-config-grid">
+                    <label class="gc-invite-config-field">
+                        <span>Type</span>
+                        <select id="gc-system-notice-type" class="gc-setup-input">
+                            <option value="info">Info</option>
+                            <option value="update">Update</option>
+                            <option value="warning">Warning</option>
+                            <option value="mute">Mute</option>
+                            <option value="ban">Ban</option>
+                        </select>
+                    </label>
+                    <label class="gc-invite-config-field">
+                        <span>Title</span>
+                        <input id="gc-system-notice-title" class="gc-setup-input" type="text" maxlength="120" placeholder="Notice title...">
+                    </label>
+                </div>
+                <textarea id="gc-system-notice-body" class="gc-setup-textarea" rows="6" maxlength="500" placeholder="Write the message body..."></textarea>
+            </div>
+            <div class="gc-settings-footer">
+                <button class="gc-btn-cancel" type="button" onclick="gcHideModal()">Cancel</button>
+                <button class="gc-btn-primary" type="button" onclick="gcSendCustomSystemNotice()">Send notice</button>
+            </div>
+        </div>
+    `;
+    modal.scrollTop = 0;
+    overlay.classList.remove('hidden');
+    window.setTimeout(() => gcWin?.querySelector('#gc-system-notice-user')?.focus(), 0);
+}
+
+async function gcSendCustomSystemNotice() {
+    if (!sbClient || !gcUserIsAdmin) return;
+
+    const usernameInput = gcWin?.querySelector('#gc-system-notice-user');
+    const titleInput = gcWin?.querySelector('#gc-system-notice-title');
+    const bodyInput = gcWin?.querySelector('#gc-system-notice-body');
+    const typeInput = gcWin?.querySelector('#gc-system-notice-type');
+
+    const username = gcNormalizeSafeName(usernameInput?.value || '');
+    const usernameKey = gcBuildNameKey(username);
+    const title = gcStripUnsafeText(titleInput?.value || '').trim();
+    const body = gcStripUnsafeText(bodyInput?.value || '').trim();
+    const type = String(typeInput?.value || 'info').toLowerCase();
+
+    if (!usernameKey) {
+        gcNotifyError('Enter a valid username.');
+        usernameInput?.focus();
+        return;
+    }
+    if (!title) {
+        gcNotifyError('Enter a notice title.');
+        titleInput?.focus();
+        return;
+    }
+    if (!body) {
+        gcNotifyError('Enter a notice body.');
+        bodyInput?.focus();
+        return;
+    }
+
+    const { data: targetUser, error: userError } = await sbClient
+        .from(GC_TABLES.users)
+        .select('id, username')
+        .eq('username_key', usernameKey)
+        .maybeSingle();
+
+    if (userError || !targetUser) {
+        gcNotifyError('Could not find that username.');
+        usernameInput?.focus();
+        return;
+    }
+
+    const created = await gcCreateSystemNotice(targetUser.id, title, body, type);
+    if (!created) {
+        gcNotifyError('Could not send the system notice.');
+        return;
+    }
+
+    gcHideModal();
+    if (gcIsSystemRoom()) {
+        gcLoadSystemNotices();
+    }
+    showNotification('Zashi Messaging', `System notice sent to ${targetUser.username}.`);
+}
+
 function gcHideModal() {
     const overlay = gcWin?.querySelector('.gc-modal-overlay');
     const input = gcWin?.querySelector('#gc-group-name');
@@ -1688,6 +1814,186 @@ function gcBuildRoomId(name) {
         .slice(0, 36);
     const suffix = Math.random().toString(36).slice(2, 8);
     return `group-${slug || 'room'}-${suffix}`;
+}
+
+function gcBuildInviteExpiryFromPreset(preset) {
+    const value = String(preset || 'never').trim().toLowerCase();
+    if (value === 'never') return null;
+    const match = value.match(/^(\d+)(h|d)$/);
+    if (!match) return null;
+    const amount = Number(match[1]);
+    if (!Number.isFinite(amount) || amount <= 0) return null;
+    const next = new Date();
+    if (match[2] === 'h') next.setHours(next.getHours() + amount);
+    else next.setDate(next.getDate() + amount);
+    return next.toISOString();
+}
+
+function gcGuessInvitePreset(room = gcGetRoomById()) {
+    if (!room?.invite_expires_at) return 'never';
+    const diffMs = new Date(room.invite_expires_at).getTime() - Date.now();
+    if (!Number.isFinite(diffMs) || diffMs <= 0) return 'never';
+    const hours = Math.round(diffMs / 3600000);
+    if (hours <= 1) return '1h';
+    if (hours <= 6) return '6h';
+    if (hours <= 12) return '12h';
+    if (hours <= 24) return '1d';
+    if (hours <= 72) return '3d';
+    if (hours <= 168) return '7d';
+    return 'never';
+}
+
+function gcShowInviteConfigModal() {
+    const overlay = gcWin?.querySelector('.gc-modal-overlay');
+    const modal = gcWin?.querySelector('.gc-modal');
+    const room = gcGetRoomById();
+    if (!overlay || !modal || !room || room.type !== 'group') return;
+    if (!gcCanManageGroup(room.id)) {
+        gcNotifyError('Only the group leader or deputy can configure invite links.');
+        return;
+    }
+
+    const preset = gcGuessInvitePreset(room);
+    const maxJoins = room.invite_max_joins ? String(room.invite_max_joins) : '';
+    modal.classList.add('gc-settings-modal');
+    modal.innerHTML = `
+        <div class="gc-settings-sheet">
+            <div class="gc-settings-header">
+                <div>
+                    <div class="gc-settings-eyebrow">Invite</div>
+                    <h3>Invite Link Settings</h3>
+                </div>
+                <button class="gc-settings-close" type="button" onclick="gcHideModal()" aria-label="Close invite settings">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Current Invite</div>
+                <div class="gc-settings-stat-row">
+                    <span>Code</span>
+                    <strong>${gcEscape(gcGetGroupInviteCode(room.id) || 'None')}</strong>
+                </div>
+                <div class="gc-settings-stat-row">
+                    <span>Expires</span>
+                    <strong>${gcEscape(gcGetInviteExpiryLabel(room.id))}</strong>
+                </div>
+                <div class="gc-settings-stat-row">
+                    <span>Join limit</span>
+                    <strong>${room.invite_max_joins ? `${room.invite_join_count || 0} / ${room.invite_max_joins}` : 'Unlimited'}</strong>
+                </div>
+            </div>
+            <div class="gc-settings-card">
+                <div class="gc-settings-card-title">Configure Invite Rules</div>
+                <div class="gc-settings-card-note">Set a time limit and optional join cap for this group link.</div>
+                <div class="gc-invite-config-grid">
+                    <label class="gc-invite-config-field">
+                        <span>Expires after</span>
+                        <select id="gc-invite-expiry" class="gc-setup-input">
+                            <option value="never"${preset === 'never' ? ' selected' : ''}>Never</option>
+                            <option value="1h"${preset === '1h' ? ' selected' : ''}>1 hour</option>
+                            <option value="6h"${preset === '6h' ? ' selected' : ''}>6 hours</option>
+                            <option value="12h"${preset === '12h' ? ' selected' : ''}>12 hours</option>
+                            <option value="1d"${preset === '1d' ? ' selected' : ''}>1 day</option>
+                            <option value="3d"${preset === '3d' ? ' selected' : ''}>3 days</option>
+                            <option value="7d"${preset === '7d' ? ' selected' : ''}>7 days</option>
+                        </select>
+                    </label>
+                    <label class="gc-invite-config-field">
+                        <span>Max joins</span>
+                        <input id="gc-invite-max-joins" class="gc-setup-input" type="number" min="1" max="9999" placeholder="Blank = unlimited" value="${gcEscape(maxJoins)}">
+                    </label>
+                </div>
+                <div class="gc-settings-actions">
+                    <button class="gc-settings-link" type="button" onclick="gcSaveInviteConfig()">
+                        <span class="material-icons-round">save</span>
+                        Save invite rules
+                    </button>
+                    <button class="gc-settings-link" type="button" onclick="gcRotateInviteCode()">
+                        <span class="material-icons-round">refresh</span>
+                        Rotate invite code
+                    </button>
+                </div>
+            </div>
+            <div class="gc-settings-footer">
+                <button class="gc-btn-cancel" type="button" onclick="gcShowSettings()">Back</button>
+                <button class="gc-btn-primary" type="button" onclick="gcShareCurrentGroupLink()">Copy link</button>
+            </div>
+        </div>
+    `;
+    modal.scrollTop = 0;
+    overlay.classList.remove('hidden');
+}
+
+async function gcSaveInviteConfig() {
+    if (!sbClient) return;
+    const room = gcGetRoomById();
+    if (!room || room.type !== 'group') return;
+    if (!gcCanManageGroup(room.id)) {
+        gcNotifyError('Only the group leader or deputy can configure invite links.');
+        return;
+    }
+
+    const expirySelect = gcWin?.querySelector('#gc-invite-expiry');
+    const maxJoinsInput = gcWin?.querySelector('#gc-invite-max-joins');
+    const inviteCode = gcGetGroupInviteCode(room.id) || gcGenerateInviteCode();
+    const inviteExpiresAt = gcBuildInviteExpiryFromPreset(expirySelect?.value || 'never');
+    const maxJoinsText = String(maxJoinsInput?.value || '').trim();
+    const inviteMaxJoins = maxJoinsText ? Number(maxJoinsText) : null;
+
+    if (maxJoinsText && (!Number.isFinite(inviteMaxJoins) || inviteMaxJoins <= 0)) {
+        gcNotifyError('Join limit must be a positive number or left blank.');
+        maxJoinsInput?.focus();
+        return;
+    }
+
+    const payload = {
+        invite_code: inviteCode,
+        invite_expires_at: inviteExpiresAt,
+        invite_max_joins: inviteMaxJoins
+    };
+
+    const { data, error } = await sbClient
+        .from(GC_TABLES.rooms)
+        .update(payload)
+        .eq('id', room.id)
+        .select()
+        .single();
+
+    if (error) {
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
+        return;
+    }
+
+    gcRoomCache = gcRoomCache.map(item => item.id === room.id ? { ...item, ...(data || {}), ...payload } : item);
+    gcShowInviteConfigModal();
+    showNotification('Zashi Messaging', 'Invite link settings updated.');
+}
+
+async function gcRotateInviteCode() {
+    if (!sbClient) return;
+    const room = gcGetRoomById();
+    if (!room || room.type !== 'group') return;
+    if (!gcCanManageGroup(room.id)) {
+        gcNotifyError('Only the group leader or deputy can rotate invite codes.');
+        return;
+    }
+
+    const nextCode = gcGenerateInviteCode();
+    const { data, error } = await sbClient
+        .from(GC_TABLES.rooms)
+        .update({ invite_code: nextCode, invite_join_count: 0 })
+        .eq('id', room.id)
+        .select()
+        .single();
+
+    if (error) {
+        gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.rooms));
+        return;
+    }
+
+    gcRoomCache = gcRoomCache.map(item => item.id === room.id ? { ...item, ...(data || {}), invite_code: nextCode, invite_join_count: 0 } : item);
+    gcShowInviteConfigModal();
+    showNotification('Zashi Messaging', 'Invite code rotated.');
 }
 
 async function gcCreateGroup() {
@@ -1734,7 +2040,9 @@ async function gcCreateGroup() {
         id: gcBuildRoomId(name),
         name,
         name_key: nameKey,
-        type: 'group'
+        type: 'group',
+        invite_code: gcGenerateInviteCode(),
+        invite_join_count: 0
     };
 
     if (createBtn) {

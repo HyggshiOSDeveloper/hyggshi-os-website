@@ -17,7 +17,7 @@ const appMeta = {
     'settings': { title: 'Settings', icon: 'settings', w: 680, h: 460 },
     'image-viewer': { title: 'Photos', icon: 'image', w: 650, h: 480 },
     'music-player': { title: 'Music Player', icon: 'headphones', w: 380, h: 480 },
-    'chat-ai': { title: 'Chat AI', icon: 'psychology', w: 800, h: 600 },
+    'chat-ai': { title: 'Chat AI', icon: 'psychology', w: 1280, h: 780 },
     'video-player': { title: 'Video Player', icon: 'movie', w: 750, h: 520 },
     'youtube': { title: 'YouTube', icon: 'smart_display', w: 850, h: 550 },
     'weather': { title: 'Weather', icon: 'cloud', w: 700, h: 500 },

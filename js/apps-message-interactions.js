@@ -2,49 +2,59 @@
 
 function gcBindHeaderActions(win) {
     const actions = win.querySelector('.gc-header-actions');
-    if (actions && !actions.querySelector('.gc-share-room-btn')) {
+    if (!actions) return;
+
+    const findButtonByRole = role => actions.querySelector(`[data-gc-role="${role}"]`);
+    const findButtonByIcon = iconName => [...actions.querySelectorAll('.gc-header-btn')]
+        .find(btn => btn.querySelector('.material-icons-round')?.textContent?.trim() === iconName);
+
+    if (!findButtonByRole('system-compose')) {
+        const composeBtn = document.createElement('button');
+        composeBtn.className = 'gc-header-btn gc-system-compose-btn';
+        composeBtn.dataset.gcRole = 'system-compose';
+        composeBtn.style.display = 'none';
+        composeBtn.title = 'Write system notice';
+        composeBtn.innerHTML = '<span class="material-icons-round">edit_note</span>';
+        composeBtn.addEventListener('click', () => gcShowSystemNoticeComposer());
+        actions.insertBefore(composeBtn, findButtonByIcon('search') || actions.firstChild);
+    }
+
+    if (!findButtonByRole('share')) {
         const shareBtn = document.createElement('button');
         shareBtn.className = 'gc-header-btn gc-share-room-btn';
+        shareBtn.dataset.gcRole = 'share';
         shareBtn.style.display = 'none';
         shareBtn.title = 'Share group link';
         shareBtn.innerHTML = '<span class="material-icons-round">share</span>';
         shareBtn.addEventListener('click', () => gcShareCurrentGroupLink());
-        const searchBtn = actions.querySelector('.gc-header-btn');
-        if (searchBtn) {
-            actions.insertBefore(shareBtn, searchBtn);
-        } else {
-            actions.appendChild(shareBtn);
-        }
+        actions.insertBefore(shareBtn, findButtonByIcon('search') || actions.firstChild);
     }
 
-    if (actions && !actions.querySelector('.gc-leave-room-btn')) {
+    if (!findButtonByRole('leave')) {
         const leaveBtn = document.createElement('button');
         leaveBtn.className = 'gc-header-btn gc-leave-room-btn';
+        leaveBtn.dataset.gcRole = 'leave';
         leaveBtn.style.display = 'none';
         leaveBtn.title = 'Leave group';
         leaveBtn.innerHTML = '<span class="material-icons-round">logout</span>';
         leaveBtn.addEventListener('click', () => gcLeaveCurrentGroup());
-        const searchBtn = actions.querySelector('.gc-header-btn');
-        if (searchBtn) {
-            actions.insertBefore(leaveBtn, searchBtn);
-        } else {
-            actions.appendChild(leaveBtn);
-        }
+        actions.insertBefore(leaveBtn, findButtonByIcon('search') || actions.firstChild);
     }
 
     const headerButtons = actions?.querySelectorAll('.gc-header-btn') || [];
-    if (headerButtons[0] && !headerButtons[0].classList.contains('gc-leave-room-btn')) {
-        headerButtons[0].classList.add('gc-search-btn');
-    } else {
-        headerButtons[1]?.classList.add('gc-search-btn');
-    }
     headerButtons.forEach(btn => {
         const icon = btn.querySelector('.material-icons-round')?.textContent?.trim();
+        btn.classList.remove('gc-search-btn', 'gc-pin-room-btn', 'gc-members-toggle-btn');
+        if (icon === 'edit_note') btn.classList.add('gc-system-compose-btn');
         if (icon === 'share') btn.classList.add('gc-share-room-btn');
+        if (icon === 'logout') btn.classList.add('gc-leave-room-btn');
         if (icon === 'search') btn.classList.add('gc-search-btn');
         if (icon === 'push_pin') btn.classList.add('gc-pin-room-btn');
         if (icon === 'people') btn.classList.add('gc-members-toggle-btn');
     });
+
+    const composeBtn = win.querySelector('.gc-header-actions .gc-system-compose-btn');
+    if (composeBtn) composeBtn.title = 'Write system notice';
 
     const shareBtn = win.querySelector('.gc-header-actions .gc-share-room-btn');
     if (shareBtn) shareBtn.title = 'Share group link';

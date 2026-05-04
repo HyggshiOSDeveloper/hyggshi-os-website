@@ -297,6 +297,7 @@ function gcUpdateHeader(roomId) {
     const headerStatus = gcWin?.querySelector('.gc-chat-header-status');
     const headerIcon = gcWin?.querySelector('.gc-chat-header-icon');
     const deleteBtn = gcWin?.querySelector('.gc-delete-room-btn');
+    const systemComposeBtn = gcWin?.querySelector('.gc-header-actions .gc-system-compose-btn');
     const shareBtn = gcWin?.querySelector('.gc-header-actions .gc-share-room-btn');
     const leaveBtn = gcWin?.querySelector('.gc-header-actions .gc-leave-room-btn');
     const searchBtn = gcWin?.querySelector('.gc-header-actions .gc-search-btn');
@@ -330,6 +331,7 @@ function gcUpdateHeader(roomId) {
         headerIcon.title = room.type === 'group' ? 'Change group avatar' : (room.type === 'system' ? 'System inbox' : 'Public room');
     }
     const isSystem = room.type === 'system' || room.id === GC_SYSTEM_ROOM_ID;
+    if (systemComposeBtn) systemComposeBtn.style.display = isSystem && gcUserIsAdmin ? 'grid' : 'none';
     if (deleteBtn) deleteBtn.style.display = !isSystem && room.type === 'group' && gcCanDeleteGroup(roomId) ? 'grid' : 'none';
     if (shareBtn) shareBtn.style.display = !isSystem && room.type === 'group' && gcCanShareGroupLink(roomId) ? 'grid' : 'none';
     if (leaveBtn) leaveBtn.style.display = !isSystem && room.type === 'group' && gcCanLeaveGroup(roomId) ? 'grid' : 'none';
