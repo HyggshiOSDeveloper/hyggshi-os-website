@@ -37,8 +37,8 @@ async function gcRefreshMembersPanel() {
                 <div class="gc-member-item">
                     <div class="gc-member-avatar${member.avatar_url ? ' has-image' : ''}" style="${member.avatar_url ? '' : `background:${member.color};`}">
                         ${member.avatar_url
-                            ? `<img src="${gcEscape(member.avatar_url)}" alt="${gcEscape(member.name)}">`
-                            : gcEscape(gcGetInitials(member.name))}
+                    ? `<img src="${gcEscape(member.avatar_url)}" alt="${gcEscape(member.name)}">`
+                    : gcEscape(gcGetInitials(member.name))}
                     </div>
                     <div class="gc-member-main">
                         <div class="gc-member-name-row">
@@ -100,8 +100,8 @@ async function gcRefreshMembersPanel() {
         <div class="gc-member-item">
             <div class="gc-member-avatar${member.avatar_url ? ' has-image' : ''}" style="${member.avatar_url ? '' : `background:${member.color};`}">
                 ${member.avatar_url
-                    ? `<img src="${gcEscape(member.avatar_url)}" alt="${gcEscape(member.name)}">`
-                    : gcEscape(gcGetInitials(member.name))}
+            ? `<img src="${gcEscape(member.avatar_url)}" alt="${gcEscape(member.name)}">`
+            : gcEscape(gcGetInitials(member.name))}
             </div>
             <div class="gc-member-name">${gcEscape(member.name)}</div>
             <div class="gc-member-online"></div>
@@ -1744,7 +1744,7 @@ async function gcSendCustomSystemNotice() {
     const bodyInput = gcWin?.querySelector('#gc-system-notice-body');
     const typeInput = gcWin?.querySelector('#gc-system-notice-type');
 
-    const username = gcNormalizeSafeName(usernameInput?.value || '');
+    const username = gcValidateSafeName(usernameInput?.value || '', 'Username').normalized;
     const usernameKey = gcBuildNameKey(username);
     const title = gcStripUnsafeText(titleInput?.value || '').trim();
     const body = gcStripUnsafeText(bodyInput?.value || '').trim();
