@@ -305,3 +305,134 @@ body.theme-hyggshi-os .chat-create-account-btn:hover {
   background: var(--hygg-bg-glass-hover);
   border-color: var(--hygg-accent-primary);
 }
+
+body.theme-hyggshi-os .app-chat-ai .chat-msg,
+body.theme-hyggshi-os .app-chat-ai .chat-message {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-msg.ai,
+body.theme-hyggshi-os .app-chat-ai .chat-message.ai {
+  justify-content: flex-start;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-msg.user,
+body.theme-hyggshi-os .app-chat-ai .chat-message.user {
+  justify-content: flex-start;
+  flex-direction: row-reverse;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-msg-avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex: 0 0 32px;
+  background: #3f8cff;
+  box-shadow: none;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-msg.user .chat-msg-avatar,
+body.theme-hyggshi-os .app-chat-ai .chat-message.user .chat-msg-avatar {
+  background: #6e63ee;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-msg-wrapper {
+  width: auto;
+  max-width: min(720px, calc(100% - 58px));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-msg.user .chat-msg-wrapper,
+body.theme-hyggshi-os .app-chat-ai .chat-message.user .chat-msg-wrapper {
+  align-items: flex-end;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-msg-content {
+  width: fit-content;
+  max-width: 100%;
+  padding: 12px 15px;
+  border-radius: 16px;
+  background: rgba(34, 35, 42, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f5f7fb;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-msg.user .chat-msg-content,
+body.theme-hyggshi-os .app-chat-ai .chat-message.user .chat-msg-content {
+  background: rgba(84, 76, 154, 0.78);
+  border-color: rgba(154, 146, 255, 0.28);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-mode-menu {
+  background: rgba(31, 31, 35, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-mode-item {
+  color: #f7f9ff;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-mode-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-mode-item.active .material-icons-round {
+  color: #8f8df8;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-thought-status {
+  color: rgba(226, 229, 238, 0.68);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-thought-status:hover {
+  color: rgba(246, 248, 255, 0.9);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-aspect-menu {
+  background: rgba(31, 31, 35, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.38);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-aspect-item {
+  color: #f7f9ff;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-aspect-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-aspect-item.active .material-icons-round {
+  color: #8f8df8;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-image-model-menu {
+  background: rgba(31, 31, 35, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-image-model-item {
+  color: #f7f9ff;
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-image-model-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.theme-hyggshi-os .app-chat-ai .chat-image-model-item.active > .material-icons-round {
+  color: #8f8df8;
+}
