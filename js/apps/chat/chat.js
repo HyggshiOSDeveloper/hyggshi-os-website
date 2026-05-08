@@ -29,7 +29,7 @@ const ChatAI = {
         'gemini-2.5-flash': { label: 'Gemini 2.5 Flash', description: 'Balanced performance for default experience.', type: 'chat' },
         'gemini-3-flash-preview': { label: 'Gemini 3 Flash Preview', description: 'Stronger reasoning and richer responses.', type: 'chat' },
         'gemini-3.1-pro-preview': { label: 'Gemini 3.1 Pro Preview', description: 'Deep analysis and complex tasks.', type: 'chat' },
-        'gemini-3.1-flash-lite': { label: 'Gemini 3.1 Flash Lite', description: 'Optimized for speed and local-feel.', type: 'chat' }
+        'gemini-3.1-flash-lite-preview': { label: 'Gemini 3.1 Flash Lite Preview', description: 'Optimized for speed and local-feel.', type: 'chat' }
     },
     RESPONSE_MODES: { auto: 'Auto', think: 'Think', fast: 'Fast' },
     ASPECT_RATIOS: {

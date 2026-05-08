@@ -134,9 +134,6 @@ function gcApplyEnglishCopy(win) {
     const registerUser = win.querySelector('#gc-reg-user');
     if (registerUser) registerUser.maxLength = GC_USERNAME_MAX_LENGTH;
 
-    gcInjectTurnstileContainers(win);
-    gcEnsureTurnstileWidgets();
-
     const groupName = win.querySelector('#gc-group-name');
     if (groupName) groupName.maxLength = GC_ROOM_NAME_MAX_LENGTH;
 
@@ -156,23 +153,6 @@ function gcApplyEnglishCopy(win) {
 
     const uploadBtn = win.querySelector('.gc-input-box .gc-header-btn');
     if (uploadBtn) uploadBtn.title = 'Upload image';
-}
-
-function gcInjectTurnstileContainers(win) {
-    if (!gcIsTurnstileEnabled()) return;
-
-    const addContainer = (buttonSelector, containerId) => {
-        const button = win.querySelector(buttonSelector);
-        if (!button || win.querySelector(`#${containerId}`)) return;
-
-        const wrap = document.createElement('div');
-        wrap.className = 'gc-turnstile-wrap';
-        wrap.innerHTML = `<div id="${containerId}" class="gc-turnstile-widget"></div>`;
-        button.parentNode.insertBefore(wrap, button);
-    };
-
-    addContainer('#gc-login-card .gc-setup-btn', 'gc-login-turnstile');
-    addContainer('#gc-register-card .gc-setup-btn', 'gc-register-turnstile');
 }
 
 async function gcAssignDeputy(userId) {
