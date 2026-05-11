@@ -512,8 +512,19 @@ function gcGetTurnstileSiteKey() {
     return gcTurnstileSiteKey || GC_TURNSTILE_SITE_KEY;
 }
 
+function gcShouldLoadTurnstileConfigEndpoint() {
+    const host = window.location.hostname || '';
+    if (window.location.protocol === 'file:') return false;
+    if (host.endsWith('github.io')) return false;
+    return true;
+}
+
 async function gcLoadTurnstileConfig() {
     if (gcTurnstileConfigPromise) return gcTurnstileConfigPromise;
+    if (!gcShouldLoadTurnstileConfigEndpoint()) {
+        gcTurnstileConfigPromise = Promise.resolve(gcTurnstileSiteKey);
+        return gcTurnstileConfigPromise;
+    }
 
     gcTurnstileConfigPromise = fetch('/api/turnstile-config', { cache: 'no-store' })
         .then(response => {
