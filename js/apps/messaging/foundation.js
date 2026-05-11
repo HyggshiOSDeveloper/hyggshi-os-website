@@ -568,6 +568,29 @@ function gcGetTurnstileToken(kind) {
     return kind === 'login' ? gcTurnstileLoginToken : gcTurnstileRegisterToken;
 }
 
+function gcHandleTurnstileError(errorCode, kind) {
+    const code = String(errorCode || '');
+    if (kind === 'login') gcTurnstileLoginToken = '';
+    else gcTurnstileRegisterToken = '';
+
+    if (code.startsWith('110200')) {
+        gcNotifyError('Turnstile domain is not authorized. Add this Pages domain in Cloudflare Turnstile Hostname Management.');
+        return true;
+    }
+    if (code.startsWith('110100') || code.startsWith('110110') || code.startsWith('400020')) {
+        gcNotifyError('Turnstile site key is invalid. Check the Cloudflare site key.');
+        return true;
+    }
+    if (code.startsWith('110600') || code.startsWith('110620')) {
+        gcNotifyError('Security check expired. Try again.');
+        gcResetTurnstile(kind);
+        return true;
+    }
+
+    gcNotifyError(`Turnstile security check failed (${code || 'unknown'}).`);
+    return true;
+}
+
 function gcRequireTurnstile(kind) {
     if (!gcIsTurnstileEnabled()) return true;
     if (gcGetTurnstileToken(kind)) return true;
@@ -617,7 +640,7 @@ async function gcEnsureTurnstileWidgets() {
             sitekey: gcGetTurnstileSiteKey(),
             callback: token => { gcTurnstileLoginToken = token || ''; },
             'expired-callback': () => { gcTurnstileLoginToken = ''; },
-            'error-callback': () => { gcTurnstileLoginToken = ''; }
+            'error-callback': errorCode => gcHandleTurnstileError(errorCode, 'login')
         });
     }
 
@@ -627,7 +650,7 @@ async function gcEnsureTurnstileWidgets() {
             sitekey: gcGetTurnstileSiteKey(),
             callback: token => { gcTurnstileRegisterToken = token || ''; },
             'expired-callback': () => { gcTurnstileRegisterToken = ''; },
-            'error-callback': () => { gcTurnstileRegisterToken = ''; }
+            'error-callback': errorCode => gcHandleTurnstileError(errorCode, 'register')
         });
     }
 }
