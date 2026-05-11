@@ -36,9 +36,6 @@ const GC_GOOGLE_CLIENT_ID_KEY = 'webos-gc-google-client-id';
 const GC_GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const GC_GOOGLE_GSI_SCRIPT = 'https://accounts.google.com/gsi/client';
 const GC_THEME_KEY = 'webos-gc-theme';
-const GC_TURNSTILE_SITE_KEY = '0x4AAAAAADLdQ-cHBBzt1MKI'; // từ Cloudflare Dashboard
-const GC_TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-const GC_TURNSTILE_VERIFY_ENDPOINT = '/api/verify-turnstile'; // Cloudflare Pages Function
 const GC_STICKERS = [
     { id: 'hi', label: 'HI', accent: '#2f80ed' },
     { id: 'ok', label: 'OK', accent: '#12b886' },
@@ -93,13 +90,6 @@ let gcGlobalLastPruneAt = 0;
 let gcGoogleTokenClient = null;
 let gcGoogleAccessToken = '';
 let gcGoogleTokenExpiresAt = 0;
-let gcTurnstileSiteKey = GC_TURNSTILE_SITE_KEY;
-let gcTurnstileConfigPromise = null;
-let gcTurnstileScriptPromise = null;
-let gcTurnstileLoginWidgetId = null;
-let gcTurnstileRegisterWidgetId = null;
-let gcTurnstileLoginToken = '';
-let gcTurnstileRegisterToken = '';
 const GC_PINNED_ROOMS_KEY = 'webos-gc-pinned-rooms';
 const GC_LEFT_GROUPS_KEY = 'webos-gc-left-groups';
 const GC_IS_ADMIN_KEY = 'webos-gc-is-admin';
@@ -436,7 +426,6 @@ function gcToggleAuth(isRegister) {
 
     loginCard.classList.toggle('hidden', !!isRegister);
     registerCard.classList.toggle('hidden', !isRegister);
-    gcEnsureTurnstileWidgets();
 }
 
 function gcFormatSupabaseError(error, tableName) {
@@ -503,172 +492,6 @@ function gcNotifySetupIssue(message) {
     if (gcWin) gcShowSetup(gcWin);
 }
 
-function gcIsTurnstileEnabled() {
-    const siteKey = gcTurnstileSiteKey || GC_TURNSTILE_SITE_KEY;
-    return !!siteKey && !siteKey.includes('YOUR_');
-}
-
-function gcGetTurnstileSiteKey() {
-    return gcTurnstileSiteKey || GC_TURNSTILE_SITE_KEY;
-}
-
-function gcShouldLoadTurnstileConfigEndpoint() {
-    const host = window.location.hostname || '';
-    if (window.location.protocol === 'file:') return false;
-    if (host.endsWith('github.io')) return false;
-    return true;
-}
-
-async function gcLoadTurnstileConfig() {
-    if (gcTurnstileConfigPromise) return gcTurnstileConfigPromise;
-    if (!gcShouldLoadTurnstileConfigEndpoint()) {
-        gcTurnstileConfigPromise = Promise.resolve(gcTurnstileSiteKey);
-        return gcTurnstileConfigPromise;
-    }
-
-    gcTurnstileConfigPromise = fetch('/api/turnstile-config', { cache: 'no-store' })
-        .then(response => {
-            if (response.status === 404) return null;
-            return response.ok ? response.json() : null;
-        })
-        .then(data => {
-            const siteKey = String(data?.siteKey || '').trim();
-            if (siteKey) gcTurnstileSiteKey = siteKey;
-            return gcTurnstileSiteKey;
-        })
-        .catch(() => gcTurnstileSiteKey);
-
-    return gcTurnstileConfigPromise;
-}
-
-function gcLoadTurnstileScript() {
-    if (!gcIsTurnstileEnabled()) return Promise.resolve(false);
-    if (window.turnstile?.render) return Promise.resolve(true);
-    if (gcTurnstileScriptPromise) return gcTurnstileScriptPromise;
-
-    gcTurnstileScriptPromise = new Promise(resolve => {
-        const existingScript = document.querySelector('script[data-gc-turnstile]');
-        if (existingScript) {
-            existingScript.addEventListener('load', () => resolve(true), { once: true });
-            existingScript.addEventListener('error', () => resolve(false), { once: true });
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = GC_TURNSTILE_SCRIPT;
-        script.async = true;
-        script.defer = true;
-        script.dataset.gcTurnstile = 'true';
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.head.appendChild(script);
-    });
-
-    return gcTurnstileScriptPromise;
-}
-
-function gcResetTurnstile(kind) {
-    if (!window.turnstile?.reset) return;
-    if (kind === 'login') {
-        gcTurnstileLoginToken = '';
-        if (gcTurnstileLoginWidgetId !== null) window.turnstile.reset(gcTurnstileLoginWidgetId);
-        return;
-    }
-    gcTurnstileRegisterToken = '';
-    if (gcTurnstileRegisterWidgetId !== null) window.turnstile.reset(gcTurnstileRegisterWidgetId);
-}
-
-function gcGetTurnstileToken(kind) {
-    return kind === 'login' ? gcTurnstileLoginToken : gcTurnstileRegisterToken;
-}
-
-function gcHandleTurnstileError(errorCode, kind) {
-    const code = String(errorCode || '');
-    if (kind === 'login') gcTurnstileLoginToken = '';
-    else gcTurnstileRegisterToken = '';
-
-    if (code.startsWith('110200')) {
-        gcNotifyError('Turnstile domain is not authorized. Add this Pages domain in Cloudflare Turnstile Hostname Management.');
-        return true;
-    }
-    if (code.startsWith('110100') || code.startsWith('110110') || code.startsWith('400020')) {
-        gcNotifyError('Turnstile site key is invalid. Check the Cloudflare site key.');
-        return true;
-    }
-    if (code.startsWith('110600') || code.startsWith('110620')) {
-        gcNotifyError('Security check expired. Try again.');
-        gcResetTurnstile(kind);
-        return true;
-    }
-
-    gcNotifyError(`Turnstile security check failed (${code || 'unknown'}).`);
-    return true;
-}
-
-function gcRequireTurnstile(kind) {
-    if (!gcIsTurnstileEnabled()) return true;
-    if (gcGetTurnstileToken(kind)) return true;
-    gcNotifyError('Complete the security check first.');
-    return false;
-}
-
-async function gcVerifyTurnstile(kind) {
-    if (!gcRequireTurnstile(kind)) return false;
-    if (!GC_TURNSTILE_VERIFY_ENDPOINT) return true;
-
-    try {
-        const response = await fetch(GC_TURNSTILE_VERIFY_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                token: gcGetTurnstileToken(kind),
-                action: kind
-            })
-        });
-        const result = await response.json().catch(() => ({}));
-        if (response.ok && result?.success) return true;
-        gcResetTurnstile(kind);
-        gcNotifyError('Security check failed. Try again.');
-        return false;
-    } catch (error) {
-        gcResetTurnstile(kind);
-        gcNotifyError('Could not verify the security check.');
-        return false;
-    }
-}
-
-async function gcEnsureTurnstileWidgets() {
-    if (!gcWin) return;
-    await gcLoadTurnstileConfig();
-    if (!gcIsTurnstileEnabled()) return;
-    const loaded = await gcLoadTurnstileScript();
-    if (!loaded || !window.turnstile?.render) {
-        gcNotifyError('Cloudflare Turnstile could not load.');
-        return;
-    }
-
-    const isVisible = element => !!element && !element.closest('.hidden');
-    const loginContainer = gcWin.querySelector('#gc-login-turnstile');
-    if (isVisible(loginContainer) && gcTurnstileLoginWidgetId === null) {
-        gcTurnstileLoginWidgetId = window.turnstile.render(loginContainer, {
-            sitekey: gcGetTurnstileSiteKey(),
-            callback: token => { gcTurnstileLoginToken = token || ''; },
-            'expired-callback': () => { gcTurnstileLoginToken = ''; },
-            'error-callback': errorCode => gcHandleTurnstileError(errorCode, 'login')
-        });
-    }
-
-    const registerContainer = gcWin.querySelector('#gc-register-turnstile');
-    if (isVisible(registerContainer) && gcTurnstileRegisterWidgetId === null) {
-        gcTurnstileRegisterWidgetId = window.turnstile.render(registerContainer, {
-            sitekey: gcGetTurnstileSiteKey(),
-            callback: token => { gcTurnstileRegisterToken = token || ''; },
-            'expired-callback': () => { gcTurnstileRegisterToken = ''; },
-            'error-callback': errorCode => gcHandleTurnstileError(errorCode, 'register')
-        });
-    }
-}
-
 async function gcEnsureBackendReady() {
     if (!sbClient) return false;
 
@@ -707,7 +530,6 @@ async function gcLogin() {
         userInp?.focus();
         return;
     }
-    if (!(await gcVerifyTurnstile('login'))) return;
 
     try {
         const { data, error } = await sbClient
@@ -719,13 +541,11 @@ async function gcLogin() {
         if (error) {
             gcDebugError('Supabase SQL Error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
-            gcResetTurnstile('login');
             return;
         }
 
         if (!data || data.password !== password) {
             gcNotifyError('Wrong username or password.');
-            gcResetTurnstile('login');
             return;
         }
 
@@ -735,7 +555,6 @@ async function gcLogin() {
     } catch (error) {
         gcDebugError('Login error:', error);
         gcNotifyError('Database connection error.');
-        gcResetTurnstile('login');
     }
 }
 
@@ -769,7 +588,6 @@ async function gcRegister() {
         gcNotifyError('Passwords do not match.');
         return;
     }
-    if (!(await gcVerifyTurnstile('register'))) return;
 
     try {
         const { data: duplicateUser } = await sbClient
@@ -786,7 +604,6 @@ async function gcRegister() {
                 userInp.select();
             }
             gcNotifyError(`This username is already taken. Try "${suggestion}".`);
-            gcResetTurnstile('register');
             return;
         }
     } catch (error) {
@@ -810,19 +627,16 @@ async function gcRegister() {
                     userInp.select();
                 }
                 gcNotifyError(`This username is already taken. Try "${suggestion}".`);
-                gcResetTurnstile('register');
                 return;
             }
             gcDebugError('Supabase SQL Error:', error);
             gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.users));
-            gcResetTurnstile('register');
             return;
         }
 
         const newUser = data?.[0];
         if (!newUser) {
             gcNotifyError('Registration failed.');
-            gcResetTurnstile('register');
             return;
         }
 
@@ -833,7 +647,6 @@ async function gcRegister() {
     } catch (error) {
         gcDebugError('Register error:', error);
         gcNotifyError('System error while creating the account.');
-        gcResetTurnstile('register');
     }
 }
 

@@ -778,7 +778,9 @@ function ideRunFile() {
     }
 
     if (ext === 'js') {
-        const scriptContent = `
+        const runtimeHtml = `<!doctype html>
+<html><body>
+<script>
 const send = (type, value) => parent.postMessage({ source: 'webos-ide-runtime', type, value }, '*');
 console.log = (...args) => send('log', args.map(String).join(' '));
 console.error = (...args) => send('error', args.map(String).join(' '));
@@ -788,18 +790,11 @@ ${active.content}
 send('success', 'Execution finished.');
 } catch (error) {
 send('error', error && error.stack ? error.stack : String(error));
-}`;
-        // Dùng blob URL thay vì inline <script> để tránh CSP inline-script restrictions
-        const blob = new Blob([scriptContent], { type: 'text/javascript' });
-        const blobUrl = URL.createObjectURL(blob);
-        const runtimeHtml = `<!doctype html>
-<html><body>
-<script src="${blobUrl}"><\/script>
+}
+</script>
 </body></html>`;
         frame.srcdoc = runtimeHtml;
         ideSetRuntimeLogs([{ text: `Running ${active.name}...`, type: 'info' }]);
-        // Revoke sau khi frame load xong
-        frame.addEventListener('load', () => URL.revokeObjectURL(blobUrl), { once: true });
         return;
     }
 
