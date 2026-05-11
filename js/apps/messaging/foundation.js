@@ -516,7 +516,10 @@ async function gcLoadTurnstileConfig() {
     if (gcTurnstileConfigPromise) return gcTurnstileConfigPromise;
 
     gcTurnstileConfigPromise = fetch('/api/turnstile-config', { cache: 'no-store' })
-        .then(response => response.ok ? response.json() : null)
+        .then(response => {
+            if (response.status === 404) return null;
+            return response.ok ? response.json() : null;
+        })
         .then(data => {
             const siteKey = String(data?.siteKey || '').trim();
             if (siteKey) gcTurnstileSiteKey = siteKey;
