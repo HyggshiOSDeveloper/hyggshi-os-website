@@ -33,8 +33,16 @@ export async function onRequestPost({ request, env }) {
     }
 
     // Verify với Cloudflare Turnstile
+    const secretKey = env.TURNSTILE_SECRET_KEY || env.GC_TURNSTILE_SECRET_KEY;
+    if (!secretKey) {
+        return Response.json(
+            { success: false, error: 'missing_secret_key' },
+            { status: 500, headers: corsHeaders(allowedOrigin) }
+        );
+    }
+
     const formData = new FormData();
-    formData.append('secret', env.TURNSTILE_SECRET_KEY);
+    formData.append('secret', secretKey);
     formData.append('response', token);
     formData.append('remoteip', request.headers.get('CF-Connecting-IP') || '');
 

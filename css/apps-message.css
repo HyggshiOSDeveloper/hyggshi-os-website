@@ -293,6 +293,17 @@
     box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.12);
 }
 
+.gc-turnstile-wrap {
+    display: flex;
+    justify-content: center;
+    min-height: 65px;
+    margin: 10px 0 8px;
+}
+
+.gc-turnstile-widget {
+    min-width: 300px;
+}
+
 .gc-setup-btn,
 .gc-btn-primary {
     border: none;
