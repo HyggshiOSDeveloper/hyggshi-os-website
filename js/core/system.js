@@ -5,6 +5,7 @@ function updateClock() {
     const dateStr = now.toLocaleDateString([], { month: 'numeric', day: 'numeric', year: 'numeric' });
     document.getElementById('clock-time').textContent = timeStr;
     document.getElementById('clock-date').textContent = dateStr;
+    updateDesktopWidgets(now);
 }
 
 function updateLockClock() {
@@ -171,4 +172,45 @@ function generateRecoveryKey() {
         if (i < 3) key += '-';
     }
     return key;
+}
+
+/* ============ DESKTOP WIDGETS ============ */
+function initDesktopWidgets() {
+    const widgets = document.getElementById('desktop-widgets');
+    if (!widgets) return;
+    const hidden = localStorage.getItem('webos-widgets-hidden') === 'true';
+    widgets.classList.toggle('hidden', hidden);
+    updateDesktopWidgets(new Date());
+}
+
+function toggleDesktopWidgets() {
+    const widgets = document.getElementById('desktop-widgets');
+    if (!widgets) return;
+    const nextHidden = !widgets.classList.contains('hidden');
+    widgets.classList.toggle('hidden', nextHidden);
+    localStorage.setItem('webos-widgets-hidden', nextHidden ? 'true' : 'false');
+}
+
+function updateDesktopWidgets(now = new Date()) {
+    const timeEl = document.getElementById('widget-time');
+    const dateEl = document.getElementById('widget-date');
+    const themeEl = document.getElementById('widget-theme');
+    const windowsEl = document.getElementById('widget-open-windows');
+    const greetingEl = document.getElementById('widget-greeting');
+    if (!timeEl || !dateEl || !themeEl || !windowsEl || !greetingEl) return;
+
+    const hour = now.getHours();
+    let greeting = 'Night';
+    if (hour >= 5 && hour < 12) greeting = 'Morning';
+    else if (hour >= 12 && hour < 18) greeting = 'Afternoon';
+    else if (hour >= 18 && hour < 22) greeting = 'Evening';
+
+    const mode = (localStorage.getItem('webos-theme-mode') || 'dark').toLowerCase();
+    const windows = document.querySelectorAll('#windows-container .window').length;
+
+    timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    dateEl.textContent = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+    themeEl.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+    windowsEl.textContent = String(windows);
+    greetingEl.textContent = greeting;
 }

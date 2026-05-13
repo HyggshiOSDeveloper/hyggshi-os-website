@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const savedUIStyle = localStorage.getItem('webos-ui-style') || 'glassmorphism';
     setUIStyle(savedUIStyle, true);
+    initDesktopWidgets();
 
     // 3. Global Event Listeners
     document.addEventListener('contextmenu', showContextMenu);

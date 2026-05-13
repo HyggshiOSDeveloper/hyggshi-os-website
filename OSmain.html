@@ -87,6 +87,28 @@
             <div class="desktop-wallpaper-grid"></div>
             <div class="desktop-wallpaper-vignette"></div>
         </div>
+        <div id="desktop-widgets" aria-label="Desktop widgets">
+            <div class="desktop-widget" id="widget-clock">
+                <div class="widget-title">Clock</div>
+                <div class="widget-time" id="widget-time">00:00</div>
+                <div class="widget-date" id="widget-date">Loading...</div>
+            </div>
+            <div class="desktop-widget" id="widget-system">
+                <div class="widget-title">System</div>
+                <div class="widget-stat">
+                    <span>Theme</span>
+                    <strong id="widget-theme">Dark</strong>
+                </div>
+                <div class="widget-stat">
+                    <span>Windows</span>
+                    <strong id="widget-open-windows">0</strong>
+                </div>
+                <div class="widget-stat">
+                    <span>Now</span>
+                    <strong id="widget-greeting">Ready</strong>
+                </div>
+            </div>
+        </div>
         <!-- Desktop Icons -->
         <div id="desktop-icons">
             <div class="desktop-icon" data-app="file-manager" ondblclick="openApp('file-manager')">
@@ -158,6 +180,7 @@
         <!-- Context Menu -->
         <div id="context-menu" class="hidden">
             <div class="ctx-item" onclick="ctxRefresh()"><span class="material-icons-round">refresh</span> Refresh</div>
+            <div class="ctx-item" onclick="toggleDesktopWidgets()"><span class="material-icons-round">widgets</span> Toggle Widgets</div>
             <div class="ctx-separator"></div>
             <div class="ctx-item" onclick="ctxNewFolder()"><span class="material-icons-round">create_new_folder</span>
                 New Folder</div>

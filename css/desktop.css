@@ -6,6 +6,71 @@
     background-color: #0a0a1a;
 }
 
+#desktop-widgets {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1200;
+}
+
+#desktop-widgets.hidden {
+    display: none;
+}
+
+.desktop-widget {
+    background: var(--bg-glass-heavy);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    backdrop-filter: blur(var(--blur-heavy));
+    -webkit-backdrop-filter: blur(var(--blur-heavy));
+    box-shadow: var(--shadow);
+}
+
+.widget-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.widget-time {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.widget-date {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.widget-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.widget-stat:last-child {
+    border-bottom: none;
+}
+
+.widget-stat strong {
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
 /* === Desktop Icons === */
 #desktop-icons {
     position: absolute;
