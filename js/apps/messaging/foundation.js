@@ -370,7 +370,17 @@ function initMessage(win) {
             gcNotifyError('Supabase library did not load.');
             return;
         }
-        sbClient = supabase.createClient(cleanUrl, SB_KEY);
+        if (window.__webosSupabaseClient && window.__webosSupabaseClientMeta) {
+            const meta = window.__webosSupabaseClientMeta;
+            if (meta.url === cleanUrl && meta.key === SB_KEY) {
+                sbClient = window.__webosSupabaseClient;
+            }
+        }
+        if (!sbClient) {
+            sbClient = supabase.createClient(cleanUrl, SB_KEY);
+            window.__webosSupabaseClient = sbClient;
+            window.__webosSupabaseClientMeta = { url: cleanUrl, key: SB_KEY };
+        }
     } catch (error) {
         gcDebugError('Supabase init error:', error);
         gcNotifyError('Cannot connect to Supabase.');

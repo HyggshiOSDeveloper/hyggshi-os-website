@@ -1356,7 +1356,16 @@ function appStoreGetClient() {
     const url = (typeof SB_URL !== 'undefined' && SB_URL) ? SB_URL : APPSTORE_SB_URL;
     const key = (typeof SB_KEY !== 'undefined' && SB_KEY) ? SB_KEY : APPSTORE_SB_KEY;
     try {
-        return supabase.createClient(url, key);
+        if (window.__webosSupabaseClient && window.__webosSupabaseClientMeta) {
+            const meta = window.__webosSupabaseClientMeta;
+            if (meta.url === url && meta.key === key) {
+                return window.__webosSupabaseClient;
+            }
+        }
+        const client = supabase.createClient(url, key);
+        window.__webosSupabaseClient = client;
+        window.__webosSupabaseClientMeta = { url, key };
+        return client;
     } catch (_) {
         return null;
     }
@@ -1391,8 +1400,10 @@ function appStoreSwitchTab(tab, btn = null) {
     const win = appStoreGetWindow();
     if (!win) return;
     const tabName = tab === 'community' ? 'community' : 'system';
-    win.dataset.tab = tabName;
-    win.querySelectorAll('.appstore-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tabName));
+    const root = win.querySelector('.app-app-store');
+    if (!root) return;
+    root.dataset.tab = tabName;
+    root.querySelectorAll('.appstore-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tabName));
     if (btn) btn.classList.add('active');
 }
 
