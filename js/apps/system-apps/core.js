@@ -1318,3 +1318,325 @@ function setUIStyle(style, silent) {
 /* ============ ABOUT ============ */
 function initAbout(win) { /* Logic if needed */ }
 
+/* ============ APP STORE ============ */
+const appStoreCoreApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store']);
+const appStoreRequiredApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store']);
+const appStoreCatalog = [
+    { id: 'browser', name: 'Browser', icon: 'public', desc: 'Browse websites inside Web OS.' },
+    { id: 'weather', name: 'Weather', icon: 'cloud', desc: 'Check live weather and forecasts.' },
+    { id: 'music-player', name: 'Music Player', icon: 'headphones', desc: 'Play local audio files.' },
+    { id: 'video-player', name: 'Video Player', icon: 'movie', desc: 'Play local video files.' },
+    { id: 'chat-ai', name: 'Chat AI', icon: 'psychology', desc: 'AI assistant for writing and coding.' },
+    { id: 'global-chat', name: 'Zashi Messaging', icon: 'public', desc: 'Community and group messaging.' },
+    { id: 'ide-editor', name: 'IDE Code Editor', icon: 'code', desc: 'Code editor with preview runtime.' },
+    { id: 'text-editor', name: 'Text Editor', icon: 'edit_note', desc: 'Write and edit text documents.' },
+    { id: 'image-viewer', name: 'Photos', icon: 'image', desc: 'View local images.' },
+    { id: 'youtube', name: 'YouTube', icon: 'smart_display', desc: 'Watch YouTube in embedded player.' }
+];
+const APPSTORE_SB_URL = 'https://kwgxqxffjruykjzjhlkq.supabase.co';
+const APPSTORE_SB_KEY = 'sb_publishable_cj9pOUvJFPdOEtZCziWULQ_c-Ch1xPb';
+const APPSTORE_PUBLIC_TABLE = 'app_store_items';
+let appStoreCommunityItems = [];
+let appStoreCommunityLoaded = false;
+
+function getInstalledApps() {
+    const saved = localStorage.getItem('webos-installed-apps');
+    if (saved) {
+        try { return new Set(JSON.parse(saved)); } catch (_) { }
+    }
+    return new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store']);
+}
+
+function saveInstalledApps(installedSet) {
+    localStorage.setItem('webos-installed-apps', JSON.stringify(Array.from(installedSet)));
+}
+
+function appStoreGetClient() {
+    if (typeof supabase === 'undefined') return null;
+    const url = (typeof SB_URL !== 'undefined' && SB_URL) ? SB_URL : APPSTORE_SB_URL;
+    const key = (typeof SB_KEY !== 'undefined' && SB_KEY) ? SB_KEY : APPSTORE_SB_KEY;
+    try {
+        return supabase.createClient(url, key);
+    } catch (_) {
+        return null;
+    }
+}
+
+function appStoreSyncInstalledAppsUI() {
+    const installed = getInstalledApps();
+    const targets = document.querySelectorAll('#desktop-icons .desktop-icon[data-app], #start-apps .start-app-item[data-app]');
+    targets.forEach((el) => {
+        const appId = el.dataset.app;
+        if (!appId) return;
+        const visible = appStoreCoreApps.has(appId) || installed.has(appId);
+        el.classList.toggle('app-not-installed', !visible);
+    });
+}
+
+function initAppStore(win) {
+    appStoreSyncInstalledAppsUI();
+    appStoreRenderSystem('', win);
+    appStoreRenderCommunity('', win);
+    if (!appStoreCommunityLoaded) appStoreLoadCommunityItems(win);
+}
+
+function appStoreGetWindow() {
+    for (const [, w] of Object.entries(windows)) {
+        if (w.appId === 'app-store') return w.el;
+    }
+    return null;
+}
+
+function appStoreSwitchTab(tab, btn = null) {
+    const win = appStoreGetWindow();
+    if (!win) return;
+    const tabName = tab === 'community' ? 'community' : 'system';
+    win.dataset.tab = tabName;
+    win.querySelectorAll('.appstore-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tabName));
+    if (btn) btn.classList.add('active');
+}
+
+function appStoreOpenPublish() {
+    const win = appStoreGetWindow();
+    if (!win) return;
+    appStoreSwitchTab('community');
+    const publishBox = win.querySelector('.appstore-publish-box');
+    const titleInput = win.querySelector('#appstore-publish-title');
+    if (publishBox) {
+        publishBox.classList.add('highlight');
+        setTimeout(() => publishBox.classList.remove('highlight'), 1200);
+        publishBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (titleInput) {
+        setTimeout(() => titleInput.focus(), 140);
+    }
+}
+
+function appStoreRenderSystem(query = '', win = null) {
+    if (!win) {
+        win = appStoreGetWindow();
+    }
+    if (!win) return;
+
+    const list = win.querySelector('#appstore-list-system');
+    if (!list) return;
+
+    const q = String(query || '').trim().toLowerCase();
+    const installed = getInstalledApps();
+    const items = appStoreCatalog.filter(item =>
+        !q || item.name.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q)
+    );
+
+    list.innerHTML = items.map(item => {
+        const isInstalled = installed.has(item.id);
+        const uninstallBtn = isInstalled
+            ? `<button class="appstore-btn uninstall" onclick="appStoreUninstall('${item.id}')">Uninstall</button>`
+            : '';
+        return `
+            <div class="appstore-item">
+                <div class="appstore-item-icon"><span class="material-icons-round">${item.icon}</span></div>
+                <div class="appstore-item-content">
+                    <div class="appstore-item-name">${item.name}</div>
+                    <div class="appstore-item-desc">${item.desc}</div>
+                </div>
+                <div class="appstore-item-actions">
+                    ${isInstalled
+                ? `<button class="appstore-btn launch" onclick="openApp('${item.id}')">Open</button>`
+                : `<button class="appstore-btn install" onclick="appStoreInstall('${item.id}')">Install</button>`}
+                    ${uninstallBtn}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function appStoreInstall(appId) {
+    const installed = getInstalledApps();
+    if (installed.has(appId)) return;
+    installed.add(appId);
+    saveInstalledApps(installed);
+    appStoreSyncInstalledAppsUI();
+    showNotification('App Store', 'App installed successfully.');
+    appStoreRenderSystem();
+}
+
+function appStoreUninstall(appId) {
+    if (appStoreRequiredApps.has(appId)) {
+        showNotification('App Store', 'This is a core system app and cannot be uninstalled.', 'error');
+        return;
+    }
+    const installed = getInstalledApps();
+    if (!installed.has(appId)) return;
+    installed.delete(appId);
+    saveInstalledApps(installed);
+    appStoreSyncInstalledAppsUI();
+
+    for (const [wid, w] of Object.entries(windows)) {
+        if (w.appId === appId) closeWindow(wid);
+    }
+
+    showNotification('App Store', 'App removed successfully.');
+    appStoreRenderSystem();
+}
+
+async function appStoreLoadCommunityItems(win = null) {
+    const client = appStoreGetClient();
+    if (!client) {
+        appStoreCommunityItems = [];
+        appStoreRenderCommunity('', win);
+        return;
+    }
+    try {
+        const { data, error } = await client
+            .from(APPSTORE_PUBLIC_TABLE)
+            .select('*')
+            .eq('is_public', true)
+            .order('created_at', { ascending: false })
+            .limit(150);
+        if (error) throw error;
+        appStoreCommunityItems = Array.isArray(data) ? data : [];
+        appStoreCommunityLoaded = true;
+        appStoreRenderCommunity('', win);
+    } catch (_) {
+        appStoreCommunityItems = [];
+        appStoreRenderCommunity('', win);
+    }
+}
+
+function appStoreRenderCommunity(query = '', win = null) {
+    if (!win) win = appStoreGetWindow();
+    if (!win) return;
+    const list = win.querySelector('#appstore-list-community');
+    const empty = win.querySelector('#appstore-community-empty');
+    if (!list || !empty) return;
+
+    const q = String(query || '').trim().toLowerCase();
+    const installed = getInstalledApps();
+    const items = appStoreCommunityItems.filter(item => {
+        const hay = `${item.title || ''} ${item.description || ''} ${item.category || ''} ${item.author_name || ''}`.toLowerCase();
+        return !q || hay.includes(q);
+    });
+
+    if (items.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+
+    empty.classList.add('hidden');
+    list.innerHTML = items.map(item => {
+        const key = `community:${item.id}`;
+        const isInstalled = installed.has(key);
+        const icon = item.category === 'game' ? 'sports_esports' : 'apps';
+        return `
+            <div class="appstore-item">
+                <div class="appstore-item-icon"><span class="material-icons-round">${icon}</span></div>
+                <div class="appstore-item-content">
+                    <div class="appstore-item-name">${item.title || 'Untitled'}</div>
+                    <div class="appstore-item-desc">${item.description || 'No description.'}</div>
+                    <div class="appstore-item-meta">${item.category || 'app'} • by ${item.author_name || 'anonymous'}</div>
+                </div>
+                <div class="appstore-item-actions">
+                    ${isInstalled
+                ? `<button class="appstore-btn launch" onclick="appStoreLaunchCommunity('${item.id}')">Open</button>`
+                : `<button class="appstore-btn install" onclick="appStoreInstallCommunity('${item.id}')">Install</button>`}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function appStoreSearchSystem(input) {
+    appStoreRenderSystem(input?.value || '');
+}
+
+function appStoreSearchCommunity(input) {
+    appStoreRenderCommunity(input?.value || '');
+}
+
+function appStoreInstallCommunity(itemId) {
+    const item = appStoreCommunityItems.find(x => String(x.id) === String(itemId));
+    if (!item || !item.launch_url) {
+        showNotification('App Store', 'Invalid app/game package.', 'error');
+        return;
+    }
+    const installed = getInstalledApps();
+    installed.add(`community:${item.id}`);
+    saveInstalledApps(installed);
+    showNotification('App Store', `${item.title} installed.`);
+    appStoreRenderCommunity();
+}
+
+function appStoreLaunchCommunity(itemId) {
+    const item = appStoreCommunityItems.find(x => String(x.id) === String(itemId));
+    if (!item || !item.launch_url) {
+        showNotification('App Store', 'Launch URL not available.', 'error');
+        return;
+    }
+    openApp('browser');
+    setTimeout(() => {
+        for (const [, w] of Object.entries(windows)) {
+            if (w.appId !== 'browser') continue;
+            const urlInput = w.el.querySelector('.br-url');
+            if (urlInput) {
+                urlInput.value = item.launch_url;
+                brGo();
+            }
+            break;
+        }
+    }, 80);
+}
+
+async function appStorePublishSubmit() {
+    const win = appStoreGetWindow();
+    if (!win) return;
+
+    const titleEl = win.querySelector('#appstore-publish-title');
+    const typeEl = win.querySelector('#appstore-publish-type');
+    const descEl = win.querySelector('#appstore-publish-desc');
+    const urlEl = win.querySelector('#appstore-publish-url');
+    const authorEl = win.querySelector('#appstore-publish-author');
+    if (!titleEl || !typeEl || !descEl || !urlEl || !authorEl) return;
+
+    const title = String(titleEl.value || '').trim();
+    const category = typeEl.value === 'game' ? 'game' : 'app';
+    const description = String(descEl.value || '').trim();
+    const launchUrl = String(urlEl.value || '').trim();
+    const author = String(authorEl.value || '').trim() || 'anonymous';
+
+    if (!title || !launchUrl) {
+        showNotification('App Store', 'Title and launch URL are required.', 'error');
+        return;
+    }
+    if (!/^https?:\/\//i.test(launchUrl)) {
+        showNotification('App Store', 'Launch URL must start with http:// or https://', 'error');
+        return;
+    }
+
+    const client = appStoreGetClient();
+    if (!client) {
+        showNotification('App Store', 'Supabase is not available.', 'error');
+        return;
+    }
+
+    try {
+        const payload = {
+            title,
+            category,
+            description,
+            launch_url: launchUrl,
+            author_name: author,
+            is_public: true
+        };
+        const { error } = await client.from(APPSTORE_PUBLIC_TABLE).insert([payload]);
+        if (error) throw error;
+        titleEl.value = '';
+        descEl.value = '';
+        urlEl.value = '';
+        showNotification('App Store', 'Published publicly. Everyone can see it now.');
+        appStoreLoadCommunityItems(win);
+    } catch (_) {
+        showNotification('App Store', 'Publish failed. Run the SQL schema update first.', 'error');
+    }
+}
+

@@ -22,6 +22,7 @@ const appMeta = {
     'youtube': { title: 'YouTube', icon: 'smart_display', w: 850, h: 550 },
     'weather': { title: 'Weather', icon: 'cloud', w: 700, h: 500 },
     'global-chat': { title: 'Zashi Messaging', icon: 'public', w: 850, h: 600 },
+    'app-store': { title: 'App Store', icon: 'storefront', w: 860, h: 560 },
     'about': { title: 'About Web OS', icon: 'info', w: 420, h: 500 },
 };
 
@@ -347,6 +348,7 @@ function initApp(appId, wid) {
         case 'music-player': mpInitWindow(win); break;
         case 'video-player': initVideoPlayer(win); break;
         case 'global-chat': initMessage(win); break;
+        case 'app-store': initAppStore(win); break;
     }
 }
 

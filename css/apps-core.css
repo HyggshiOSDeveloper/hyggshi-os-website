@@ -1324,3 +1324,246 @@ input:checked+.slider:before {
     font-size: 12px;
     color: var(--text-muted);
 }
+
+/* === App Store === */
+.app-app-store {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.appstore-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.appstore-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.appstore-title-wrap .material-icons-round {
+    color: #f59e0b;
+}
+
+.appstore-title-wrap h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.appstore-title-wrap p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.appstore-search-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 220px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 10px;
+}
+
+.appstore-search-box .material-icons-round {
+    font-size: 18px;
+    color: var(--text-muted);
+}
+
+.appstore-search-box input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    outline: none;
+    font-size: 12px;
+}
+
+.appstore-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.appstore-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.appstore-tab {
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.appstore-tab.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.appstore-pane {
+    display: none;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.app-app-store[data-tab="system"] .appstore-pane-system,
+.app-app-store:not([data-tab]) .appstore-pane-system {
+    display: flex;
+}
+
+.app-app-store[data-tab="community"] .appstore-pane-community {
+    display: flex;
+}
+
+.appstore-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.appstore-item-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.09);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+}
+
+.appstore-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.appstore-item-name {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.appstore-item-desc {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.appstore-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.appstore-btn.install {
+    background: var(--accent);
+    color: #fff;
+}
+
+.appstore-btn.launch {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+}
+
+.appstore-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.appstore-btn.uninstall {
+    background: rgba(255, 93, 111, 0.18);
+    color: #ffc4cc;
+}
+
+.appstore-upload-btn {
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.appstore-upload-btn .material-icons-round {
+    font-size: 16px;
+}
+
+.appstore-publish-box.highlight {
+    outline: 2px solid rgba(245, 158, 11, 0.55);
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.12);
+}
+
+.appstore-item-meta {
+    margin-top: 3px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.appstore-publish-box {
+    margin: 12px 12px 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.appstore-publish-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.appstore-publish-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.appstore-publish-form input,
+.appstore-publish-form select {
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.appstore-empty {
+    margin: 12px;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+}

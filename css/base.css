@@ -357,3 +357,7 @@ body {
         opacity: 1;
     }
 }
+
+.app-not-installed {
+    display: none !important;
+}

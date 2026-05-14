@@ -38,7 +38,9 @@ function toggleStartMenu() {
     btn.classList.toggle('active', startMenuOpen);
     if (startMenuOpen) {
         document.getElementById('start-search').value = '';
-        document.querySelectorAll('.start-app-item').forEach(i => i.classList.remove('hidden'));
+        document.querySelectorAll('.start-app-item').forEach(i => {
+            if (!i.classList.contains('app-not-installed')) i.classList.remove('hidden');
+        });
         document.getElementById('start-search').focus();
         // Close calendar if open
         if (calendarOpen) toggleCalendar();

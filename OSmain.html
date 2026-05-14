@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -167,6 +167,11 @@
                         class="material-icons-round" style="color: white">cloud</span></div>
                 <span class="icon-label">Weather</span>
             </div>
+            <div class="desktop-icon" data-app="app-store" ondblclick="openApp('app-store')">
+                <div class="icon-img" style="background: linear-gradient(135deg, #f59e0b, #f97316)"><span
+                        class="material-icons-round" style="color: white">storefront</span></div>
+                <span class="icon-label">App Store</span>
+            </div>
             <div class="desktop-icon" data-app="global-chat" ondblclick="openApp('global-chat')">
                 <div class="icon-img" style="background: linear-gradient(135deg, #6c5ce7, #a29bfe)"><span
                         class="material-icons-round" style="color: white">public</span></div>
@@ -237,6 +242,9 @@
             </div>
             <div class="start-app-item" data-app="weather" onclick="openApp('weather')">
                 <span class="material-icons-round" style="color: #64b5f6">cloud</span><span>Weather</span>
+            </div>
+            <div class="start-app-item" data-app="app-store" onclick="openApp('app-store')">
+                <span class="material-icons-round" style="color: #f59e0b">storefront</span><span>App Store</span>
             </div>
             <div class="start-app-item" data-app="about" onclick="openApp('about')">
                 <span class="material-icons-round">info</span><span>About</span>
@@ -462,19 +470,19 @@
             </div>
             <div class="calc-buttons">
                 <button class="calc-btn func" onclick="calcAction('clear')">AC</button>
-                <button class="calc-btn func" onclick="calcAction('sign')">±</button>
+                <button class="calc-btn func" onclick="calcAction('sign')">Â±</button>
                 <button class="calc-btn func" onclick="calcAction('percent')">%</button>
-                <button class="calc-btn op" onclick="calcAction('op', '/')">÷</button>
+                <button class="calc-btn op" onclick="calcAction('op', '/')">Ã·</button>
 
                 <button class="calc-btn" onclick="calcAction('num', '7')">7</button>
                 <button class="calc-btn" onclick="calcAction('num', '8')">8</button>
                 <button class="calc-btn" onclick="calcAction('num', '9')">9</button>
-                <button class="calc-btn op" onclick="calcAction('op', '*')">×</button>
+                <button class="calc-btn op" onclick="calcAction('op', '*')">Ã—</button>
 
                 <button class="calc-btn" onclick="calcAction('num', '4')">4</button>
                 <button class="calc-btn" onclick="calcAction('num', '5')">5</button>
                 <button class="calc-btn" onclick="calcAction('num', '6')">6</button>
-                <button class="calc-btn op" onclick="calcAction('op', '-')">−</button>
+                <button class="calc-btn op" onclick="calcAction('op', '-')">âˆ’</button>
 
                 <button class="calc-btn" onclick="calcAction('num', '1')">1</button>
                 <button class="calc-btn" onclick="calcAction('num', '2')">2</button>
@@ -830,7 +838,7 @@
                     <li>Customizable appearance</li>
                 </ul>
             </div>
-            <p class="about-copy">© 2024 - 2026 Hyggshi OS Web Edition Project</p>
+            <p class="about-copy">Â© 2024 - 2026 Hyggshi OS Web Edition Project</p>
         </div>
     </template>
 
@@ -1100,6 +1108,61 @@
         </div>
     </template>
 
+    <!-- App Store -->
+    <template id="tmpl-app-store">
+        <div class="app-app-store">
+            <div class="appstore-header">
+                <div class="appstore-title-wrap">
+                    <span class="material-icons-round">storefront</span>
+                    <div>
+                        <h3>App Store</h3>
+                        <p>Install apps and publish public apps for everyone</p>
+                    </div>
+                </div>
+                <div class="appstore-tabs">
+                    <button class="appstore-tab active" data-tab="system" onclick="appStoreSwitchTab('system', this)">System Apps</button>
+                    <button class="appstore-tab" data-tab="community" onclick="appStoreSwitchTab('community', this)">Community</button>
+                </div>
+                <button class="appstore-upload-btn" onclick="appStoreOpenPublish()">
+                    <span class="material-icons-round">upload</span>
+                    Publish Public App
+                </button>
+            </div>
+
+            <div class="appstore-pane appstore-pane-system">
+                <div class="appstore-search-box">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" placeholder="Search system apps..." oninput="appStoreSearchSystem(this)">
+                </div>
+                <div class="appstore-list" id="appstore-list-system"></div>
+            </div>
+
+            <div class="appstore-pane appstore-pane-community">
+                <div class="appstore-search-box">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" placeholder="Search games/apps..." oninput="appStoreSearchCommunity(this)">
+                </div>
+                <div class="appstore-publish-box">
+                    <div class="appstore-publish-title">Publish Public App/Game</div>
+                    <div class="appstore-publish-form">
+                        <input id="appstore-publish-title" type="text" placeholder="Title (required)">
+                        <select id="appstore-publish-type">
+                            <option value="app">App</option>
+                            <option value="game">Game</option>
+                        </select>
+                        <input id="appstore-publish-author" type="text" placeholder="Author name">
+                        <input id="appstore-publish-url" type="text" placeholder="Launch URL (https://...)">
+                        <input id="appstore-publish-desc" type="text" placeholder="Description">
+                        <button class="appstore-btn install" onclick="appStorePublishSubmit()">Publish</button>
+                        <button class="appstore-btn launch" onclick="appStoreLoadCommunityItems()">Refresh</button>
+                    </div>
+                </div>
+                <div class="appstore-empty hidden" id="appstore-community-empty">No public app/game yet.</div>
+                <div class="appstore-list" id="appstore-list-community"></div>
+            </div>
+        </div>
+    </template>
+
     <!-- Zashi Messaging -->
     <template id="tmpl-global-chat">
         <div class="app-globalchat">
@@ -1115,7 +1178,7 @@
                     </div>
                     <div class="gc-setup-group">
                         <label class="gc-setup-label">Password</label>
-                        <input type="password" id="gc-login-pass" class="gc-setup-input" placeholder="••••••••">
+                        <input type="password" id="gc-login-pass" class="gc-setup-input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
                     </div>
                     <button class="gc-setup-btn" onclick="gcLogin()">
                         <span class="material-icons-round">login</span>
@@ -1170,21 +1233,21 @@
                         <div class="gc-user-avatar">?</div>
                         <div class="gc-user-meta">
                             <div class="gc-user-name">Unknown</div>
-                            <div class="gc-user-subtitle">Đang hoạt động</div>
+                            <div class="gc-user-subtitle">Äang hoáº¡t Ä‘á»™ng</div>
                         </div>
                         <button class="gc-settings-btn" onclick="gcShowSettings()"><span
                                 class="material-icons-round">settings</span></button>
                     </div>
                     <div class="gc-sidebar-search">
                         <span class="material-icons-round">search</span>
-                        <input type="text" placeholder="Tìm cuộc trò chuyện">
+                        <input type="text" placeholder="TÃ¬m cuá»™c trÃ² chuyá»‡n">
                     </div>
                 </div>
                 <div class="gc-rooms-section">
-                    <div class="gc-rooms-label">Tin nhắn</div>
+                    <div class="gc-rooms-label">Tin nháº¯n</div>
                     <div class="gc-rooms-list"></div>
                     <button class="gc-create-btn" onclick="gcShowCreateGroup()"><span
-                            class="material-icons-round">add_comment</span> Tạo nhóm chat</button>
+                            class="material-icons-round">add_comment</span> Táº¡o nhÃ³m chat</button>
                 </div>
             </div>
             <div class="gc-main">
@@ -1192,14 +1255,14 @@
                     <div class="gc-chat-header-icon"><span class="material-icons-round">forum</span></div>
                     <div class="gc-chat-header-info">
                         <div class="gc-chat-header-name">Select a room</div>
-                        <div class="gc-chat-header-status">Chọn cuộc trò chuyện để bắt đầu</div>
+                        <div class="gc-chat-header-status">Chá»n cuá»™c trÃ² chuyá»‡n Ä‘á»ƒ báº¯t Ä‘áº§u</div>
                     </div>
                     <div class="gc-header-actions">
                         <button class="gc-delete-room-btn" style="display:none" onclick="gcDeleteCurrentRoom()"><span
                                 class="material-icons-round">delete</span></button>
-                        <button class="gc-header-btn" title="Tìm trong đoạn chat"><span
+                        <button class="gc-header-btn" title="TÃ¬m trong Ä‘oáº¡n chat"><span
                                 class="material-icons-round">search</span></button>
-                        <button class="gc-header-btn" title="Ghim cuộc trò chuyện"><span
+                        <button class="gc-header-btn" title="Ghim cuá»™c trÃ² chuyá»‡n"><span
                                 class="material-icons-round">push_pin</span></button>
                         <button class="gc-header-btn" onclick="gcToggleMembers()"><span
                                 class="material-icons-round">people</span></button>
@@ -1208,10 +1271,10 @@
                 <div class="gc-messages"></div>
                 <div class="gc-input-area">
                     <div class="gc-composer-tools">
-                        <button class="gc-tool-btn" title="Ảnh"><span class="material-icons-round">image</span></button>
+                        <button class="gc-tool-btn" title="áº¢nh"><span class="material-icons-round">image</span></button>
                         <button class="gc-tool-btn" title="Sticker"><span
                                 class="material-icons-round">mood</span></button>
-                        <button class="gc-tool-btn" title="Tệp"><span
+                        <button class="gc-tool-btn" title="Tá»‡p"><span
                                 class="material-icons-round">folder</span></button>
                     </div>
                     <div class="gc-input-box">
@@ -1301,3 +1364,4 @@
 </body>
 
 </html>
+

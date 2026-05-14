@@ -41,10 +41,15 @@ document.addEventListener('DOMContentLoaded', () => {
         startSearch.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
             document.querySelectorAll('.start-app-item').forEach(item => {
+                if (item.classList.contains('app-not-installed')) return;
                 const name = item.querySelector('span:last-child').textContent.toLowerCase();
                 item.classList.toggle('hidden', !name.includes(query));
             });
         });
+    }
+
+    if (typeof appStoreSyncInstalledAppsUI === 'function') {
+        appStoreSyncInstalledAppsUI();
     }
 
     // 5. Boot Sequence Simulation
