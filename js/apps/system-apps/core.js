@@ -1391,8 +1391,10 @@ function appStoreSwitchTab(tab, btn = null) {
     const win = appStoreGetWindow();
     if (!win) return;
     const tabName = tab === 'community' ? 'community' : 'system';
-    win.dataset.tab = tabName;
-    win.querySelectorAll('.appstore-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tabName));
+    const root = win.querySelector('.app-app-store');
+    if (!root) return;
+    root.dataset.tab = tabName;
+    root.querySelectorAll('.appstore-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tabName));
     if (btn) btn.classList.add('active');
 }
 
