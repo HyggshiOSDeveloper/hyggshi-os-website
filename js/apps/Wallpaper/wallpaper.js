@@ -109,6 +109,15 @@ function syncWallpaperEngineStateFromSavedWallpaper() {
         return;
     }
 
+    if (saved.startsWith('youtube:')) {
+        wallpaperEngineState.currentPreset = 'youtube';
+        wallpaperEngineState.currentSource = saved;
+        wallpaperEngineState.currentLabel = 'YouTube Video';
+        wallpaperEngineState.currentKind = 'youtube';
+        wallpaperEngineState.videoSrc = saved.slice(8);
+        return;
+    }
+
     wallpaperEngineState.currentPreset = 'nature';
     wallpaperEngineState.currentSource = wallpaperEnginePresets.nature.wallpaper;
     wallpaperEngineState.currentLabel = wallpaperEnginePresets.nature.label;
@@ -135,6 +144,7 @@ function wpUpdateWindowUI(win = wpGetWindow()) {
     if (!win) return;
     const title = win.querySelector('#wp-active-name');
     const previewVideo = win.querySelector('#wp-preview-video');
+    const previewYoutube = win.querySelector('#wp-preview-youtube');
     const activePreset = wallpaperEngineState.currentKind === 'preset' ? wallpaperEngineState.currentPreset : '';
 
     if (title) title.textContent = wallpaperEngineState.currentLabel;
@@ -157,12 +167,25 @@ function wpUpdateWindowUI(win = wpGetWindow()) {
             }
             previewVideo.classList.add('active');
             previewVideo.loop = localStorage.getItem('webos-wallpaper-loop') !== 'false';
-            previewVideo.play().catch(() => {});
+            previewVideo.play().catch(() => { });
         } else {
             previewVideo.pause();
             previewVideo.removeAttribute('src');
             previewVideo.load();
             previewVideo.classList.remove('active');
+        }
+    }
+
+    if (previewYoutube) {
+        if (wallpaperEngineState.currentKind === 'youtube' && wallpaperEngineState.videoSrc) {
+            const youtubeUrl = `https://www.youtube-nocookie.com/embed/${wallpaperEngineState.videoSrc}?autoplay=1&mute=1&loop=1&playlist=${wallpaperEngineState.videoSrc}&controls=0&modestbranding=1&rel=0`;
+            if (previewYoutube.src !== youtubeUrl) {
+                previewYoutube.src = youtubeUrl;
+            }
+            previewYoutube.style.opacity = '1';
+        } else {
+            previewYoutube.style.opacity = '0';
+            previewYoutube.removeAttribute('src');
         }
     }
 }
@@ -208,7 +231,35 @@ function wpLoadVideoFromUrl(url) {
     const trimmed = url.trim();
     if (!trimmed) return;
 
-    // Validate URL (simple check)
+    let videoId = '';
+
+    // Check if it's a YouTube URL
+    if (trimmed.includes('youtube.com/watch?v=')) {
+        const urlObj = new URL(trimmed);
+        videoId = urlObj.searchParams.get('v');
+    } else if (trimmed.includes('youtu.be/')) {
+        videoId = trimmed.split('youtu.be/')[1].split('?')[0];
+    } else if (trimmed.length === 11) {
+        // Direct video ID
+        videoId = trimmed;
+    }
+
+    if (videoId) {
+        // It's a YouTube video!
+        wallpaperEngineState.currentPreset = 'youtube';
+        wallpaperEngineState.currentKind = 'youtube';
+        wallpaperEngineState.currentLabel = 'YouTube Video';
+        wallpaperEngineState.currentSource = `youtube:${videoId}`;
+        wallpaperEngineState.videoSrc = videoId;
+
+        setWallpaper(wallpaperEngineState.currentSource, false);
+        wpUpdateWindowUI();
+        
+        showNotification('Wallpaper Engine', 'Loading YouTube video...');
+        return;
+    }
+
+    // Regular video URL
     try {
         new URL(trimmed);
     } catch (_) {

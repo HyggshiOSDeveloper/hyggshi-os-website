@@ -1156,6 +1156,7 @@ function setAccent(color, silent) {
 function setWallpaper(wp, silent) {
     const desktop = document.getElementById('desktop');
     const wallpaperVideo = document.getElementById('desktop-wallpaper-video');
+    const wallpaperYoutube = document.getElementById('desktop-wallpaper-youtube');
     const wallpaperImage = document.getElementById('desktop-wallpaper-image');
     const wallpaperValue = String(wp || '');
     const gradients = {
@@ -1166,7 +1167,9 @@ function setWallpaper(wp, silent) {
     };
 
     const isVideo = wallpaperValue.startsWith('video:');
+    const isYoutube = wallpaperValue.startsWith('youtube:');
     const videoSrc = isVideo ? wallpaperValue.slice(6) : '';
+    const youtubeId = isYoutube ? wallpaperValue.slice(8) : '';
     
     // Scaling Mode: cover, contain, stretch (fill)
     const scalingMode = localStorage.getItem('webos-wallpaper-scaling') || 'cover';
@@ -1185,7 +1188,7 @@ function setWallpaper(wp, silent) {
     };
 
     if (wallpaperImage) {
-        if (isVideo) {
+        if (isVideo || isYoutube) {
             wallpaperImage.style.background = 'none';
         } else if (wallpaperValue.startsWith('gradient')) {
             wallpaperImage.style.background = gradients[wallpaperValue] || gradients['gradient1'];
@@ -1209,9 +1212,21 @@ function setWallpaper(wp, silent) {
             wallpaperVideo.classList.remove('active');
         }
     }
+    if (wallpaperYoutube) {
+        if (isYoutube) {
+            const youtubeUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&rel=0`;
+            if (wallpaperYoutube.src !== youtubeUrl) {
+                wallpaperYoutube.src = youtubeUrl;
+            }
+            wallpaperYoutube.classList.add('active');
+        } else {
+            wallpaperYoutube.classList.remove('active');
+            wallpaperYoutube.removeAttribute('src');
+        }
+    }
     if (desktop) {
         desktop.dataset.wallpaper = wallpaperValue;
-        desktop.dataset.wallpaperType = isVideo ? 'video' : 'image';
+        desktop.dataset.wallpaperType = isYoutube ? 'youtube' : (isVideo ? 'video' : 'image');
         desktop.dataset.scalingMode = scalingMode;
     }
     try {
