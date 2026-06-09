@@ -20,11 +20,7 @@ const wallpaperEnginePresets = {
         wallpaper: 'gradient2',
         previewClass: 'ocean'
     },
-    city: {
-        label: 'City',
-        wallpaper: 'gradient4',
-        previewClass: 'city'
-    }
+
 };
 
 let wallpaperEngineState = {
@@ -182,9 +178,9 @@ function wpUpdateWindowUI(win = wpGetWindow()) {
             if (previewYoutube.src !== youtubeUrl) {
                 previewYoutube.src = youtubeUrl;
             }
-            previewYoutube.style.opacity = '1';
+            previewYoutube.classList.add('active');
         } else {
-            previewYoutube.style.opacity = '0';
+            previewYoutube.classList.remove('active');
             previewYoutube.removeAttribute('src');
         }
     }

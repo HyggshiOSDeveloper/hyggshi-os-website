@@ -170,6 +170,24 @@
     opacity: 1;
 }
 
+.wp-preview-youtube {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    display: none;
+    transition: opacity 240ms ease;
+    z-index: 0;
+    pointer-events: none;
+    border: none;
+}
+
+.wp-preview-youtube.active {
+    opacity: 1;
+    display: block;
+}
+
 .wp-display::before {
     content: '';
     position: absolute;
@@ -203,6 +221,7 @@
     transform: scale(1.08);
     transition: opacity 260ms ease, transform 320ms ease;
     filter: saturate(1.05);
+    z-index: 1;
 }
 
 .wp-bg.active {
