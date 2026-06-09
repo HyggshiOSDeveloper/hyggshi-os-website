@@ -1,5 +1,5 @@
 /* ============ GLOBAL STATE ============ */
-let windowZIndex = 100;
+let windowZIndex = 2000;
 let activeWindowId = null;
 let windows = {};
 let windowIdCounter = 0;
@@ -21,6 +21,7 @@ const appMeta = {
     'video-player': { title: 'Video Player', icon: 'movie', w: 750, h: 520 },
     'youtube': { title: 'YouTube', icon: 'smart_display', w: 850, h: 550 },
     'weather': { title: 'Weather', icon: 'cloud', w: 700, h: 500 },
+    'wallpaper-engine': { title: 'Wallpaper Engine', icon: 'wallpaper', w: 860, h: 620 },
     'global-chat': { title: 'Zashi Messaging', icon: 'public', w: 850, h: 600 },
     'app-store': { title: 'App Store', icon: 'storefront', w: 860, h: 560 },
     'about': { title: 'About Web OS', icon: 'info', w: 420, h: 500 },
@@ -118,6 +119,7 @@ function closeWindow(wid) {
     w.el.classList.add('closing');
     setTimeout(() => {
         // Cleanup app-specific resources
+        if (typeof w.onDestroy === 'function') w.onDestroy();
         destroyApp(w.appId, wid);
         w.el.remove();
         delete windows[wid];
@@ -349,6 +351,7 @@ function initApp(appId, wid) {
         case 'video-player': initVideoPlayer(win); break;
         case 'global-chat': initMessage(win); break;
         case 'app-store': initAppStore(win); break;
+        case 'wallpaper-engine': initWallpaperEngine(win); break;
     }
 }
 
@@ -358,5 +361,6 @@ function destroyApp(appId, wid) {
         case 'music-player': mpDestroyWindow(wid); break;
         case 'video-player': vpDestroyWindow(wid); break;
         case 'chat-ai': chatDestroyWindow(wid); break;
+        case 'wallpaper-engine': wpDestroyWindow(wid); break;
     }
 }

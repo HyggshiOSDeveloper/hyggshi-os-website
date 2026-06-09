@@ -6,6 +6,91 @@
     background-color: #0a0a1a;
 }
 
+#desktop-wallpaper {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.desktop-wallpaper-video,
+.desktop-wallpaper-image,
+.desktop-wallpaper-blob,
+.desktop-wallpaper-grid,
+.desktop-wallpaper-vignette {
+    position: absolute;
+    inset: 0;
+}
+
+.desktop-wallpaper-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 240ms ease;
+    z-index: 0;
+}
+
+.desktop-wallpaper-video.active {
+    opacity: 1;
+}
+
+.desktop-wallpaper-image {
+    background: url('../Resources/background.png') center/cover no-repeat;
+    transition: background 220ms ease, transform 220ms ease;
+    z-index: 1;
+}
+
+.desktop-wallpaper-blob {
+    z-index: 2;
+    pointer-events: none;
+    filter: blur(60px);
+    opacity: 0.55;
+    transform: translate(0, 0);
+}
+
+.desktop-wallpaper-blob.blob-a {
+    width: 42vw;
+    height: 42vw;
+    left: -10vw;
+    top: 10vh;
+    background: radial-gradient(circle, rgba(79, 70, 229, 0.42), transparent 68%);
+}
+
+.desktop-wallpaper-blob.blob-b {
+    width: 32vw;
+    height: 32vw;
+    right: -4vw;
+    top: 8vh;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.3), transparent 66%);
+}
+
+.desktop-wallpaper-blob.blob-c {
+    width: 30vw;
+    height: 30vw;
+    left: 32vw;
+    bottom: -10vh;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.28), transparent 65%);
+}
+
+.desktop-wallpaper-grid {
+    z-index: 3;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.38), transparent 70%);
+    opacity: 0.35;
+}
+
+.desktop-wallpaper-vignette {
+    z-index: 4;
+    pointer-events: none;
+    background: radial-gradient(circle at center, transparent 45%, rgba(0, 0, 0, 0.28) 100%);
+}
+
 #desktop-widgets {
     position: absolute;
     top: 16px;
@@ -82,6 +167,7 @@
     gap: 8px;
     max-height: calc(100vh - var(--taskbar-height) - 40px);
     align-content: flex-start;
+    z-index: 1100;
 }
 
 .desktop-icon {

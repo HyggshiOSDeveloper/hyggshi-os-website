@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setAccent(savedAccent, true);
 
     initAnimatedWallpaper();
-    const savedWallpaper = localStorage.getItem('webos-wallpaper') || 'Resources/background.png';
+    const savedWallpaper = localStorage.getItem('webos-wallpaper') || sessionStorage.getItem('webos-wallpaper') || 'Resources/background.png';
     setWallpaper(savedWallpaper, true);
 
     const savedThemeMode = localStorage.getItem('webos-theme-mode') || 'dark';

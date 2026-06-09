@@ -1155,7 +1155,9 @@ function setAccent(color, silent) {
 
 function setWallpaper(wp, silent) {
     const desktop = document.getElementById('desktop');
+    const wallpaperVideo = document.getElementById('desktop-wallpaper-video');
     const wallpaperImage = document.getElementById('desktop-wallpaper-image');
+    const wallpaperValue = String(wp || '');
     const gradients = {
         'gradient1': 'linear-gradient(135deg, #0c0c1d, #1a1a3e, #2d1b69)',
         'gradient2': 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)',
@@ -1163,21 +1165,110 @@ function setWallpaper(wp, silent) {
         'gradient4': 'linear-gradient(135deg, #141e30, #243b55)',
     };
 
+    const isVideo = wallpaperValue.startsWith('video:');
+    const videoSrc = isVideo ? wallpaperValue.slice(6) : '';
+    
+    // Scaling Mode: cover, contain, stretch (fill)
+    const scalingMode = localStorage.getItem('webos-wallpaper-scaling') || 'cover';
+    const loopVideo = localStorage.getItem('webos-wallpaper-loop') !== 'false';
+    
+    const sizeMap = {
+        'cover': 'cover',
+        'contain': 'contain',
+        'stretch': '100% 100%'
+    };
+    
+    const objectFitMap = {
+        'cover': 'cover',
+        'contain': 'contain',
+        'stretch': 'fill'
+    };
+
     if (wallpaperImage) {
-        if (wp.startsWith('gradient')) {
-            wallpaperImage.style.background = gradients[wp] || gradients['gradient1'];
+        if (isVideo) {
+            wallpaperImage.style.background = 'none';
+        } else if (wallpaperValue.startsWith('gradient')) {
+            wallpaperImage.style.background = gradients[wallpaperValue] || gradients['gradient1'];
         } else {
-            wallpaperImage.style.background = `url('${wp}') center/cover no-repeat`;
+            wallpaperImage.style.background = `url('${wallpaperValue}') center/${sizeMap[scalingMode]} no-repeat`;
         }
     }
-    if (desktop) desktop.dataset.wallpaper = wp;
-    localStorage.setItem('webos-wallpaper', wp);
+    if (wallpaperVideo) {
+        if (isVideo) {
+            if (wallpaperVideo.src !== videoSrc) {
+                wallpaperVideo.src = videoSrc;
+            }
+            wallpaperVideo.classList.add('active');
+            wallpaperVideo.style.objectFit = objectFitMap[scalingMode];
+            wallpaperVideo.loop = loopVideo;
+            wallpaperVideo.play().catch(() => { });
+        } else {
+            wallpaperVideo.pause();
+            wallpaperVideo.removeAttribute('src');
+            wallpaperVideo.load();
+            wallpaperVideo.classList.remove('active');
+        }
+    }
+    if (desktop) {
+        desktop.dataset.wallpaper = wallpaperValue;
+        desktop.dataset.wallpaperType = isVideo ? 'video' : 'image';
+        desktop.dataset.scalingMode = scalingMode;
+    }
+    try {
+        localStorage.setItem('webos-wallpaper', wallpaperValue);
+        sessionStorage.setItem('webos-wallpaper', wallpaperValue);
+    } catch (_) { }
     document.querySelectorAll('.set-wp').forEach(w => {
         const onclick = w.getAttribute('onclick') || '';
-        w.classList.toggle('active', onclick.includes(wp));
+        w.classList.toggle('active', onclick.includes(wallpaperValue));
     });
     if (!silent) showNotification('Appearance', 'Wallpaper updated.');
 }
+
+function wpSetScalingMode(mode) {
+    localStorage.setItem('webos-wallpaper-scaling', mode);
+    const saved = localStorage.getItem('webos-wallpaper') || sessionStorage.getItem('webos-wallpaper');
+    setWallpaper(saved, true);
+    
+    // Sync UI if app is open
+    if (typeof windows !== 'undefined') {
+        for (const w of Object.values(windows)) {
+            if (w.appId === 'wallpaper-engine') {
+                const select = w.el.querySelector('#wp-scaling-mode');
+                if (select) select.value = mode;
+                break;
+            }
+        }
+    }
+    
+    const modeLabels = {
+         'cover': 'Fill Screen (Cover)',
+         'contain': 'Fit to Screen (Contain)',
+         'stretch': 'Stretch to Fill'
+     };
+     showNotification('Appearance', `Scaling mode set to ${modeLabels[mode]}.`);
+ }
+ 
+ function wpSetLoop(enabled) {
+     localStorage.setItem('webos-wallpaper-loop', enabled);
+     const saved = localStorage.getItem('webos-wallpaper') || sessionStorage.getItem('webos-wallpaper');
+     setWallpaper(saved, true);
+     
+     // Update preview video in Wallpaper Engine if open
+     if (typeof windows !== 'undefined') {
+         for (const w of Object.values(windows)) {
+             if (w.appId === 'wallpaper-engine') {
+                 const previewVideo = w.el.querySelector('#wp-preview-video');
+                 if (previewVideo) previewVideo.loop = enabled;
+                 const toggle = w.el.querySelector('#wp-loop-toggle');
+                 if (toggle) toggle.checked = enabled;
+                 break;
+             }
+         }
+     }
+     
+     showNotification('Appearance', `Video looping ${enabled ? 'enabled' : 'disabled'}.`);
+ }
 
 function setScale(value) {
     document.body.style.zoom = value / 100;
@@ -1204,6 +1295,10 @@ function initAnimatedWallpaper() {
 
     const imageLayer = document.getElementById('desktop-wallpaper-image');
     const blobs = Array.from(wallpaper.querySelectorAll('.desktop-wallpaper-blob'));
+    
+    // Performance optimization: Hardware acceleration
+    if (imageLayer) imageLayer.style.willChange = 'transform';
+    blobs.forEach(b => b.style.willChange = 'transform');
 
     desktopWallpaperState = {
         desktop,
@@ -1247,6 +1342,22 @@ function initAnimatedWallpaper() {
             return;
         }
 
+        // Optimization: Pause animation when not visible or lock screen is active
+        const lockScreen = document.getElementById('lock-screen');
+        const isLocked = lockScreen && !lockScreen.classList.contains('hidden');
+        const isHidden = document.hidden;
+        
+        // Check if a maximized window is covering the desktop
+        let isCovered = false;
+        if (typeof windows !== 'undefined') {
+            isCovered = Object.values(windows).some(w => w.maximized && !w.minimized);
+        }
+
+        if (isHidden || isLocked || isCovered) {
+            desktopWallpaperState.rafId = requestAnimationFrame(tick);
+            return;
+        }
+
         desktopWallpaperState.blobs.forEach((blob, index) => {
             const waveX = Math.sin(time * blob.speed + index * 1.7);
             const waveY = Math.cos(time * blob.speed * 0.82 + index * 2.4);
@@ -1254,7 +1365,7 @@ function initAnimatedWallpaper() {
             blob.targetY = 50 + waveY * blob.amplitudeY + (desktopWallpaperState.mouseY - 0.5) * (12 + index * 4);
             blob.currentX = wallpaperLerp(blob.currentX, blob.targetX, 0.045);
             blob.currentY = wallpaperLerp(blob.currentY, blob.targetY, 0.045);
-            blob.el.style.transform = `translate(${blob.currentX - 50}%, ${blob.currentY - 50}%)`;
+            blob.el.style.transform = `translate3d(${blob.currentX - 50}%, ${blob.currentY - 50}%, 0)`;
         });
 
         if (desktopWallpaperState.imageLayer) {
@@ -1262,7 +1373,7 @@ function initAnimatedWallpaper() {
             const targetOffsetY = (desktopWallpaperState.mouseY - 0.5) * 12;
             desktopWallpaperState.imageOffsetX = wallpaperLerp(desktopWallpaperState.imageOffsetX, targetOffsetX, 0.035);
             desktopWallpaperState.imageOffsetY = wallpaperLerp(desktopWallpaperState.imageOffsetY, targetOffsetY, 0.035);
-            desktopWallpaperState.imageLayer.style.transform = `translate(${desktopWallpaperState.imageOffsetX}px, ${desktopWallpaperState.imageOffsetY}px) scale(1.05)`;
+            desktopWallpaperState.imageLayer.style.transform = `translate3d(${desktopWallpaperState.imageOffsetX}px, ${desktopWallpaperState.imageOffsetY}px, 0) scale(1.05)`;
         }
 
         desktopWallpaperState.rafId = requestAnimationFrame(tick);
@@ -1319,8 +1430,8 @@ function setUIStyle(style, silent) {
 function initAbout(win) { /* Logic if needed */ }
 
 /* ============ APP STORE ============ */
-const appStoreCoreApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store']);
-const appStoreRequiredApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store']);
+const appStoreCoreApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store', 'wallpaper-engine']);
+const appStoreRequiredApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store', 'wallpaper-engine']);
 const appStoreCatalog = [
     { id: 'browser', name: 'Browser', icon: 'public', desc: 'Browse websites inside Web OS.' },
     { id: 'weather', name: 'Weather', icon: 'cloud', desc: 'Check live weather and forecasts.' },
@@ -1331,11 +1442,15 @@ const appStoreCatalog = [
     { id: 'ide-editor', name: 'IDE Code Editor', icon: 'code', desc: 'Code editor with preview runtime.' },
     { id: 'text-editor', name: 'Text Editor', icon: 'edit_note', desc: 'Write and edit text documents.' },
     { id: 'image-viewer', name: 'Photos', icon: 'image', desc: 'View local images.' },
-    { id: 'youtube', name: 'YouTube', icon: 'smart_display', desc: 'Watch YouTube in embedded player.' }
+    { id: 'youtube', name: 'YouTube', icon: 'smart_display', desc: 'Watch YouTube in embedded player.' },
+    { id: 'wallpaper-engine', name: 'Wallpaper Engine', icon: 'wallpaper', desc: 'Choose and preview desktop wallpapers.' }
 ];
 const APPSTORE_SB_URL = 'https://kwgxqxffjruykjzjhlkq.supabase.co';
 const APPSTORE_SB_KEY = 'sb_publishable_cj9pOUvJFPdOEtZCziWULQ_c-Ch1xPb';
 const APPSTORE_PUBLIC_TABLE = 'app_store_items';
+const APPSTORE_CODE_PREFIX = '__codehash:';
+const APPSTORE_SOURCE_PREFIX = '__source:';
+const APPSTORE_STORAGE_BUCKET = 'chat-files';
 let appStoreCommunityItems = [];
 let appStoreCommunityLoaded = false;
 
@@ -1344,7 +1459,7 @@ function getInstalledApps() {
     if (saved) {
         try { return new Set(JSON.parse(saved)); } catch (_) { }
     }
-    return new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store']);
+    return new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store', 'wallpaper-engine']);
 }
 
 function saveInstalledApps(installedSet) {
@@ -1369,6 +1484,49 @@ function appStoreGetClient() {
     } catch (_) {
         return null;
     }
+}
+
+function appStoreExtractCodeHash(description = '') {
+    const text = String(description || '');
+    if (!text.startsWith(APPSTORE_CODE_PREFIX)) return '';
+    const end = text.indexOf('__ ');
+    if (end === -1) return '';
+    return text.slice(APPSTORE_CODE_PREFIX.length, end).trim();
+}
+
+function appStoreStripCodeMeta(description = '') {
+    const text = String(description || '');
+    if (!text.startsWith(APPSTORE_CODE_PREFIX)) return text;
+    const chunks = text.split('__ ');
+    if (chunks.length < 3) return text;
+    return chunks.slice(2).join('__ ').trim();
+}
+
+function appStoreExtractSourceUrl(description = '') {
+    const text = String(description || '');
+    const sourceMark = `${APPSTORE_SOURCE_PREFIX}`;
+    const idx = text.indexOf(sourceMark);
+    if (idx === -1) return '';
+    const sub = text.slice(idx + sourceMark.length);
+    const end = sub.indexOf('__ ');
+    if (end === -1) return '';
+    return sub.slice(0, end).trim();
+}
+
+function appStoreSanitizeFileName(name = '') {
+    return String(name || 'source.txt').replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+
+async function appStoreUploadSourceFile(file, client) {
+    const safeName = appStoreSanitizeFileName(file?.name || 'source.txt');
+    const path = `app-store/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+    const { error: upErr } = await client.storage.from(APPSTORE_STORAGE_BUCKET).upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+    });
+    if (upErr) throw upErr;
+    const { data } = client.storage.from(APPSTORE_STORAGE_BUCKET).getPublicUrl(path);
+    return data?.publicUrl || '';
 }
 
 function appStoreSyncInstalledAppsUI() {
@@ -1544,13 +1702,15 @@ function appStoreRenderCommunity(query = '', win = null) {
                 <div class="appstore-item-icon"><span class="material-icons-round">${icon}</span></div>
                 <div class="appstore-item-content">
                     <div class="appstore-item-name">${item.title || 'Untitled'}</div>
-                    <div class="appstore-item-desc">${item.description || 'No description.'}</div>
+                    <div class="appstore-item-desc">${appStoreStripCodeMeta(item.description) || 'No description.'}</div>
                     <div class="appstore-item-meta">${item.category || 'app'} • by ${item.author_name || 'anonymous'}</div>
                 </div>
                 <div class="appstore-item-actions">
                     ${isInstalled
                 ? `<button class="appstore-btn launch" onclick="appStoreLaunchCommunity('${item.id}')">Open</button>`
                 : `<button class="appstore-btn install" onclick="appStoreInstallCommunity('${item.id}')">Install</button>`}
+                    ${appStoreExtractSourceUrl(item.description) ? `<button class="appstore-btn launch" onclick="appStoreOpenSource('${item.id}')">Source</button>` : ''}
+                    <button class="appstore-btn uninstall" onclick="appStoreDeleteCommunity('${item.id}')">Delete</button>
                 </div>
             </div>
         `;
@@ -1607,16 +1767,20 @@ async function appStorePublishSubmit() {
     const descEl = win.querySelector('#appstore-publish-desc');
     const urlEl = win.querySelector('#appstore-publish-url');
     const authorEl = win.querySelector('#appstore-publish-author');
-    if (!titleEl || !typeEl || !descEl || !urlEl || !authorEl) return;
+    const codeEl = win.querySelector('#appstore-publish-code');
+    const fileEl = win.querySelector('#appstore-publish-file');
+    if (!titleEl || !typeEl || !descEl || !urlEl || !authorEl || !codeEl || !fileEl) return;
 
     const title = String(titleEl.value || '').trim();
     const category = typeEl.value === 'game' ? 'game' : 'app';
     const description = String(descEl.value || '').trim();
     const launchUrl = String(urlEl.value || '').trim();
     const author = String(authorEl.value || '').trim() || 'anonymous';
+    const manageCode = String(codeEl.value || '').trim();
+    const sourceFile = fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
 
-    if (!title || !launchUrl) {
-        showNotification('App Store', 'Title and launch URL are required.', 'error');
+    if (!title || !launchUrl || !manageCode || !sourceFile) {
+        showNotification('App Store', 'Title, launch URL, manage code and source file are required.', 'error');
         return;
     }
     if (!/^https?:\/\//i.test(launchUrl)) {
@@ -1631,10 +1795,13 @@ async function appStorePublishSubmit() {
     }
 
     try {
+        const codeHash = await hashPassword(manageCode);
+        const sourceUrl = await appStoreUploadSourceFile(sourceFile, client);
+        const safeDescription = `${APPSTORE_CODE_PREFIX}${codeHash}__ ${APPSTORE_SOURCE_PREFIX}${sourceUrl}__ ${description}`;
         const payload = {
             title,
             category,
-            description,
+            description: safeDescription,
             launch_url: launchUrl,
             author_name: author,
             is_public: true
@@ -1644,10 +1811,68 @@ async function appStorePublishSubmit() {
         titleEl.value = '';
         descEl.value = '';
         urlEl.value = '';
+        codeEl.value = '';
+        fileEl.value = '';
         showNotification('App Store', 'Published publicly. Everyone can see it now.');
         appStoreLoadCommunityItems(win);
     } catch (_) {
         showNotification('App Store', 'Publish failed. Run the SQL schema update first.', 'error');
+    }
+}
+
+function appStoreOpenSource(itemId) {
+    const item = appStoreCommunityItems.find(x => String(x.id) === String(itemId));
+    if (!item) return;
+    const sourceUrl = appStoreExtractSourceUrl(item.description);
+    if (!sourceUrl) {
+        showNotification('App Store', 'No source file found for this app.', 'error');
+        return;
+    }
+    openApp('browser');
+    setTimeout(() => {
+        for (const [, w] of Object.entries(windows)) {
+            if (w.appId !== 'browser') continue;
+            const urlInput = w.el.querySelector('.br-url');
+            if (urlInput) {
+                urlInput.value = sourceUrl;
+                brGo();
+            }
+            break;
+        }
+    }, 80);
+}
+
+async function appStoreDeleteCommunity(itemId) {
+    const item = appStoreCommunityItems.find(x => String(x.id) === String(itemId));
+    if (!item) return;
+
+    const savedHash = appStoreExtractCodeHash(item.description);
+    if (!savedHash) {
+        showNotification('App Store', 'This app has no manage code.', 'error');
+        return;
+    }
+
+    const code = prompt('Enter manage code to delete this app:');
+    if (!code) return;
+    const codeHash = await hashPassword(String(code).trim());
+    if (codeHash !== savedHash) {
+        showNotification('App Store', 'Wrong code. Delete denied.', 'error');
+        return;
+    }
+
+    const client = appStoreGetClient();
+    if (!client) {
+        showNotification('App Store', 'Supabase is not available.', 'error');
+        return;
+    }
+
+    try {
+        const { error } = await client.from(APPSTORE_PUBLIC_TABLE).delete().eq('id', item.id);
+        if (error) throw error;
+        showNotification('App Store', 'App deleted successfully.');
+        appStoreLoadCommunityItems();
+    } catch (_) {
+        showNotification('App Store', 'Delete failed.', 'error');
     }
 }
 

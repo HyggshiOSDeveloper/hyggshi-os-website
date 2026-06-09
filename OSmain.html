@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -16,9 +16,10 @@
     <link rel="stylesheet" href="css/apps-weather.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/hyggshi-os.css">
+    <link rel="stylesheet" href="css/apps-wallpaper.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/c``ss2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 </head>
 
@@ -80,6 +81,7 @@
     <!-- ===== DESKTOP ===== -->
     <div id="desktop">
         <div id="desktop-wallpaper" aria-hidden="true">
+            <video class="desktop-wallpaper-video" id="desktop-wallpaper-video" muted loop playsinline></video>
             <div class="desktop-wallpaper-image" id="desktop-wallpaper-image"></div>
             <div class="desktop-wallpaper-blob blob-a"></div>
             <div class="desktop-wallpaper-blob blob-b"></div>
@@ -177,6 +179,11 @@
                         class="material-icons-round" style="color: white">public</span></div>
                 <span class="icon-label">Zashi Messaging</span>
             </div>
+            <div class="desktop-icon" data-app="wallpaper-engine" ondblclick="openApp('wallpaper-engine')">
+                <div class="icon-img" style="background: linear-gradient(135deg, #00b894, #00cec9)"><span
+                        class="material-icons-round" style="color: white">wallpaper</span></div>
+                <span class="icon-label">Wallpaper Engine</span>
+            </div>
         </div>
 
         <!-- Windows Container -->
@@ -224,6 +231,9 @@
             </div>
             <div class="start-app-item" data-app="settings" onclick="openApp('settings')">
                 <span class="material-icons-round">settings</span><span>Settings</span>
+            </div>
+            <div class="start-app-item" data-app="wallpaper-engine" onclick="openApp('wallpaper-engine')">
+                <span class="material-icons-round">wallpaper</span><span>Wallpaper Engine</span>
             </div>
             <div class="start-app-item" data-app="image-viewer" onclick="openApp('image-viewer')">
                 <span class="material-icons-round">image</span><span>Photos</span>
@@ -457,7 +467,7 @@
                         class="material-icons-round">arrow_circle_right</span></button>
             </div>
             <iframe class="br-frame" id="br-frame" src="https://www.wikipedia.org"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
+                    sandbox="allow-scripts allow-forms allow-popups"></iframe>
         </div>
     </template>
 
@@ -470,19 +480,19 @@
             </div>
             <div class="calc-buttons">
                 <button class="calc-btn func" onclick="calcAction('clear')">AC</button>
-                <button class="calc-btn func" onclick="calcAction('sign')">Â±</button>
+                <button class="calc-btn func" onclick="calcAction('sign')">±</button>
                 <button class="calc-btn func" onclick="calcAction('percent')">%</button>
-                <button class="calc-btn op" onclick="calcAction('op', '/')">Ã·</button>
+                <button class="calc-btn op" onclick="calcAction('op', '/')">/·</button>
 
                 <button class="calc-btn" onclick="calcAction('num', '7')">7</button>
                 <button class="calc-btn" onclick="calcAction('num', '8')">8</button>
                 <button class="calc-btn" onclick="calcAction('num', '9')">9</button>
-                <button class="calc-btn op" onclick="calcAction('op', '*')">Ã—</button>
+                <button class="calc-btn op" onclick="calcAction('op', '*')">x</button>
 
                 <button class="calc-btn" onclick="calcAction('num', '4')">4</button>
                 <button class="calc-btn" onclick="calcAction('num', '5')">5</button>
                 <button class="calc-btn" onclick="calcAction('num', '6')">6</button>
-                <button class="calc-btn op" onclick="calcAction('op', '-')">âˆ’</button>
+                <button class="calc-btn op" onclick="calcAction('op', '-')">-</button>
 
                 <button class="calc-btn" onclick="calcAction('num', '1')">1</button>
                 <button class="calc-btn" onclick="calcAction('num', '2')">2</button>
@@ -492,6 +502,111 @@
                 <button class="calc-btn zero" onclick="calcAction('num', '0')">0</button>
                 <button class="calc-btn" onclick="calcAction('dot')">.</button>
                 <button class="calc-btn op eq" onclick="calcAction('eq')">=</button>
+            </div>
+        </div>
+    </template>
+
+    <!-- App Wallpaper Engine -->
+    <template id="tmpl-wallpaper-engine">
+        <div class="app-wallpaper-engine">
+            <div class="wp-header">
+                <div>
+                    <h3>Wallpaper Engine</h3>
+                    <p>Pick a preset and apply it to the desktop instantly.</p>
+                </div>
+                <div class="wp-active-pill">
+                    <span class="material-icons-round">wallpaper</span>
+                    <span id="wp-active-name">Nature</span>
+                </div>
+            </div>
+            <div class="wp-toolbar">
+                <button data-wp="nature" onclick="wpChange('nature')" title="Nature"><span
+                        class="material-icons-round">park</span><span>Nature</span></button>
+                <button data-wp="space" onclick="wpChange('space')" title="Space"><span
+                        class="material-icons-round">public</span><span>Space</span></button>
+                <button data-wp="abstract" onclick="wpChange('abstract')" title="Abstract"><span
+                        class="material-icons-round">brush</span><span>Abstract</span></button>
+                <button data-wp="ocean" onclick="wpChange('ocean')" title="Ocean"><span
+                        class="material-icons-round">waves</span><span>Ocean</span></button>
+                <button data-wp="city" onclick="wpChange('city')" title="City"><span
+                        class="material-icons-round">location_city</span><span>City</span></button>
+            </div>
+            <div class="wp-url-box">
+                <input type="text" id="wp-url-input" placeholder="Paste video URL here..." onkeydown="if(event.key==='Enter') wpLoadVideoFromUrl(this.value)">
+                <button class="wp-url-btn" onclick="wpLoadVideoFromUrl(document.getElementById('wp-url-input').value)">
+                    <span class="material-icons-round">link</span>
+                    <span>Load URL</span>
+                </button>
+            </div>
+            <div class="wp-display" id="wp-display">
+                <video class="wp-preview-video" id="wp-preview-video" muted loop playsinline></video>
+                <div class="wp-bg nature active"></div>
+                <div class="wp-bg space"></div>
+                <div class="wp-bg abstract"></div>
+                <div class="wp-bg ocean"></div>
+                <div class="wp-bg city"></div>
+            </div>
+            <input type="file" id="wp-video-input" accept="video/*" class="hidden" onchange="wpUploadVideo(this)">
+            <div class="wp-footer">
+                <div class="wp-system-info">
+                    <div class="wp-info-item">
+                        <span class="material-icons-round">aspect_ratio</span>
+                        <div class="wp-info-text">
+                            <span class="wp-info-label">Screen Resolution</span>
+                            <span id="wp-screen-res">Loading...</span>
+                        </div>
+                    </div>
+                    <button class="wp-expand-btn" onclick="wpToggleDetails()" title="Expand for full details">
+                        <span class="material-icons-round" id="wp-expand-icon">expand_more</span>
+                        <span>Details</span>
+                    </button>
+                    <div class="wp-info-item">
+                        <span class="material-icons-round">fullscreen</span>
+                        <div class="wp-info-text">
+                            <span class="wp-info-label">Scaling Mode</span>
+                            <select id="wp-scaling-mode" onchange="wpSetScalingMode(this.value)" class="wp-select">
+                                <option value="cover">Fill Screen (Cover)</option>
+                                <option value="contain">Fit to Screen (Contain)</option>
+                                <option value="stretch">Stretch to Fill</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="wp-info-item">
+                        <span class="material-icons-round">repeat</span>
+                        <div class="wp-info-text">
+                            <span class="wp-info-label">Loop Video</span>
+                            <label class="switch">
+                                <input type="checkbox" id="wp-loop-toggle" onchange="wpSetLoop(this.checked)">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div id="wp-details-panel" class="wp-details-panel hidden">
+                    <div class="wp-details-grid">
+                        <div class="wp-detail-cell">
+                            <span class="wp-detail-label">Orientation</span>
+                            <span class="wp-detail-val" id="wp-detail-orient">-</span>
+                        </div>
+                        <div class="wp-detail-cell">
+                            <span class="wp-detail-label">Aspect Ratio</span>
+                            <span class="wp-detail-val" id="wp-detail-ratio">-</span>
+                        </div>
+                        <div class="wp-detail-cell">
+                            <span class="wp-detail-label">Pixel Ratio</span>
+                            <span class="wp-detail-val" id="wp-detail-dpr">-</span>
+                        </div>
+                        <div class="wp-detail-cell">
+                            <span class="wp-detail-label">Color Depth</span>
+                            <span class="wp-detail-val" id="wp-detail-depth">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="wp-actions">
+                    <button class="wp-action-btn" onclick="wpApplyToDesktop()">Apply to Desktop</button>
+                    <button class="wp-action-btn" onclick="document.getElementById('wp-video-input').click()">Upload Video</button>
+                    <button class="wp-random-btn" onclick="wpRandomize()">Randomize</button>
+                </div>
             </div>
         </div>
     </template>
@@ -1151,7 +1266,9 @@
                             <option value="game">Game</option>
                         </select>
                         <input id="appstore-publish-author" type="text" placeholder="Author name">
+                        <input id="appstore-publish-code" type="password" placeholder="Manage code (required)">
                         <input id="appstore-publish-url" type="text" placeholder="Launch URL (https://...)">
+                        <input id="appstore-publish-file" type="file" accept=".html,.htm,.js,.css,.json,.zip,.txt">
                         <input id="appstore-publish-desc" type="text" placeholder="Description">
                         <button class="appstore-btn install" onclick="appStorePublishSubmit()">Publish</button>
                         <button class="appstore-btn launch" onclick="appStoreLoadCommunityItems()">Refresh</button>
@@ -1329,6 +1446,7 @@
     <script src="js/apps/messaging/data.js"></script>
     <script src="js/apps/messaging/interactions.js"></script>
     <script src="js/apps/messaging/panels.js"></script>
+    <script src="js/apps/wallpaper/wallpaper.js"></script>
     <script src="js/core/main.js"></script>
     <!-- Video Player -->
     <template id="tmpl-video-player">

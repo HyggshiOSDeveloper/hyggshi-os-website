@@ -1,5 +1,5 @@
 /* ============ GLOBAL STATE ============ */
-let windowZIndex = 100;
+let windowZIndex = 2000;
 let activeWindowId = null;
 let windows = {};
 let windowIdCounter = 0;

@@ -1,0 +1,470 @@
+/* === Wallpaper Engine === */
+.app-wallpaper-engine {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+    padding: 16px;
+    color: var(--text-primary);
+    overflow: hidden;
+}
+
+.wp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.wp-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.wp-header p {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.wp-active-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    white-space: nowrap;
+}
+
+.wp-active-pill .material-icons-round {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+.wp-toolbar {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.wp-toolbar button,
+.wp-random-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    padding: 12px 10px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform var(--transition), background var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.wp-toolbar button:hover,
+.wp-random-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14);
+}
+
+.wp-toolbar button.active {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 34%, transparent), rgba(255, 255, 255, 0.08));
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+    color: var(--text-primary);
+}
+
+.wp-toolbar button .material-icons-round {
+    font-size: 18px;
+}
+
+.wp-url-box {
+    display: flex;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 10px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+#wp-url-input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    transition: border-color var(--transition), background var(--transition);
+}
+
+#wp-url-input:focus {
+    border-color: var(--accent);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.wp-url-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform var(--transition), filter var(--transition);
+}
+
+.wp-url-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.wp-url-btn:active {
+    transform: translateY(0);
+}
+
+.wp-display {
+    position: relative;
+    flex: 1;
+    min-height: 320px;
+    overflow: hidden;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 35%),
+        rgba(0, 0, 0, 0.28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.wp-preview-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 260ms ease;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.wp-preview-video.active {
+    opacity: 1;
+}
+
+.wp-display::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 30%),
+        linear-gradient(45deg, rgba(255, 255, 255, 0.04), transparent 50%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.wp-display::after {
+    content: 'Preview';
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 3;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.22);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.wp-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: scale(1.08);
+    transition: opacity 260ms ease, transform 320ms ease;
+    filter: saturate(1.05);
+}
+
+.wp-bg.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.wp-bg.nature {
+    background:
+        radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.22), transparent 20%),
+        radial-gradient(circle at 82% 20%, rgba(72, 187, 120, 0.38), transparent 28%),
+        linear-gradient(135deg, rgba(17, 24, 39, 0.25), rgba(6, 95, 70, 0.4)),
+        url('../Resources/background.png') center/cover no-repeat;
+}
+
+.wp-bg.space {
+    background:
+        radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.32), transparent 6%),
+        radial-gradient(circle at 72% 30%, rgba(59, 130, 246, 0.34), transparent 18%),
+        radial-gradient(circle at 88% 72%, rgba(167, 139, 250, 0.24), transparent 20%),
+        linear-gradient(135deg, #050816, #0b1a35 55%, #182852);
+}
+
+.wp-bg.abstract {
+    background:
+        radial-gradient(circle at 28% 24%, rgba(251, 191, 36, 0.28), transparent 18%),
+        radial-gradient(circle at 70% 25%, rgba(244, 114, 182, 0.28), transparent 22%),
+        radial-gradient(circle at 72% 82%, rgba(34, 211, 238, 0.24), transparent 20%),
+        linear-gradient(135deg, #1a0533, #2c1655 45%, #5a189a);
+}
+
+.wp-bg.ocean {
+    background:
+        radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.18), transparent 16%),
+        radial-gradient(circle at 70% 18%, rgba(56, 189, 248, 0.3), transparent 25%),
+        linear-gradient(135deg, #07111f, #0f3550 52%, #0f766e);
+}
+
+.wp-bg.city {
+    background:
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.14), transparent 20%),
+        radial-gradient(circle at 50% 12%, rgba(253, 224, 71, 0.28), transparent 16%),
+        linear-gradient(180deg, #0f172a 0%, #132238 46%, #334155 100%);
+}
+
+.wp-bg.city::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 38%;
+    background:
+        linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.16)),
+        repeating-linear-gradient(
+            90deg,
+            rgba(15, 23, 42, 0.9) 0 18px,
+            rgba(30, 41, 59, 0.96) 18px 28px
+        );
+    clip-path: polygon(0 36%, 4% 28%, 8% 34%, 13% 20%, 18% 38%, 24% 16%, 30% 42%, 36% 24%, 42% 50%, 50% 22%, 58% 45%, 66% 20%, 72% 44%, 78% 24%, 86% 38%, 92% 18%, 100% 32%, 100% 100%, 0 100%);
+    opacity: 0.7;
+}
+
+.wp-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.wp-system-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.wp-expand-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.wp-expand-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-color: var(--accent);
+}
+
+.wp-details-panel {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    animation: slideDown 0.3s ease-out;
+}
+
+.wp-details-panel.hidden {
+    display: none;
+}
+
+.wp-details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.wp-detail-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.wp-detail-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
+.wp-detail-val {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.wp-info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wp-info-item .material-icons-round {
+    color: var(--accent);
+    font-size: 20px;
+    opacity: 0.8;
+}
+
+.wp-info-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.wp-info-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+#wp-screen-res {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.wp-select {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.wp-select:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--accent);
+}
+
+.wp-select option {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.wp-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.wp-note {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.wp-action-btn {
+    min-width: 132px;
+    padding: 12px 18px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.wp-action-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14);
+}
+
+.wp-random-btn {
+    min-width: 128px;
+    padding-inline: 18px;
+    background: color-mix(in srgb, var(--accent) 18%, rgba(255, 255, 255, 0.06));
+    color: var(--text-primary);
+}
+
+@media (max-width: 720px) {
+    .app-wallpaper-engine {
+        padding: 12px;
+    }
+
+    .wp-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .wp-toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .wp-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .wp-actions {
+        justify-content: stretch;
+    }
+
+    .wp-action-btn,
+    .wp-random-btn {
+        width: 100%;
+    }
+
+    .wp-actions {
+        flex-direction: column;
+    }
+}
