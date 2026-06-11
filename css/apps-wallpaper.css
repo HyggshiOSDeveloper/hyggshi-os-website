@@ -1,12 +1,12 @@
 /* === Wallpaper Engine === */
-.app-wallpaper-engine {
+.app-wallpaper-engine { /* Main Frame */
     display: flex;
     flex-direction: column;
     gap: 14px;
     height: 100%;
     padding: 16px;
     color: var(--text-primary);
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .wp-header {
