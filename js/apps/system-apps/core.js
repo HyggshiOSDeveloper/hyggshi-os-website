@@ -1166,6 +1166,50 @@ function setWallpaper(wp, silent) {
         'gradient4': 'linear-gradient(135deg, #141e30, #243b55)',
     };
 
+    // ── Image URL (remote) ──────────────────────────────
+    if (wallpaperValue.startsWith('image-url:')) {
+        const imageUrl = wallpaperValue.slice(10); // strip "image-url:"
+        const scalingMode = localStorage.getItem('webos-wallpaper-scaling') || 'cover';
+        const sizeValue = scalingMode === 'stretch' ? '100% 100%'
+                        : scalingMode === 'contain'  ? 'contain'
+                        : 'cover';
+
+        // Hide video / youtube layers
+        if (wallpaperVideo) {
+            wallpaperVideo.pause();
+            wallpaperVideo.removeAttribute('src');
+            wallpaperVideo.load();
+            wallpaperVideo.classList.remove('active');
+        }
+        if (wallpaperYoutube) {
+            wallpaperYoutube.classList.remove('active');
+            wallpaperYoutube.removeAttribute('src');
+        }
+
+        // Apply image to wallpaper image layer
+        if (wallpaperImage) {
+            wallpaperImage.style.backgroundImage = `url("${imageUrl}")`;
+            wallpaperImage.style.backgroundSize   = sizeValue;
+            wallpaperImage.style.backgroundPosition = 'center';
+            wallpaperImage.style.backgroundRepeat  = 'no-repeat';
+        }
+
+        if (desktop) {
+            desktop.dataset.wallpaper     = wallpaperValue;
+            desktop.dataset.wallpaperType = 'image-url';
+            desktop.dataset.scalingMode   = scalingMode;
+        }
+
+        try {
+            localStorage.setItem('webos-wallpaper', wallpaperValue);
+            sessionStorage.setItem('webos-wallpaper', wallpaperValue);
+        } catch (_) {}
+
+        if (!silent) showNotification('Appearance', 'Wallpaper updated.');
+        return; // ← early return, skip gradient / video logic below
+    }
+    // ────────────────────────────────────────────────────
+
     const isVideo = wallpaperValue.startsWith('video:');
     const isYoutube = wallpaperValue.startsWith('youtube:');
     const videoSrc = isVideo ? wallpaperValue.slice(6) : '';
@@ -1214,14 +1258,22 @@ function setWallpaper(wp, silent) {
     }
     if (wallpaperYoutube) {
         if (isYoutube) {
-            const youtubeUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&rel=0`;
-            if (wallpaperYoutube.src !== youtubeUrl) {
-                wallpaperYoutube.src = youtubeUrl;
+            // srcdoc proxy: bypasses file:// origin restriction (Error 153)
+            // Inner iframe runs from about:blank context — YouTube allows autoplay
+            const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&fs=0`;
+            const srcdocHtml = `<!DOCTYPE html><html><head><style>*{margin:0;padding:0;overflow:hidden;background:#000}iframe{width:100vw;height:100vh;border:none;pointer-events:none}</style></head><body><iframe src="${embedUrl}" allow="autoplay;encrypted-media" allowfullscreen></iframe></body></html>`;
+            const currentId = wallpaperYoutube.dataset.ytId || '';
+            if (currentId !== youtubeId) {
+                wallpaperYoutube.dataset.ytId = youtubeId;
+                wallpaperYoutube.removeAttribute('src');
+                wallpaperYoutube.srcdoc = srcdocHtml;
             }
             wallpaperYoutube.classList.add('active');
         } else {
             wallpaperYoutube.classList.remove('active');
+            wallpaperYoutube.srcdoc = '';
             wallpaperYoutube.removeAttribute('src');
+            delete wallpaperYoutube.dataset.ytId;
         }
     }
     if (desktop) {
@@ -1890,4 +1942,3 @@ async function appStoreDeleteCommunity(itemId) {
         showNotification('App Store', 'Delete failed.', 'error');
     }
 }
-

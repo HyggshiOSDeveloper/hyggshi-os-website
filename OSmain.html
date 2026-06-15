@@ -19,7 +19,8 @@
     <link rel="stylesheet" href="css/apps-wallpaper.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/c``ss2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/c``ss2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 </head>
 
@@ -82,7 +83,8 @@
     <div id="desktop">
         <div id="desktop-wallpaper" aria-hidden="true">
             <video class="desktop-wallpaper-video" id="desktop-wallpaper-video" muted loop playsinline></video>
-            <iframe class="desktop-wallpaper-youtube" id="desktop-wallpaper-youtube" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="pointer-events: none;"></iframe>
+            <iframe class="desktop-wallpaper-youtube" id="desktop-wallpaper-youtube" frameborder="0"
+                allow="autoplay; encrypted-media" allowfullscreen style="pointer-events: none;"></iframe>
             <div class="desktop-wallpaper-image" id="desktop-wallpaper-image"></div>
             <div class="desktop-wallpaper-blob blob-a"></div>
             <div class="desktop-wallpaper-blob blob-b"></div>
@@ -193,7 +195,8 @@
         <!-- Context Menu -->
         <div id="context-menu" class="hidden">
             <div class="ctx-item" onclick="ctxRefresh()"><span class="material-icons-round">refresh</span> Refresh</div>
-            <div class="ctx-item" onclick="toggleDesktopWidgets()"><span class="material-icons-round">widgets</span> Toggle Widgets</div>
+            <div class="ctx-item" onclick="toggleDesktopWidgets()"><span class="material-icons-round">widgets</span>
+                Toggle Widgets</div>
             <div class="ctx-separator"></div>
             <div class="ctx-item" onclick="ctxNewFolder()"><span class="material-icons-round">create_new_folder</span>
                 New Folder</div>
@@ -468,7 +471,7 @@
                         class="material-icons-round">arrow_circle_right</span></button>
             </div>
             <iframe class="br-frame" id="br-frame" src="https://www.wikipedia.org"
-                    sandbox="allow-scripts allow-forms allow-popups"></iframe>
+                sandbox="allow-scripts allow-forms allow-popups"></iframe>
         </div>
     </template>
 
@@ -513,49 +516,88 @@
             <div class="wp-header">
                 <div>
                     <h3>Wallpaper Engine</h3>
-                    <p>Pick a preset and apply it to the desktop instantly.</p>
+                    <p>Presets, images, or HQ video — paste a URL or upload a file.</p>
                 </div>
                 <div class="wp-active-pill">
                     <span class="material-icons-round">wallpaper</span>
                     <span id="wp-active-name">Nature</span>
                 </div>
             </div>
+
+            <!-- Preset buttons -->
             <div class="wp-toolbar">
-                <button data-wp="nature" onclick="wpChange('nature')" title="Nature"><span
-                        class="material-icons-round">park</span><span>Nature</span></button>
-                <button data-wp="space" onclick="wpChange('space')" title="Space"><span
-                        class="material-icons-round">public</span><span>Space</span></button>
-                <button data-wp="abstract" onclick="wpChange('abstract')" title="Abstract"><span
-                        class="material-icons-round">brush</span><span>Abstract</span></button>
-                <button data-wp="ocean" onclick="wpChange('ocean')" title="Ocean"><span
-                        class="material-icons-round">waves</span><span>Ocean</span></button>
-                <button data-wp="city" onclick="wpChange('city')" title="City"><span
-                        class="material-icons-round">location_city</span><span>City</span></button>
-            </div>
-            <div class="wp-url-box">
-                <input type="text" id="wp-url-input" placeholder="Paste video URL here..." onkeydown="if(event.key==='Enter') wpLoadVideoFromUrl(this.value)">
-                <button class="wp-url-btn" onclick="wpLoadVideoFromUrl(document.getElementById('wp-url-input').value)">
-                    <span class="material-icons-round">link</span>
-                    <span>Load URL</span>
+                <button data-wp="nature" onclick="wpChange('nature')" title="Nature">
+                    <span class="material-icons-round">park</span><span>Nature</span>
+                </button>
+                <button data-wp="space" onclick="wpChange('space')" title="Space">
+                    <span class="material-icons-round">public</span><span>Space</span>
+                </button>
+                <button data-wp="abstract" onclick="wpChange('abstract')" title="Abstract">
+                    <span class="material-icons-round">brush</span><span>Abstract</span>
+                </button>
+                <button data-wp="ocean" onclick="wpChange('ocean')" title="Ocean">
+                    <span class="material-icons-round">waves</span><span>Ocean</span>
+                </button>
+                <button data-wp="city" onclick="wpChange('city')" title="City">
+                    <span class="material-icons-round">location_city</span><span>City</span>
                 </button>
             </div>
+
+            <!-- ── Smart URL box (Image OR Video — auto-detected) ── -->
+            <div class="wp-url-row">
+                <input type="text" id="wp-url-input" class="wp-url-input"
+                    placeholder="Paste image URL (.jpg/.png/.webp) or video URL (.mp4/.webm) or YouTube link…">
+                <button class="wp-smart-load-btn" id="wp-smart-load-btn">
+                    <span class="material-icons-round">auto_fix_high</span>
+                    <span>Smart Load</span>
+                </button>
+            </div>
+            <!-- hint chips -->
+            <div class="wp-url-hint">
+                <span class="wp-url-hint-chip">
+                    <span class="material-icons-round">image</span>jpg · png · webp · avif · gif · svg
+                </span>
+                <span class="wp-url-hint-chip">
+                    <span class="material-icons-round">movie</span>mp4 · webm · mov · mkv
+                </span>
+                <span class="wp-url-hint-chip">
+                    <span class="material-icons-round">smart_display</span>YouTube URL / ID
+                </span>
+            </div>
+
+            <!-- Preview display -->
             <div class="wp-display" id="wp-display">
-                <video class="wp-preview-video" id="wp-preview-video" muted loop playsinline></video>
-                <iframe class="wp-preview-youtube" id="wp-preview-youtube" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                <!-- HQ Video preview -->
+                <video class="wp-preview-video" id="wp-preview-video" muted loop playsinline preload="auto"
+                    disablepictureinpicture style="will-change:transform;transform:translateZ(0)">
+                </video>
+
+                <!-- YouTube preview -->
+                <iframe class="wp-preview-youtube" id="wp-preview-youtube" frameborder="0"
+                    allow="autoplay; encrypted-media" allowfullscreen>
+                </iframe>
+
+                <!-- Image-URL preview (NEW) -->
+                <img class="wp-preview-img-url" id="wp-preview-img-url" alt="Wallpaper preview" draggable="false">
+
+                <!-- Preset gradient layers -->
                 <div class="wp-bg nature active"></div>
                 <div class="wp-bg space"></div>
                 <div class="wp-bg abstract"></div>
                 <div class="wp-bg ocean"></div>
                 <div class="wp-bg city"></div>
             </div>
+
+            <!-- Hidden file inputs -->
             <input type="file" id="wp-video-input" accept="video/*" class="hidden" onchange="wpUploadVideo(this)">
+
             <div class="wp-footer">
                 <div class="wp-system-info">
                     <div class="wp-info-item">
                         <span class="material-icons-round">aspect_ratio</span>
                         <div class="wp-info-text">
                             <span class="wp-info-label">Screen Resolution</span>
-                            <span id="wp-screen-res">Loading...</span>
+                            <span id="wp-screen-res">Loading…</span>
                         </div>
                     </div>
                     <button class="wp-expand-btn" onclick="wpToggleDetails()" title="Expand for full details">
@@ -574,7 +616,7 @@
                         </div>
                     </div>
                     <div class="wp-info-item">
-                        <span class="material-icons-round">repeat</span>
+                        <span class="material-icons-round">hd</span>
                         <div class="wp-info-text">
                             <span class="wp-info-label">Loop Video</span>
                             <label class="switch">
@@ -584,6 +626,8 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Expanded details panel -->
                 <div id="wp-details-panel" class="wp-details-panel hidden">
                     <div class="wp-details-grid">
                         <div class="wp-detail-cell">
@@ -604,10 +648,21 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Action buttons -->
                 <div class="wp-actions">
-                    <button class="wp-action-btn" onclick="wpApplyToDesktop()">Apply to Desktop</button>
-                    <button class="wp-action-btn" onclick="document.getElementById('wp-video-input').click()">Upload Video</button>
-                    <button class="wp-random-btn" onclick="wpRandomize()">Randomize</button>
+                    <button class="wp-action-btn" onclick="wpApplyToDesktop()">
+                        Apply to Desktop
+                    </button>
+                <!--    <button class="wp-img-btn" onclick="wpUploadImage()">
+                        Upload Image
+                    </button> -->
+                    <button class="wp-action-btn" onclick="document.getElementById('wp-video-input').click()">
+                        Upload HQ Video
+                    </button>
+                    <button class="wp-random-btn" onclick="wpRandomize()">
+                        Randomize
+                    </button>
                 </div>
             </div>
         </div>
@@ -822,7 +877,8 @@
                             <div class="api-key-input-container">
                                 <input type="password" id="gemini-api-key" class="set-input-text"
                                     placeholder="Paste your API key here..." onchange="saveGeminiKey(this.value)">
-                                <p class="set-hint">Get one at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent)">Google AI Studio</a>.</p>
+                                <p class="set-hint">Get one at <a href="https://aistudio.google.com/app/apikey"
+                                        target="_blank" style="color:var(--accent)">Google AI Studio</a>.</p>
                             </div>
                         </div>
                         <div class="set-group api-key-box">
@@ -830,7 +886,9 @@
                             <div class="api-key-input-container">
                                 <input type="password" id="hf-api-token" class="set-input-text"
                                     placeholder="Paste your HF token here..." onchange="saveHfToken(this.value)">
-                                <p class="set-hint">Required for FLUX.1-schnell image generation. Get one at <a href="https://huggingface.co/settings/tokens" target="_blank" style="color:var(--accent)">Hugging Face Settings</a>.</p>
+                                <p class="set-hint">Required for FLUX.1-schnell image generation. Get one at <a
+                                        href="https://huggingface.co/settings/tokens" target="_blank"
+                                        style="color:var(--accent)">Hugging Face Settings</a>.</p>
                             </div>
                         </div>
                         <div class="set-group">
@@ -955,7 +1013,7 @@
                     <li>Customizable appearance</li>
                 </ul>
             </div>
-            <p class="about-copy">Â© 2024 - 2026 Hyggshi OS Web Edition Project</p>
+            <p class="about-copy">&copy; 2024 - 2026 Hyggshi OS Web Edition Project</p>
         </div>
     </template>
 
@@ -974,8 +1032,7 @@
                 </div>
                 <div class="chat-sidebar-search">
                     <span class="material-icons-round">search</span>
-                    <input type="text" id="chat-search-input" placeholder="Search chats"
-                        oninput="chatRenderHistory()">
+                    <input type="text" id="chat-search-input" placeholder="Search chats" oninput="chatRenderHistory()">
                 </div>
                 <div class="chat-sidebar-actions">
                     <button class="chat-nav-item chat-nav-primary" onclick="chatNewConversation()">
@@ -1078,7 +1135,8 @@
                                     onclick="chatSelectModel('gemini-3.1-flash-lite-preview', this)">
                                     <span class="chat-model-item-copy">
                                         <strong>Gemini 3.1 Flash Lite Preview</strong>
-                                        <span>Smaller preview model optimized for speed and local-feel interactions.</span>
+                                        <span>Smaller preview model optimized for speed and local-feel
+                                            interactions.</span>
                                     </span>
                                     <span class="chat-model-item-check material-icons-round">check</span>
                                 </button>
@@ -1237,8 +1295,10 @@
                     </div>
                 </div>
                 <div class="appstore-tabs">
-                    <button class="appstore-tab active" data-tab="system" onclick="appStoreSwitchTab('system', this)">System Apps</button>
-                    <button class="appstore-tab" data-tab="community" onclick="appStoreSwitchTab('community', this)">Community</button>
+                    <button class="appstore-tab active" data-tab="system"
+                        onclick="appStoreSwitchTab('system', this)">System Apps</button>
+                    <button class="appstore-tab" data-tab="community"
+                        onclick="appStoreSwitchTab('community', this)">Community</button>
                 </div>
                 <button class="appstore-upload-btn" onclick="appStoreOpenPublish()">
                     <span class="material-icons-round">upload</span>
@@ -1297,13 +1357,14 @@
                     </div>
                     <div class="gc-setup-group">
                         <label class="gc-setup-label">Password</label>
-                        <input type="password" id="gc-login-pass" class="gc-setup-input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                        <input type="password" id="gc-login-pass" class="gc-setup-input" placeholder="Your password...">
                     </div>
                     <button class="gc-setup-btn" onclick="gcLogin()">
                         <span class="material-icons-round">login</span>
                         Login
                     </button>
-                    <a class="gc-discord-btn" href="https://discord.gg/C2wnU8Vz6U" target="_blank" rel="noopener noreferrer">
+                    <a class="gc-discord-btn" href="https://discord.gg/C2wnU8Vz6U" target="_blank"
+                        rel="noopener noreferrer">
                         <span class="material-icons-round">forum</span>
                         Join Discord
                     </a>
@@ -1336,7 +1397,8 @@
                         <span class="material-icons-round">how_to_reg</span>
                         Create Account
                     </button>
-                    <a class="gc-discord-btn" href="https://discord.gg/C2wnU8Vz6U" target="_blank" rel="noopener noreferrer">
+                    <a class="gc-discord-btn" href="https://discord.gg/C2wnU8Vz6U" target="_blank"
+                        rel="noopener noreferrer">
                         <span class="material-icons-round">forum</span>
                         Join Discord
                     </a>
@@ -1390,7 +1452,8 @@
                 <div class="gc-messages"></div>
                 <div class="gc-input-area">
                     <div class="gc-composer-tools">
-                        <button class="gc-tool-btn" title="áº¢nh"><span class="material-icons-round">image</span></button>
+                        <button class="gc-tool-btn" title="áº¢nh"><span
+                                class="material-icons-round">image</span></button>
                         <button class="gc-tool-btn" title="Sticker"><span
                                 class="material-icons-round">mood</span></button>
                         <button class="gc-tool-btn" title="Tá»‡p"><span
@@ -1413,7 +1476,8 @@
                     <span class="material-icons-round">forum</span>
                     <h3>Welcome to Zashi Messaging</h3>
                     <p>Select a room on the left to start chatting.</p>
-                    <a class="gc-discord-btn gc-discord-btn-inline" href="https://discord.gg/C2wnU8Vz6U" target="_blank" rel="noopener noreferrer">
+                    <a class="gc-discord-btn gc-discord-btn-inline" href="https://discord.gg/C2wnU8Vz6U" target="_blank"
+                        rel="noopener noreferrer">
                         <span class="material-icons-round">groups</span>
                         Join Discord
                     </a>
@@ -1484,4 +1548,3 @@
 </body>
 
 </html>
-
