@@ -1258,17 +1258,29 @@ function setWallpaper(wp, silent) {
     }
     if (wallpaperYoutube) {
         if (isYoutube) {
-            // srcdoc proxy: bypasses file:// origin restriction (Error 153)
-            // Inner iframe runs from about:blank context — YouTube allows autoplay
-            const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&fs=0`;
-            const srcdocHtml = `<!DOCTYPE html><html><head><style>*{margin:0;padding:0;overflow:hidden;background:#000}iframe{width:100vw;height:100vh;border:none;pointer-events:none}</style></head><body><iframe src="${embedUrl}" allow="autoplay;encrypted-media" allowfullscreen></iframe></body></html>`;
+            // Check if YouTube interactive mode is enabled
+            const ytInteractive = localStorage.getItem('webos-wallpaper-yt-interactive') === 'true';
+            const controlsParam = ytInteractive ? 'controls=1' : 'controls=0';
+            const pointerStyle = ytInteractive ? 'pointer-events:none' : 'pointer-events:none';
+            // Inner iframe always has pointer-events:none; outer iframe CSS handles interaction via .yt-interactive class
+            const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&${controlsParam}&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&fs=0`;
+            const srcdocHtml = `<!DOCTYPE html><html><head><style>*{margin:0;padding:0;overflow:hidden;background:#000}iframe{width:100vw;height:100vh;border:none;${pointerStyle}}</style></head><body><iframe src="${embedUrl}" allow="autoplay;encrypted-media" allowfullscreen></iframe></body></html>`;
             const currentId = wallpaperYoutube.dataset.ytId || '';
-            if (currentId !== youtubeId) {
+            const wasInteractive = wallpaperYoutube.dataset.ytInteractive === 'true';
+            // Rebuild srcdoc if video changed or interactive mode toggled
+            if (currentId !== youtubeId || wasInteractive !== ytInteractive) {
                 wallpaperYoutube.dataset.ytId = youtubeId;
+                wallpaperYoutube.dataset.ytInteractive = ytInteractive ? 'true' : 'false';
                 wallpaperYoutube.removeAttribute('src');
                 wallpaperYoutube.srcdoc = srcdocHtml;
             }
             wallpaperYoutube.classList.add('active');
+            // Apply interactive class
+            if (ytInteractive) {
+                wallpaperYoutube.classList.add('yt-interactive');
+            } else {
+                wallpaperYoutube.classList.remove('yt-interactive');
+            }
         } else {
             wallpaperYoutube.classList.remove('active');
             wallpaperYoutube.srcdoc = '';

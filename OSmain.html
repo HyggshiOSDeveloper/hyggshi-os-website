@@ -84,7 +84,8 @@
         <div id="desktop-wallpaper" aria-hidden="true">
             <video class="desktop-wallpaper-video" id="desktop-wallpaper-video" muted loop playsinline></video>
             <iframe class="desktop-wallpaper-youtube" id="desktop-wallpaper-youtube" frameborder="0"
-                allow="autoplay; encrypted-media" allowfullscreen style="pointer-events: none;"></iframe>
+                allow="autoplay; encrypted-media" allowfullscreen>
+            </iframe>
             <div class="desktop-wallpaper-image" id="desktop-wallpaper-image"></div>
             <div class="desktop-wallpaper-blob blob-a"></div>
             <div class="desktop-wallpaper-blob blob-b"></div>
@@ -654,7 +655,7 @@
                     <button class="wp-action-btn" onclick="wpApplyToDesktop()">
                         Apply to Desktop
                     </button>
-                <!--    <button class="wp-img-btn" onclick="wpUploadImage()">
+                    <!--    <button class="wp-img-btn" onclick="wpUploadImage()">
                         Upload Image
                     </button> -->
                     <button class="wp-action-btn" onclick="document.getElementById('wp-video-input').click()">
@@ -663,6 +664,18 @@
                     <button class="wp-random-btn" onclick="wpRandomize()">
                         Randomize
                     </button>
+                </div>
+
+                <!-- Interactive YouTube toggle -->
+                <div class="wp-info-item" style="margin-top:8px">
+                    <span class="material-icons-round">touch_app</span>
+                    <div class="wp-info-text">
+                        <span class="wp-info-label">Interactive YouTube</span>
+                        <label class="switch">
+                            <input type="checkbox" id="wp-yt-interactive" onchange="wpSetYoutubeInteractive(this.checked)">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>

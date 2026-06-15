@@ -39,6 +39,13 @@
     opacity: 1;
 }
 
+/* YouTube interactive mode — allows user to click/interact with the embed */
+.desktop-wallpaper-youtube.yt-interactive {
+    pointer-events: auto;
+    cursor: pointer;
+    z-index: 5;
+}
+
 .desktop-wallpaper-image {
     background: url('../Resources/background.png') center/cover no-repeat;
     transition: background 220ms ease, transform 220ms ease;
