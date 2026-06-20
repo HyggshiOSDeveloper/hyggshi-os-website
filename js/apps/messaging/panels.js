@@ -390,6 +390,7 @@ function gcShowReportModal(messageId) {
                 <div class="gc-settings-card-title">Reason</div>
                 <select id="gc-report-reason" class="gc-setup-input">
                     <option value="spam">Spam</option>
+                    <option value="spam content">Spam content</option>
                     <option value="harassment">Harassment</option>
                     <option value="illegal">Illegal content</option>
                     <option value="impersonation">Impersonation</option>
@@ -681,7 +682,7 @@ async function gcDeleteReportedMessageCore(reportId, options = {}) {
 
     const { data: report, error: reportError } = await sbClient
         .from(GC_TABLES.reports)
-        .select('id, room_id, message_id, reported_user_id, reason, status')
+        .select('id, room_id, message_id, reporter_user_id, reported_user_id, reason, status')
         .eq('id', reportId)
         .maybeSingle();
 
@@ -748,6 +749,17 @@ async function gcDeleteReportedMessageCore(reportId, options = {}) {
 
     if (updateError) {
         gcDebugError('Close report after deletion error:', updateError);
+    }
+
+    // Notify the reporter that their report has been completed with a random code
+    if (report.reporter_user_id) {
+        const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+        await gcCreateSystemNotice(
+            report.reporter_user_id,
+            'Report completed',
+            `Your report (${report.reason || 'other'}) has been reviewed and resolved by our moderation team. Completion code: ${randomCode}. Thank you for helping keep Zashi safe.`,
+            'update'
+        );
     }
 
     showNotification('Zashi Messaging', successText);
