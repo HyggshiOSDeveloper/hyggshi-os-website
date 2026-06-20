@@ -17,6 +17,10 @@
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/hyggshi-os.css">
     <link rel="stylesheet" href="css/apps-wallpaper.css">
+   <!-- <link rel="stylesheet" href="css/animations.css"> -->
+    <link rel="stylesheet" href="css/apps-cursor.css">
+    <link rel="stylesheet" href="css/cursor.css">
+    <link rel="stylesheet" href="css/apps-camera.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/c``ss2?family=Inter:wght@300;400;500;600;700&display=swap"
@@ -183,6 +187,11 @@
                         class="material-icons-round" style="color: white">public</span></div>
                 <span class="icon-label">Zashi Messaging</span>
             </div>
+            <div class="desktop-icon" data-app="camera" ondblclick="openApp('camera')">
+                <div class="icon-img" style="background: linear-gradient(135deg, #2d3436, #636e72)"><span
+                        class="material-icons-round" style="color: white">camera_alt</span></div>
+                <span class="icon-label">Camera</span>
+            </div>
             <div class="desktop-icon" data-app="wallpaper-engine" ondblclick="openApp('wallpaper-engine')">
                 <div class="icon-img" style="background: linear-gradient(135deg, #00b894, #00cec9)"><span
                         class="material-icons-round" style="color: white">wallpaper</span></div>
@@ -236,6 +245,9 @@
             </div>
             <div class="start-app-item" data-app="settings" onclick="openApp('settings')">
                 <span class="material-icons-round">settings</span><span>Settings</span>
+            </div>
+            <div class="start-app-item" data-app="camera" onclick="openApp('camera')">
+                <span class="material-icons-round" style="color: #636e72">camera_alt</span><span>Camera</span>
             </div>
             <div class="start-app-item" data-app="wallpaper-engine" onclick="openApp('wallpaper-engine')">
                 <span class="material-icons-round">wallpaper</span><span>Wallpaper Engine</span>
@@ -681,6 +693,68 @@
         </div>
     </template>
 
+    <!-- Camera -->
+    <template id="tmpl-camera">
+        <div class="app-camera">
+            <div class="camera-toolbar">
+                <button class="camera-toolbar-btn" onclick="cameraSwitchCamera()" title="Switch Camera" id="camera-switch-btn">
+                    <span class="material-icons-round">flip_camera_android</span>
+                </button>
+                <button class="camera-toolbar-btn" onclick="cameraToggleTorch()" title="Toggle Flash" id="camera-torch-btn">
+                    <span class="material-icons-round">flash_on</span>
+                </button>
+                <button class="camera-toolbar-btn" onclick="cameraToggleMirror()" title="Toggle Mirror" id="camera-mirror-btn">
+                    <span class="material-icons-round">flip</span>
+                </button>
+                <select class="camera-quality-select" id="camera-quality-select" onchange="cameraChangeQuality(this.value)">
+                    <option value="640x480">640×480</option>
+                    <option value="1280x720" selected>HD (720p)</option>
+                    <option value="1920x1080">Full HD (1080p)</option>
+                    <option value="3840x2160">4K UHD</option>
+                </select>
+            </div>
+            <div class="camera-viewfinder" id="camera-viewfinder">
+                <video class="camera-video" id="camera-video" autoplay playsinline muted></video>
+                <canvas class="camera-canvas" id="camera-canvas"></canvas>
+                <div class="camera-placeholder" id="camera-placeholder">
+                    <span class="material-icons-round">videocam</span>
+                    <p>Click Start to open camera</p>
+                </div>
+            </div>
+            <div class="camera-overlay-focus" id="camera-overlay-focus"></div>
+            <div class="camera-status" id="camera-status">Ready</div>
+            <div class="camera-controls">
+                <button class="camera-control-btn camera-capture-btn" id="camera-capture-btn" onclick="cameraCapture()" title="Capture Photo">
+                    <span class="material-icons-round">radio_button_checked</span>
+                </button>
+                <button class="camera-control-btn camera-start-btn" id="camera-start-btn" onclick="cameraStart()">
+                    <span class="material-icons-round">videocam</span>
+                    <span>Start</span>
+                </button>
+                <button class="camera-control-btn camera-stop-btn hidden" id="camera-stop-btn" onclick="cameraStop()">
+                    <span class="material-icons-round">videocam_off</span>
+                    <span>Stop</span>
+                </button>
+                <button class="camera-control-btn" onclick="cameraViewGallery()" title="Gallery">
+                    <span class="material-icons-round">photo_library</span>
+                </button>
+                <button class="camera-control-btn" onclick="cameraSaveLastCapture()" title="Save Last Capture">
+                    <span class="material-icons-round">save</span>
+                </button>
+            </div>
+            <div class="camera-gallery hidden" id="camera-gallery">
+                <div class="camera-gallery-header">
+                    <span>Captured Photos</span>
+                    <button class="camera-gallery-close" onclick="cameraCloseGallery()">
+                        <span class="material-icons-round">close</span>
+                    </button>
+                </div>
+                <div class="camera-gallery-grid" id="camera-gallery-grid"></div>
+            </div>
+            <div class="camera-toast" id="camera-toast"></div>
+        </div>
+    </template>
+
     <!-- Settings -->
     <template id="tmpl-settings">
         <div class="app-settings">
@@ -697,6 +771,10 @@
                 </div>
                 <div class="set-nav" onclick="setTab('ai')"><span class="material-icons-round">smart_toy</span> AI
                     Settings</div>
+                <div class="set-nav" onclick="setTab('cursor')"><span class="material-icons-round">mouse</span> Cursor
+                </div>
+                <div class="set-nav" onclick="setTab('desktop-env')"><span class="material-icons-round">desktop</span> Desktop Environment
+                </div>
             </div>
             <div class="set-content" id="set-content">
                 <!-- Appearance (default) -->
@@ -911,6 +989,81 @@
                             </button>
                             <p class="set-hint">Creates a new local Web OS user account and switches to it after setup.
                             </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="set-panel hidden" id="set-desktop-env">
+                    <!-- Populated dynamically by GNOME.System.initSettings() -->
+                </div>
+                <div class="set-panel hidden" id="set-cursor">
+                    <h3>Cursor Settings</h3>
+                    <div class="set-cursor-toggle-row">
+                        <div>
+                            <label>Enable Custom Cursor</label>
+                            <div class="set-hint">Replaces the default cursor with a custom animated one.</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="set-cursor-enabled" onchange="setCursorEnabled(this.checked)">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="set-group">
+                        <label>Cursor Style</label>
+                        <div class="set-cursor-styles" id="set-cursor-styles">
+                            <div class="set-cursor-style-card active" onclick="setCursorStyle('default', this)">
+                                <div class="style-icon">
+                                    <div class="inner-dot"></div>
+                                </div>
+                                <span>Standard</span>
+                            </div>
+                            <div class="set-cursor-style-card" onclick="setCursorStyle('neon', this)">
+                                <div class="style-icon neon">
+                                    <div class="inner-dot"></div>
+                                </div>
+                                <span>Neon</span>
+                            </div>
+                            <div class="set-cursor-style-card" onclick="setCursorStyle('minimal', this)">
+                                <div class="style-icon minimal">
+                                    <div class="inner-dot"></div>
+                                </div>
+                                <span>Minimal</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="set-group">
+                        <label>Cursor Size</label>
+                        <div class="set-cursor-sizes" id="set-cursor-sizes">
+                            <div class="set-cursor-size-card" onclick="setCursorSize('small', this)">
+                                <div class="size-demo">
+                                    <div class="demo-ring" style="width:18px;height:18px;position:relative;">
+                                        <div class="demo-dot" style="width:4px;height:4px;"></div>
+                                    </div>
+                                </div>
+                                <span>Small</span>
+                            </div>
+                            <div class="set-cursor-size-card active" onclick="setCursorSize('medium', this)">
+                                <div class="size-demo">
+                                    <div class="demo-ring" style="width:26px;height:26px;position:relative;">
+                                        <div class="demo-dot" style="width:6px;height:6px;"></div>
+                                    </div>
+                                </div>
+                                <span>Medium</span>
+                            </div>
+                            <div class="set-cursor-size-card" onclick="setCursorSize('large', this)">
+                                <div class="size-demo">
+                                    <div class="demo-ring" style="width:34px;height:34px;position:relative;">
+                                        <div class="demo-dot" style="width:9px;height:9px;"></div>
+                                    </div>
+                                </div>
+                                <span>Large</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="set-group">
+                        <label>Preview</label>
+                        <div class="set-cursor-preview" id="set-cursor-preview">
+                            <div class="set-cursor-preview-ring"></div>
+                            <div class="set-cursor-preview-dot"></div>
                         </div>
                     </div>
                 </div>
@@ -1364,18 +1517,20 @@
                     <span class="material-icons-round gc-setup-icon">public</span>
                     <h2>Zashi Messaging Login</h2>
                     <p>Connect with other Zashi users. Enter your credentials to start chatting.</p>
-                    <div class="gc-setup-group">
-                        <label class="gc-setup-label">Username</label>
-                        <input type="text" id="gc-login-user" class="gc-setup-input" placeholder="Your username...">
-                    </div>
-                    <div class="gc-setup-group">
-                        <label class="gc-setup-label">Password</label>
-                        <input type="password" id="gc-login-pass" class="gc-setup-input" placeholder="Your password...">
-                    </div>
-                    <button class="gc-setup-btn" onclick="gcLogin()">
-                        <span class="material-icons-round">login</span>
-                        Login
-                    </button>
+                    <form id="gc-login-form" onsubmit="event.preventDefault(); gcLogin();">
+                        <div class="gc-setup-group">
+                            <label class="gc-setup-label">Username</label>
+                            <input type="text" id="gc-login-user" class="gc-setup-input" placeholder="Your username..." autocomplete="username">
+                        </div>
+                        <div class="gc-setup-group">
+                            <label class="gc-setup-label">Password</label>
+                            <input type="password" id="gc-login-pass" class="gc-setup-input" placeholder="Your password..." autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="gc-setup-btn">
+                            <span class="material-icons-round">login</span>
+                            Login
+                        </button>
+                    </form>
                     <a class="gc-discord-btn" href="https://discord.gg/C2wnU8Vz6U" target="_blank"
                         rel="noopener noreferrer">
                         <span class="material-icons-round">forum</span>
@@ -1392,24 +1547,26 @@
                     <span class="material-icons-round gc-setup-icon">person_add</span>
                     <h2>Create Account</h2>
                     <p>Join the community! Choose a unique username and password.</p>
-                    <div class="gc-setup-group">
-                        <label class="gc-setup-label">Username</label>
-                        <input type="text" id="gc-reg-user" class="gc-setup-input" placeholder="Min 3 characters...">
-                    </div>
-                    <div class="gc-setup-group">
-                        <label class="gc-setup-label">Password</label>
-                        <input type="password" id="gc-reg-pass" class="gc-setup-input"
-                            placeholder="Min 6 characters...">
-                    </div>
-                    <div class="gc-setup-group">
-                        <label class="gc-setup-label">Confirm Password</label>
-                        <input type="password" id="gc-reg-confirm" class="gc-setup-input"
-                            placeholder="Repeat password...">
-                    </div>
-                    <button class="gc-setup-btn" onclick="gcRegister()">
-                        <span class="material-icons-round">how_to_reg</span>
-                        Create Account
-                    </button>
+                    <form id="gc-register-form" onsubmit="event.preventDefault(); gcRegister();">
+                        <div class="gc-setup-group">
+                            <label class="gc-setup-label">Username</label>
+                            <input type="text" id="gc-reg-user" class="gc-setup-input" placeholder="Min 3 characters..." autocomplete="username">
+                        </div>
+                        <div class="gc-setup-group">
+                            <label class="gc-setup-label">Password</label>
+                            <input type="password" id="gc-reg-pass" class="gc-setup-input"
+                                placeholder="Min 6 characters..." autocomplete="new-password">
+                        </div>
+                        <div class="gc-setup-group">
+                            <label class="gc-setup-label">Confirm Password</label>
+                            <input type="password" id="gc-reg-confirm" class="gc-setup-input"
+                                placeholder="Repeat password..." autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="gc-setup-btn">
+                            <span class="material-icons-round">how_to_reg</span>
+                            Create Account
+                        </button>
+                    </form>
                     <a class="gc-discord-btn" href="https://discord.gg/C2wnU8Vz6U" target="_blank"
                         rel="noopener noreferrer">
                         <span class="material-icons-round">forum</span>
@@ -1526,7 +1683,11 @@
     <script src="js/apps/messaging/interactions.js"></script>
     <script src="js/apps/messaging/panels.js"></script>
     <script src="js/apps/Wallpaper/wallpaper.js"></script>
+    <script src="js/apps/camera/camera.js"></script>
     <script src="js/core/main.js"></script>
+    <!-- Desktop Environment Modules -->
+
+
     <!-- Video Player -->
     <template id="tmpl-video-player">
         <div class="app-video-player">

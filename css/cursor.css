@@ -1,0 +1,4 @@
+html, body {
+    cursor: url("../Resources/cursor.png"), auto;
+    /* just change the cursor.png path to your location */
+}

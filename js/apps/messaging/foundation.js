@@ -438,6 +438,43 @@ function gcToggleAuth(isRegister) {
     registerCard.classList.toggle('hidden', !isRegister);
 }
 
+/**
+ * Prompt the browser to save the user's Zashi credentials.
+ * Uses the Credential Management API if available, otherwise
+ * the browser's built-in form-based password save will handle it
+ * (since we now wrap inputs in proper <form> tags with autocomplete).
+ */
+function gcSaveCredentialToBrowser(username, password) {
+    if (!username || !password) return;
+    
+    // Try the Credential Management API (modern browsers)
+    if (navigator.credentials && window.PasswordCredential) {
+        try {
+            const cred = new PasswordCredential({
+                id: username,
+                password: password,
+                name: 'Zashi Messaging'
+            });
+            navigator.credentials.store(cred).catch(function() {
+                // User declined or API unavailable - silently ignore
+            });
+        } catch (e) {
+            // PasswordCredential constructor may fail in some browsers
+        }
+    }
+    
+    // Also try the newer navigator.credentials.create approach
+    if (navigator.credentials && !window.PasswordCredential) {
+        try {
+            const cred = new window.PasswordCredential || 
+                { id: username, password: password, name: 'Zashi Messaging' };
+            navigator.credentials.store(cred).catch(function() {});
+        } catch (e) {
+            // Silently ignore
+        }
+    }
+}
+
 function gcFormatSupabaseError(error, tableName) {
     if (!error) return 'Unknown database error.';
     const rawMessage = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`.toLowerCase();
@@ -562,6 +599,9 @@ async function gcLogin() {
         gcSetUserSession(data.username, data.id, data.color, data.avatar_url, data.cover_url, data.bio, data.is_admin, data.muted_until, data.warnings_count, data.global_chat_banned);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
+        
+        // Prompt browser to save password
+        gcSaveCredentialToBrowser(username, password);
     } catch (error) {
         gcDebugError('Login error:', error);
         gcNotifyError('Database connection error.');
@@ -654,6 +694,9 @@ async function gcRegister() {
         gcSetUserSession(newUser.username, newUser.id, newUser.color, newUser.avatar_url, newUser.cover_url, newUser.bio, newUser.is_admin, newUser.muted_until, newUser.warnings_count, newUser.global_chat_banned);
         gcHideSetup(gcWin);
         gcStartApp(gcWin);
+        
+        // Prompt browser to save password after registration
+        gcSaveCredentialToBrowser(username, password);
     } catch (error) {
         gcDebugError('Register error:', error);
         gcNotifyError('System error while creating the account.');

@@ -1,0 +1,4 @@
+/* GNOME Desktop Environment - Main Stylesheet */
+@import url('src/DE.css');
+@import url('src/UI.css');
+@import url('src/animations.css');

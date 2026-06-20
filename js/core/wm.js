@@ -24,6 +24,7 @@ const appMeta = {
     'wallpaper-engine': { title: 'Wallpaper Engine', icon: 'wallpaper', w: 860, h: 620 },
     'global-chat': { title: 'Zashi Messaging', icon: 'public', w: 850, h: 600 },
     'app-store': { title: 'App Store', icon: 'storefront', w: 860, h: 560 },
+    'camera': { title: 'Camera', icon: 'camera_alt', w: 720, h: 560 },
     'about': { title: 'About Web OS', icon: 'info', w: 420, h: 500 },
 };
 
@@ -351,6 +352,7 @@ function initApp(appId, wid) {
         case 'video-player': initVideoPlayer(win); break;
         case 'global-chat': initMessage(win); break;
         case 'app-store': initAppStore(win); break;
+        case 'camera': initCameraApp(win); break;
         case 'wallpaper-engine': initWallpaperEngine(win); break;
     }
 }
@@ -361,6 +363,7 @@ function destroyApp(appId, wid) {
         case 'music-player': mpDestroyWindow(wid); break;
         case 'video-player': vpDestroyWindow(wid); break;
         case 'chat-ai': chatDestroyWindow(wid); break;
+        case 'camera': cameraDestroyWindow(wid); break;
         case 'wallpaper-engine': wpDestroyWindow(wid); break;
     }
 }

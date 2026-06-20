@@ -27,7 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setUIStyle(savedUIStyle, true);
     initDesktopWidgets();
 
-    // 3. Global Event Listeners
+    // 3. Init Custom Cursor
+    initCustomCursor();
+
+    // 4. Global Event Listeners
     document.addEventListener('contextmenu', showContextMenu);
     document.addEventListener('click', (e) => {
         if (!e.target.closest('#context-menu') && !e.target.closest('.fm-item')) hideContextMenu();

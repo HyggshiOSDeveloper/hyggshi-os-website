@@ -393,6 +393,8 @@ function gcShowReportModal(messageId) {
                     <option value="harassment">Harassment</option>
                     <option value="illegal">Illegal content</option>
                     <option value="impersonation">Impersonation</option>
+                    <option value="inappropriate">Inappropriate content</option>
+                    <option value="disclosing personal and private information">Disclosing personal and private information</option>
                     <option value="other">Other</option>
                 </select>
                 <textarea id="gc-report-details" class="gc-setup-textarea" maxlength="300" placeholder="Optional details..."></textarea>
@@ -573,6 +575,17 @@ async function gcUpdateReportStatus(reportId, nextStatus) {
         return;
     }
 
+    const { data: report, error: reportError } = await sbClient
+        .from(GC_TABLES.reports)
+        .select('id, reporter_user_id, reason, status')
+        .eq('id', reportId)
+        .maybeSingle();
+
+    if (reportError || !report) {
+        gcNotifyError('Could not load the report.');
+        return;
+    }
+
     const { error } = await sbClient
         .from(GC_TABLES.reports)
         .update({ status })
@@ -581,6 +594,17 @@ async function gcUpdateReportStatus(reportId, nextStatus) {
     if (error) {
         gcNotifyError(gcFormatSupabaseError(error, GC_TABLES.reports));
         return;
+    }
+
+    // When a report is completed (reviewed or closed), notify the reporter with a random completion code
+    if ((status === 'reviewed' || status === 'closed') && report.reporter_user_id) {
+        const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+        await gcCreateSystemNotice(
+            report.reporter_user_id,
+            'Report completed',
+            `Your report (${report.reason || 'other'}) has been reviewed and resolved by our moderation team. Completion code: ${randomCode}. Thank you for helping keep Zashi safe.`,
+            'update'
+        );
     }
 
     showNotification('Zashi Messaging', `Report marked as ${status}.`);
@@ -927,6 +951,14 @@ async function gcSubmitReport(messageId) {
     if (payload.reported_user_id) {
         await gcHandleAutoReportEscalation(payload.reported_user_id, reason);
     }
+
+    // Notify the reporter that their report is being processed
+    await gcCreateSystemNotice(
+        gcUserId,
+        'Report received',
+        `Your report (${reason}) has been received and is now being processed by our moderation team. We will notify you once a decision has been made. Thank you for helping keep Zashi safe.`,
+        'info'
+    );
 
     gcHideModal();
     showNotification('Zashi Messaging', 'Report submitted. Thank you.');

@@ -1037,6 +1037,25 @@ function initSettings(win) {
         recoveryVal.textContent = key;
     }
 
+    // Load Cursor Settings
+    const cursorEnabled = win.querySelector('#set-cursor-enabled');
+    if (cursorEnabled) cursorEnabled.checked = localStorage.getItem('webos-cursor-enabled') === 'true';
+    
+    const cursorStyle = cursorState.style || 'default';
+    win.querySelectorAll('#set-cursor-styles .set-cursor-style-card').forEach(card => {
+        const onclick = card.getAttribute('onclick') || '';
+        card.classList.toggle('active', onclick.includes(cursorStyle));
+    });
+    
+    const cursorSize = cursorState.size || 'medium';
+    win.querySelectorAll('#set-cursor-sizes .set-cursor-size-card').forEach(card => {
+        const onclick = card.getAttribute('onclick') || '';
+        card.classList.toggle('active', onclick.includes(cursorSize));
+    });
+    
+    // Update preview
+    updateCursorPreview(cursorStyle, cursorSize);
+
     renderUsersList(win);
 }
 
@@ -1505,12 +1524,221 @@ function setUIStyle(style, silent) {
     }
 }
 
+/* ============ CUSTOM CURSOR ============ */
+let cursorState = {
+    enabled: false,
+    style: 'default',
+    size: 'medium',
+    dot: null,
+    ring: null,
+    mouseX: 0,
+    mouseY: 0,
+    rafId: null
+};
+
+function initCustomCursor() {
+    // Create cursor elements if they don't exist
+    if (!document.getElementById('custom-cursor')) {
+        const cursorEl = document.createElement('div');
+        cursorEl.id = 'custom-cursor';
+        cursorEl.innerHTML = `
+            <div class="cursor-dot"></div>
+            <div class="cursor-ring"></div>
+        `;
+        document.body.appendChild(cursorEl);
+    }
+    
+    cursorState.dot = document.querySelector('.cursor-dot');
+    cursorState.ring = document.querySelector('.cursor-ring');
+    
+    // Load saved settings
+    const savedEnabled = localStorage.getItem('webos-cursor-enabled') === 'true';
+    const savedStyle = localStorage.getItem('webos-cursor-style') || 'default';
+    const savedSize = localStorage.getItem('webos-cursor-size') || 'medium';
+    
+    cursorState.style = savedStyle;
+    cursorState.size = savedSize;
+    
+    // Apply saved style/size classes
+    updateCursorClassList();
+    
+    if (savedEnabled) {
+        enableCursor(true);
+    }
+    
+    // Track mouse position
+    document.addEventListener('mousemove', (e) => {
+        cursorState.mouseX = e.clientX;
+        cursorState.mouseY = e.clientY;
+        if (cursorState.enabled) {
+            moveCursor(e.clientX, e.clientY);
+        }
+    });
+    
+    // Track hover on interactive elements
+    document.addEventListener('mouseover', (e) => {
+        if (!cursorState.enabled) return;
+        const target = e.target;
+        const isInteractive = target.matches('a, button, input, select, textarea, [onclick], .clickable, .window-titlebar, .set-nav, .set-mode-card, .set-style-card, .set-color, .start-app-item, .desktop-icon, .taskbar-app, .fm-item, .set-cursor-style-card, .set-cursor-size-card');
+        if (isInteractive) {
+            cursorState.dot?.classList.add('hover');
+            cursorState.ring?.classList.add('hover');
+        } else {
+            cursorState.dot?.classList.remove('hover');
+            cursorState.ring?.classList.remove('hover');
+        }
+    });
+    
+    // Track mousedown/up for click effect
+    document.addEventListener('mousedown', () => {
+        if (!cursorState.enabled) return;
+        cursorState.ring?.classList.add('clicking');
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (!cursorState.enabled) return;
+        cursorState.ring?.classList.remove('clicking');
+    });
+}
+
+function moveCursor(x, y) {
+    if (cursorState.dot) {
+        cursorState.dot.style.left = x + 'px';
+        cursorState.dot.style.top = y + 'px';
+    }
+    if (cursorState.ring) {
+        cursorState.ring.style.left = x + 'px';
+        cursorState.ring.style.top = y + 'px';
+    }
+}
+
+function enableCursor(enabled) {
+    cursorState.enabled = enabled;
+    const cursorEl = document.getElementById('custom-cursor');
+    if (cursorEl) {
+        cursorEl.classList.toggle('active', enabled);
+    }
+    document.body.classList.toggle('custom-cursor-active', enabled);
+    localStorage.setItem('webos-cursor-enabled', enabled);
+    
+    if (enabled) {
+        // Hide default cursor
+        document.body.classList.add('custom-cursor-active');
+        // Move cursor to current mouse position
+        moveCursor(cursorState.mouseX, cursorState.mouseY);
+    } else {
+        document.body.classList.remove('custom-cursor-active');
+    }
+}
+
+function setCursorEnabled(enabled) {
+    enableCursor(enabled);
+    showNotification('Cursor', enabled ? 'Custom cursor enabled.' : 'Custom cursor disabled.');
+}
+
+function updateCursorClassList() {
+    const body = document.body;
+    // Remove all cursor style/size classes
+    body.classList.remove('cursor-style-default', 'cursor-style-neon', 'cursor-style-minimal');
+    body.classList.remove('cursor-size-small', 'cursor-size-medium', 'cursor-size-large');
+    
+    // Apply current style
+    if (cursorState.style === 'default') {
+        body.classList.add('cursor-style-default');
+    } else if (cursorState.style === 'neon') {
+        body.classList.add('cursor-style-neon');
+    } else if (cursorState.style === 'minimal') {
+        body.classList.add('cursor-style-minimal');
+    }
+    
+    // Apply current size
+    if (cursorState.size === 'small') {
+        body.classList.add('cursor-size-small');
+    } else if (cursorState.size === 'large') {
+        body.classList.add('cursor-size-large');
+    }
+    // medium is default - no class needed
+}
+
+function setCursorStyle(style, el) {
+    cursorState.style = style;
+    localStorage.setItem('webos-cursor-style', style);
+    
+    // Update UI
+    if (el) {
+        el.closest('#set-cursor-styles')?.querySelectorAll('.set-cursor-style-card').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    }
+    
+    // Update preview
+    updateCursorPreview(style, cursorState.size);
+    
+    // Apply changes immediately if cursor is enabled
+    updateCursorClassList();
+    if (!cursorState.enabled) showNotification('Cursor', `Cursor style set to ${style}.`);
+}
+
+function setCursorSize(size, el) {
+    cursorState.size = size;
+    localStorage.setItem('webos-cursor-size', size);
+    
+    // Update UI
+    if (el) {
+        el.closest('#set-cursor-sizes')?.querySelectorAll('.set-cursor-size-card').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    }
+    
+    // Update preview
+    updateCursorPreview(cursorState.style, size);
+    
+    // Apply changes immediately if cursor is enabled
+    updateCursorClassList();
+    if (!cursorState.enabled) showNotification('Cursor', `Cursor size set to ${size}.`);
+}
+
+function updateCursorPreview(style, size) {
+    const preview = document.getElementById('set-cursor-preview');
+    if (!preview) return;
+    
+    const dot = preview.querySelector('.set-cursor-preview-dot');
+    const ring = preview.querySelector('.set-cursor-preview-ring');
+    if (!dot || !ring) return;
+    
+    // Get accent color
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#6c5ce7';
+    
+    // Apply style
+    if (style === 'default') {
+        dot.style.cssText = `width:8px;height:8px;background:${accent};border-radius:50%;position:absolute;transition:all 0.3s ease;`;
+        ring.style.cssText = `width:36px;height:36px;border:2px solid ${accent};border-radius:50%;position:absolute;transition:all 0.3s ease;`;
+    } else if (style === 'neon') {
+        dot.style.cssText = `width:6px;height:6px;background:${accent};border-radius:50%;position:absolute;box-shadow:0 0 8px ${accent}, 0 0 16px ${accent};transition:all 0.3s ease;`;
+        ring.style.cssText = `width:32px;height:32px;border:2px solid ${accent};border-radius:50%;position:absolute;box-shadow:0 0 6px ${accent}, inset 0 0 6px ${accent};transition:all 0.3s ease;`;
+    } else if (style === 'minimal') {
+        const textColor = getComputedStyle(document.body).getPropertyValue('--text-primary').trim() || '#fff';
+        dot.style.cssText = `width:5px;height:5px;background:${textColor};border-radius:50%;position:absolute;transition:all 0.3s ease;`;
+        ring.style.cssText = `width:24px;height:24px;border:1.5px solid ${textColor};border-radius:50%;position:absolute;opacity:0.6;transition:all 0.3s ease;`;
+    }
+    
+    // Apply size
+    const sizeMap = {
+        'small': { dot: 5, ring: 26 },
+        'medium': { dot: 8, ring: 36 },
+        'large': { dot: 10, ring: 46 }
+    };
+    const s = sizeMap[size] || sizeMap['medium'];
+    dot.style.width = s.dot + 'px';
+    dot.style.height = s.dot + 'px';
+    ring.style.width = s.ring + 'px';
+    ring.style.height = s.ring + 'px';
+}
+
 /* ============ ABOUT ============ */
 function initAbout(win) { /* Logic if needed */ }
 
 /* ============ APP STORE ============ */
-const appStoreCoreApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store', 'wallpaper-engine']);
-const appStoreRequiredApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store', 'wallpaper-engine']);
+const appStoreCoreApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store']);
+const appStoreRequiredApps = new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store']);
 const appStoreCatalog = [
     { id: 'browser', name: 'Browser', icon: 'public', desc: 'Browse websites inside Web OS.' },
     { id: 'weather', name: 'Weather', icon: 'cloud', desc: 'Check live weather and forecasts.' },
@@ -1522,7 +1750,8 @@ const appStoreCatalog = [
     { id: 'text-editor', name: 'Text Editor', icon: 'edit_note', desc: 'Write and edit text documents.' },
     { id: 'image-viewer', name: 'Photos', icon: 'image', desc: 'View local images.' },
     { id: 'youtube', name: 'YouTube', icon: 'smart_display', desc: 'Watch YouTube in embedded player.' },
-    { id: 'wallpaper-engine', name: 'Wallpaper Engine', icon: 'wallpaper', desc: 'Choose and preview desktop wallpapers.' }
+    { id: 'wallpaper-engine', name: 'Wallpaper Engine', icon: 'wallpaper', desc: 'Choose and preview desktop wallpapers.' },
+    { id: 'camera', name: 'Camera', icon: 'camera', desc: 'Capture photos and videos.' }
 ];
 const APPSTORE_SB_URL = 'https://kwgxqxffjruykjzjhlkq.supabase.co';
 const APPSTORE_SB_KEY = 'sb_publishable_cj9pOUvJFPdOEtZCziWULQ_c-Ch1xPb';
@@ -1538,7 +1767,7 @@ function getInstalledApps() {
     if (saved) {
         try { return new Set(JSON.parse(saved)); } catch (_) { }
     }
-    return new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store', 'wallpaper-engine']);
+    return new Set(['file-manager', 'terminal', 'settings', 'calculator', 'about', 'app-store', 'wallpaper-engine', 'camera']);
 }
 
 function saveInstalledApps(installedSet) {

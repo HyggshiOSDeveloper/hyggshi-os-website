@@ -1,0 +1,366 @@
+/* ============ CUSTOM CURSOR STYLES ============ */
+
+/* ── Custom Cursor Container ── */
+#custom-cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 99999;
+    display: none;
+}
+
+#custom-cursor.active {
+    display: block;
+}
+
+.cursor-dot {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    background: var(--accent, #6c5ce7);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    transition: width 0.15s ease, height 0.15s ease, background 0.3s ease;
+}
+
+.cursor-ring {
+    position: fixed;
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--accent, #6c5ce7);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99998;
+    transform: translate(-50%, -50%);
+    transition: width 0.25s ease, height 0.25s ease, border-color 0.3s ease, background 0.25s ease;
+}
+
+/* Hover effect on interactive elements */
+.cursor-ring.hover {
+    width: 52px;
+    height: 52px;
+    background: var(--accent, #6c5ce7) !important;
+    opacity: 0.15;
+}
+
+.cursor-dot.hover {
+    width: 12px;
+    height: 12px;
+}
+
+/* Click effect */
+.cursor-ring.clicking {
+    width: 28px;
+    height: 28px;
+}
+
+/* ── Cursor Style: Neon ── */
+.cursor-style-neon .cursor-dot {
+    width: 6px;
+    height: 6px;
+    box-shadow: 0 0 8px var(--accent, #6c5ce7), 0 0 16px var(--accent, #6c5ce7);
+}
+
+.cursor-style-neon .cursor-ring {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--accent, #6c5ce7);
+    box-shadow: 0 0 6px var(--accent, #6c5ce7), inset 0 0 6px var(--accent, #6c5ce7);
+    background: transparent;
+}
+
+.cursor-style-neon .cursor-ring.hover {
+    width: 48px;
+    height: 48px;
+    box-shadow: 0 0 12px var(--accent, #6c5ce7), inset 0 0 12px var(--accent, #6c5ce7);
+    background: var(--accent, #6c5ce7);
+    opacity: 0.12;
+}
+
+/* ── Cursor Style: Minimal ── */
+.cursor-style-minimal .cursor-dot {
+    width: 5px;
+    height: 5px;
+    background: var(--text-primary, #fff);
+}
+
+.cursor-style-minimal .cursor-ring {
+    width: 24px;
+    height: 24px;
+    border: 1.5px solid var(--text-primary, #fff);
+    opacity: 0.6;
+}
+
+.cursor-style-minimal .cursor-ring.hover {
+    width: 36px;
+    height: 36px;
+    opacity: 0.3;
+}
+
+/* ── Cursor Style: Inverted ── */
+.cursor-style-inverted .cursor-dot {
+    background: #fff;
+    mix-blend-mode: difference;
+}
+
+.cursor-style-inverted .cursor-ring {
+    border: 2px solid #fff;
+    mix-blend-mode: difference;
+}
+
+/* ── Cursor Sizes ── */
+
+/* Small */
+.cursor-size-small .cursor-dot {
+    width: 5px;
+    height: 5px;
+}
+
+.cursor-size-small .cursor-ring {
+    width: 26px;
+    height: 26px;
+}
+
+.cursor-size-small .cursor-ring.hover {
+    width: 40px;
+    height: 40px;
+}
+
+/* Medium (default - no override needed) */
+
+/* Large */
+.cursor-size-large .cursor-dot {
+    width: 10px;
+    height: 10px;
+}
+
+.cursor-size-large .cursor-ring {
+    width: 46px;
+    height: 46px;
+}
+
+.cursor-size-large .cursor-dot.hover {
+    width: 14px;
+    height: 14px;
+}
+
+.cursor-size-large .cursor-ring.hover {
+    width: 60px;
+    height: 60px;
+}
+
+/* ── Cursor Trail (fading dots behind cursor) ── */
+.cursor-trail-dot {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    background: var(--accent, #6c5ce7);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99997;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+}
+
+/* ── Hide default cursor when custom cursor is active ── */
+body.custom-cursor-active,
+body.custom-cursor-active * {
+    cursor: none !important;
+}
+
+/* ============ SETTINGS CURSOR PANEL ============ */
+
+.set-cursor-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 120px;
+    background: var(--surface, rgba(255,255,255,0.05));
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border: 1px dashed var(--border, rgba(255,255,255,0.1));
+    position: relative;
+    overflow: hidden;
+}
+
+.set-cursor-preview-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent, #6c5ce7);
+    border-radius: 50%;
+    position: absolute;
+    transition: all 0.3s ease;
+}
+
+.set-cursor-preview-ring {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--accent, #6c5ce7);
+    border-radius: 50%;
+    position: absolute;
+    transition: all 0.3s ease;
+}
+
+.set-cursor-styles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.set-cursor-style-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    background: var(--surface, rgba(255,255,255,0.05));
+    border: 1px solid var(--border, rgba(255,255,255,0.1));
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.set-cursor-style-card:hover {
+    border-color: var(--accent, #6c5ce7);
+    background: var(--accent-soft, rgba(108,92,231,0.1));
+}
+
+.set-cursor-style-card.active {
+    border-color: var(--accent, #6c5ce7);
+    background: var(--accent-soft, rgba(108,92,231,0.15));
+}
+
+.set-cursor-style-card .style-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--accent, #6c5ce7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.set-cursor-style-card .style-icon .inner-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent, #6c5ce7);
+    border-radius: 50%;
+}
+
+.set-cursor-style-card .style-icon.neon {
+    box-shadow: 0 0 8px var(--accent, #6c5ce7);
+}
+
+.set-cursor-style-card .style-icon.minimal {
+    width: 24px;
+    height: 24px;
+    border-width: 1.5px;
+    opacity: 0.6;
+}
+
+.set-cursor-style-card .style-icon.minimal .inner-dot {
+    width: 5px;
+    height: 5px;
+}
+
+.set-cursor-style-card .style-icon.inverted {
+    mix-blend-mode: difference;
+    border-color: #fff;
+}
+
+.set-cursor-style-card .style-icon.inverted .inner-dot {
+    background: #fff;
+}
+
+.set-cursor-style-card span {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary, rgba(255,255,255,0.7));
+}
+
+.set-cursor-style-card.active span {
+    color: var(--accent, #6c5ce7);
+}
+
+/* Toggle row */
+.set-cursor-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.set-cursor-toggle-row label {
+    font-size: 13px;
+    color: var(--text-primary, #fff);
+}
+
+.set-cursor-toggle-row .set-hint {
+    font-size: 11px;
+    color: var(--text-muted, rgba(255,255,255,0.4));
+    margin-top: 2px;
+}
+
+/* Size selector */
+.set-cursor-sizes {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.set-cursor-size-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px;
+    background: var(--surface, rgba(255,255,255,0.05));
+    border: 1px solid var(--border, rgba(255,255,255,0.1));
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.set-cursor-size-card:hover {
+    border-color: var(--accent, #6c5ce7);
+}
+
+.set-cursor-size-card.active {
+    border-color: var(--accent, #6c5ce7);
+    background: var(--accent-soft, rgba(108,92,231,0.15));
+}
+
+.set-cursor-size-card .size-demo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+}
+
+.set-cursor-size-card .size-demo .demo-ring {
+    border: 2px solid var(--accent, #6c5ce7);
+    border-radius: 50%;
+}
+
+.set-cursor-size-card .size-demo .demo-dot {
+    background: var(--accent, #6c5ce7);
+    border-radius: 50%;
+    position: absolute;
+}
+
+.set-cursor-size-card span {
+    font-size: 12px;
+    color: var(--text-secondary, rgba(255,255,255,0.7));
+}
+
+.set-cursor-size-card.active span {
+    color: var(--accent, #6c5ce7);
+}
