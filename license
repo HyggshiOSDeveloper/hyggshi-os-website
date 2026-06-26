@@ -1,35 +1,141 @@
-HOSL-1.2 – Hyggshi OS License v1.2
+HOSL-1.3 – Hyggshi OS License v1.3
 Copyright © 2025–2026 Hyggshi-os-website
 
-1. PERMISSIONS
-You may use, copy, modify, and distribute this software and its
-source code, free of charge, for non-commercial purposes only.
+PREAMBLE
 
-2. COMMERCIAL USE RESTRICTION
-This software may not be used, in whole or in part, in any product,
-service, or activity intended to generate revenue, monetary compensation,
-or commercial advantage — whether directly or indirectly.
+This license governs the use of software, source code, web applications,
+and any creative or functional works developed by or with the assistance
+of artificial intelligence tools ("AI-assisted works"), authored under
+the Hyggshi-os-website project. By using, copying, modifying, or
+distributing any covered work, you accept all terms herein.
 
-3. ATTRIBUTION REQUIREMENT
-If you use this software to create an operating system (OS) or graphical
-user interface (GUI) in Roblox Studio, the following credit must be
-displayed prominently in the product or its documentation:
+1. DEFINITIONS
 
-    "Based on work by hyggshi-os-website"
+   a. "Software" refers to any source code, compiled binaries, scripts,
+      assets, or logic files distributed under this license.
 
-4. AI TRAINING RESTRICTION
-This software and its source code may not be used as training data
-for machine learning or AI models without explicit written permission
-from the copyright holder.
+   b. "Web Application" (Web App) refers to any browser-based or
+      server-side application, including but not limited to websites,
+      progressive web apps (PWAs), APIs, dashboards, and online tools,
+      distributed or derived from works under this license.
 
-5. DERIVATIVE WORKS
-Any derivative work must be distributed under the same HOSL-1.2 license.
-You may not sublicense this software under any other license.
+   c. "AI-Assisted Work" refers to any software, web app, text, design,
+      logic, or creative output that was generated in whole or in part
+      with the assistance of artificial intelligence tools (e.g., large
+      language models, code generators, image generators), where the
+      original prompting, direction, curation, or integration was
+      performed by the copyright holder.
 
-6. DISCLAIMER
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED. THE AUTHOR SHALL NOT BE LIABLE FOR ANY DAMAGES
-ARISING FROM THE USE OF THIS SOFTWARE.
+   d. "Covered Work" means the Software, Web Application, AI-Assisted
+      Work, or any combination or derivative thereof.
 
-7. ACCEPTANCE
-Use or distribution of this software constitutes acceptance of these terms.
+   e. "You" refers to any individual or legal entity exercising rights
+      under this license.
+
+2. PERMISSIONS
+
+   You may use, copy, modify, and distribute any Covered Work, free of
+   charge, for non-commercial purposes only, subject to the conditions
+   in this license.
+
+3. COMMERCIAL USE RESTRICTION
+
+   No Covered Work, in whole or in part, may be used in any product,
+   service, platform, or activity that:
+
+   a. Generates revenue, subscription fees, advertising income, or
+      monetary compensation of any kind;
+   b. Provides commercial advantage, competitive benefit, or business
+      value, whether directly or indirectly;
+   c. Is offered as a paid web service, SaaS product, hosted API, or
+      monetized web application.
+
+   This restriction applies equally to Software, Web Apps, and
+   AI-Assisted Works covered by this license.
+
+4. ATTRIBUTION REQUIREMENT
+
+   a. Software & GUI: If you use any Covered Work to create an operating
+      system (OS) or graphical user interface (GUI) — including in
+      platforms such as Roblox Studio — the following credit must be
+      displayed prominently in the product or its documentation:
+
+          "Based on work by hyggshi-os-website"
+
+   b. Web Applications: If you use any Covered Work to build or operate
+      a website or web application, the following attribution must appear
+      in a visible location (e.g., footer, about page, or credits
+      section):
+
+          "Powered by / Based on work by hyggshi-os-website"
+
+   c. AI-Assisted Works: If you use, redistribute, or build upon any
+      AI-assisted output covered by this license, you must clearly
+      indicate that the original work was AI-assisted and attribute it as:
+
+          "AI-assisted work originally created by hyggshi-os-website"
+
+5. AI TRAINING RESTRICTION
+
+   No Covered Work — including Software, Web App content, and
+   AI-Assisted Works — may be used as training data, fine-tuning data,
+   reinforcement learning feedback, or evaluation datasets for any
+   machine learning or artificial intelligence model, without explicit
+   written permission from the copyright holder.
+
+6. WEB APPLICATION TERMS
+
+   In addition to all other terms in this license, the following apply
+   specifically to Web Applications derived from or incorporating any
+   Covered Work:
+
+   a. The web application must not be hosted behind a paywall or
+      subscription gate.
+   b. If the web application collects user data, it must disclose this
+      clearly and comply with applicable privacy laws.
+   c. You may not use Covered Work to build a competing or substantially
+      similar web service without prior written permission.
+
+7. AI-ASSISTED WORK TERMS
+
+   The following apply to AI-Assisted Works covered by this license:
+
+   a. Ownership: The copyright holder retains authorship and ownership
+      of all AI-assisted outputs created under their direction, curation,
+      or integration, to the extent permitted by applicable law.
+   b. No Misrepresentation: You may not represent AI-assisted works
+      under this license as solely human-authored when redistributing.
+   c. Integrity: You may not alter AI-assisted works in a way that
+      misrepresents their original intent or attributes false statements
+      to the copyright holder.
+
+8. DERIVATIVE WORKS
+
+   a. Any derivative of a Covered Work must be distributed under this
+      same HOSL-1.3 license. You may not sublicense under any other terms.
+   b. Derivatives must preserve all copyright notices, attribution
+      requirements, and restrictions present in this license.
+   c. You must clearly document what changes were made to the original
+      Covered Work.
+
+9. DISCLAIMER OF WARRANTIES
+
+   THE COVERED WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+   NON-INFRINGEMENT. THE AUTHOR SHALL NOT BE LIABLE FOR ANY DIRECT,
+   INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING FROM
+   THE USE OF THE COVERED WORK, EVEN IF ADVISED OF THE POSSIBILITY OF
+   SUCH DAMAGES.
+
+10. TERMINATION
+
+    Your rights under this license terminate automatically if you breach
+    any of its terms. Upon termination, you must cease all use and
+    distribution of the Covered Work and destroy any copies in your
+    possession.
+
+11. ACCEPTANCE
+
+    Use, distribution, modification, or deployment of any Covered Work
+    constitutes full acceptance of all terms in this license.
