@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -11,124 +11,201 @@
 
 <body>
     <header class="header">
-        <div class="container nav">
-            <div class="logo">
-                <img src="Resources/upscalemedia-transformed.png" alt="Logo">
-                <span>☁️ Hyggshi OS</span>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo">
+                    <span>Hyggshi OS</span>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-menu">
+                        <li><a href="index.html" class="nav-link">Home</a></li>
+                        <li><a href="About.html" class="nav-link">About</a></li>
+                        <li><a href="projects.html" class="nav-link active">Projects</a></li>
+                        <li><a href="History.html" class="nav-link">History</a></li>
+                        <li><a href="news.html" class="nav-link">News</a></li>
+                        <li><a href="download.html" class="nav-link">Download</a></li>
+                    </ul>
+                </nav>
+                <button class="theme-toggle" title="Toggle theme">
+                    <span class="toggle-icon"></span>
+                </button>
             </div>
-            <ul class="nav-menu">
-                <li><a href="index.html" class="nav-link">Home</a></li>
-                <li><a href="About.html" class="nav-link">About</a></li>
-                <li><a href="projects.html" class="nav-link active">Projects</a></li>
-                <li><a href="History.html" class="nav-link">History</a></li>
-                <li><a href="download.html" class="nav-link">Download</a></li>
-            </ul>
-            <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
         </div>
     </header>
 
     <main class="container">
-        <section class="section-spacer" style="text-align: center;">
-            <span class="badge active cloud-float fade-in-up">☁️ Projects</span>
-            <h1 class="fade-in-up" style="margin-top: 1rem;">Các <span class="text-gradient">Dự án</span></h1>
-            <p class="fade-in-up delay-1" style="color: var(--c-text-muted);">Khám phá hệ sinh thái Hyggshi OS</p>
+        <!-- Hero Section -->
+        <section class="section">
+            <div class="section-header">
+                <div class="hero-badge">Projects</div>
+                <h1 class="section-title">Our <span class="title-accent">Projects</span></h1>
+                <p class="hero-description" style="max-width: 600px; margin: 0 auto;">
+                    Explore the Hyggshi OS ecosystem
+                </p>
+            </div>
         </section>
 
         <!-- Active Projects -->
-        <section class="section-spacer">
-            <h2 class="section-title fade-in-up">Đang <span>Hoạt động</span></h2>
-            <div class="grid-3 fade-in-up delay-1">
-                <div class="card">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                        <div class="card-icon" style="margin-bottom: 0;">☁️</div>
-                        <span class="badge active">Active</span>
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Currently <span class="title-accent">Active</span></h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                        </svg>
                     </div>
+                    <div class="news-badge" style="margin-bottom: var(--space-sm);">Active</div>
                     <h3>Hyggshi OS 3.0</h3>
-                    <p style="color: var(--c-text-muted); margin-bottom: 1.5rem;">Phiên bản chính thức mới nhất với
-                        thiết kế Cloudar OS. Hỗ trợ
-                        Module System và Cloud Sync.</p>
-                    <a href="download.html" class="btn btn-primary" style="width: 100%;">Tải xuống</a>
+                    <p style="color: var(--c-text-secondary); line-height: 1.7;">
+                        The latest official version with Hyggshi OS design. Supports Module System and Cloud Sync.
+                    </p>
+                    <a href="download.html" class="btn btn-primary" style="width: 100%; margin-top: var(--space-md);">
+                        <span>Download</span>
+                    </a>
                 </div>
-                <div class="card">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                        <div class="card-icon" style="margin-bottom: 0;">🧩</div>
-                        <span class="badge active">Active</span>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
                     </div>
+                    <div class="news-badge" style="margin-bottom: var(--space-sm);">Active</div>
                     <h3>Hyggshi OS Flex</h3>
-                    <p style="color: var(--c-text-muted); margin-bottom: 1.5rem;">Phiên bản nhẹ, dễ tùy biến dành cho
-                        developer muốn fork và
-                        phát triển riêng.</p>
+                    <p style="color: var(--c-text-secondary); line-height: 1.7;">
+                        A lightweight, highly customizable version for developers who want to fork and develop their own
+                        version.
+                    </p>
                     <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center" target="_blank"
-                        class="btn btn-secondary" style="width: 100%;">GitHub</a>
+                        class="btn btn-secondary" style="width: 100%; margin-top: var(--space-md);">
+                        <span>GitHub</span>
+                    </a>
                 </div>
-                <div class="card">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                        <div class="card-icon" style="margin-bottom: 0;">💻</div>
-                        <span class="badge active">Active</span>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
                     </div>
+                    <div class="news-badge" style="margin-bottom: var(--space-sm);">Active</div>
                     <h3>Code Mini</h3>
-                    <p style="color: var(--c-text-muted); margin-bottom: 1.5rem;">Trình soạn thảo code nhẹ tích hợp
-                        trong Hyggshi OS với syntax
-                        highlighting.</p>
-                    <a href="HyggshiOSCodeMini.html" class="btn btn-secondary" style="width: 100%;">Xem chi tiết</a>
+                    <p style="color: var(--c-text-secondary); line-height: 1.7;">
+                        A lightweight code editor integrated into Hyggshi OS with syntax highlighting.
+                    </p>
+                    <a href="HyggshiOSCodeMini.html" class="btn btn-secondary"
+                        style="width: 100%; margin-top: var(--space-md);">
+                        <span>View Details</span>
+                    </a>
                 </div>
             </div>
         </section>
 
         <!-- In Development -->
-        <section class="section-spacer">
-            <h2 class="section-title fade-in-up">Đang <span>Phát triển</span></h2>
-            <div class="grid-2 fade-in-up delay-1">
-                <div class="card">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                        <div class="card-icon" style="margin-bottom: 0;">🔧</div>
-                        <span class="badge warning">Dev</span>
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">In <span class="title-accent">Development</span></h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
+                        </svg>
                     </div>
+                    <div class="news-badge" style="margin-bottom: var(--space-sm); background-color: var(--c-warning);">
+                        Development</div>
                     <h3>Hyggshi OS Engine</h3>
-                    <p style="color: var(--c-text-muted);">Bộ engine core mã nguồn mở để xây dựng các hệ điều hành trên
-                        Roblox.</p>
+                    <p style="color: var(--c-text-secondary); line-height: 1.7;">
+                        Open-source core engine for building operating systems on Roblox.
+                    </p>
                 </div>
-                <div class="card">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                        <div class="card-icon" style="margin-bottom: 0;">💬</div>
-                        <span class="badge warning">Dev</span>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                            </path>
+                        </svg>
                     </div>
+                    <div class="news-badge" style="margin-bottom: var(--space-sm); background-color: var(--c-warning);">
+                        Development</div>
                     <h3>Zashi Messaging</h3>
-                    <p style="color: var(--c-text-muted);">Ứng dụng nhắn tin nội bộ (đang bổ sung hệ thống content
-                        moderation).</p>
+                    <p style="color: var(--c-text-secondary); line-height: 1.7;">
+                        Internal messaging application (currently adding content moderation system).
+                    </p>
                 </div>
             </div>
         </section>
 
         <!-- Archived -->
-        <section class="section-spacer">
-            <h2 class="section-title fade-in-up">Đã <span>Lưu trữ</span></h2>
-            <div class="grid-4 fade-in-up delay-1">
-                <div class="card" style="opacity: 0.7;">
-                    <span class="badge danger" style="margin-bottom: 1rem;">Archived</span>
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title"><span class="title-accent">Archived</span> Projects</h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card" style="opacity: 0.7;">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 8v13H3V8"></path>
+                            <rect x="1" y="3" width="22" height="5"></rect>
+                            <line x1="10" y1="12" x2="14" y2="12"></line>
+                        </svg>
+                    </div>
+                    <div class="news-badge" style="margin-bottom: var(--space-sm); background-color: var(--c-error);">
+                        Archived</div>
                     <h3>Hyggshi OS 1.x</h3>
-                    <p style="color: var(--c-text-muted); font-size: 0.9rem;">Phiên bản legacy đầu tiên.</p>
+                    <p style="color: var(--c-text-muted); font-size: var(--text-sm);">First legacy version.</p>
                 </div>
-                <div class="card" style="opacity: 0.7;">
-                    <span class="badge danger" style="margin-bottom: 1rem;">Cancelled</span>
+                <div class="feature-card" style="opacity: 0.7;">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <div class="news-badge" style="margin-bottom: var(--space-sm); background-color: var(--c-error);">
+                        Cancelled</div>
                     <h3>OS TV</h3>
-                    <p style="color: var(--c-text-muted); font-size: 0.9rem;">Dự án UI cho TV (hủy do thiếu nhân lực).
+                    <p style="color: var(--c-text-muted); font-size: var(--text-sm);">TV UI project (cancelled due to
+                        lack of resources).</p>
+                </div>
+                <div class="feature-card" style="opacity: 0.7;">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <div class="news-badge" style="margin-bottom: var(--space-sm); background-color: var(--c-error);">
+                        Cancelled</div>
+                    <h3>OS Pro</h3>
+                    <p style="color: var(--c-text-muted); font-size: var(--text-sm);">Premium version (merged into 3.0).
                     </p>
                 </div>
-                <div class="card" style="opacity: 0.7;">
-                    <span class="badge danger" style="margin-bottom: 1rem;">Cancelled</span>
-                    <h3>OS Pro</h3>
-                    <p style="color: var(--c-text-muted); font-size: 0.9rem;">Phiên bản cao cấp (đã merge vào 3.0).</p>
-                </div>
-                <div class="card" style="opacity: 0.7;">
-                    <span class="badge danger" style="margin-bottom: 1rem;">Paused</span>
+                <div class="feature-card" style="opacity: 0.7;">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="news-badge" style="margin-bottom: var(--space-sm); background-color: var(--c-error);">
+                        Paused</div>
                     <h3>OS Phone</h3>
-                    <p style="color: var(--c-text-muted); font-size: 0.9rem;">Giao diện di động (tạm dừng).</p>
+                    <p style="color: var(--c-text-muted); font-size: var(--text-sm);">Mobile interface (temporarily
+                        paused).</p>
                 </div>
             </div>
         </section>
@@ -136,7 +213,16 @@
 
     <footer class="footer">
         <div class="container">
-            <p style="color: var(--c-text-muted);">© 2024 - 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="About.html">About</a>
+                    <a href="projects.html">Projects</a>
+                    <a href="license.html">License</a>
+                    <a href="https://discord.gg/PZuDkFzJtc" target="_blank">Discord</a>
+                    <a href="https://github.com/HyggshiOSDeveloper" target="_blank">GitHub</a>
+                </div>
+                <p class="footer-text">© 2024 - 2026 Hyggshi OS Project Center.</p>
+            </div>
         </div>
     </footer>
     <script src="theme.js"></script>

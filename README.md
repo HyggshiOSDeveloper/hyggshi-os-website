@@ -38,6 +38,18 @@ Experimentation (OS-like modular UI)
 HTML / CSS / JavaScript
 Pollinations AI API
 Cloudflare Pages (deployment)
+
+## Run locally
+
+Do not open `news.html` or `post.html` directly from the file system (`file://`). The news pages load Markdown with `fetch()` and use a JavaScript module, which browsers intentionally block for local files.
+
+From the project folder, start a small local HTTP server instead:
+
+```bash
+python3 -m http.server 8080
+```
+
+Then open [http://localhost:8080/news.html](http://localhost:8080/news.html). You can also use the **Live Server** extension in VS Code. Cloudflare Pages already serves the site over HTTP(S), so no production change is needed.
 📄 License
 
 Open-source project for educational and experimental use.

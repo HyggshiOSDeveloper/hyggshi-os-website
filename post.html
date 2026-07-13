@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post – Hyggshi OS</title>
+  <link rel="icon" href="Resources/favicon.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header"><div class="container"><div class="header-content">
+    <a class="logo" href="index.html"><img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo"><span>Hyggshi OS</span></a>
+    <nav class="nav" aria-label="Main navigation"><ul class="nav-menu"><li><a href="index.html" class="nav-link">Home</a></li><li><a href="About.html" class="nav-link">About</a></li><li><a href="projects.html" class="nav-link">Projects</a></li><li><a href="History.html" class="nav-link">History</a></li><li><a href="news.html" class="nav-link active">News</a></li><li><a href="download.html" class="nav-link">Download</a></li></ul></nav>
+    <button class="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme"><span class="toggle-icon"></span></button>
+  </div></div></header>
+
+  <main class="container post-page"><a class="back-link" href="news.html">← All articles</a><article id="post-content" class="post-content" aria-live="polite"><p class="news-status">Loading article...</p></article></main>
+
+  <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-links"><a href="About.html">About</a><a href="projects.html">Projects</a><a href="license.html">License</a><a href="https://discord.gg/PZuDkFzJtc" target="_blank" rel="noreferrer">Discord</a><a href="https://github.com/HyggshiOSDeveloper" target="_blank" rel="noreferrer">GitHub</a></div><p class="footer-text">© 2024 - 2026 Hyggshi OS Project Center.</p></div></div></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script type="module">
+    import { formatPostDate, loadPost } from './scripts/news.js?v=2';
+    const container = document.getElementById('post-content');
+    const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+    try {
+      const slug = new URLSearchParams(location.search).get('slug');
+      const post = await loadPost(slug);
+      const image = post.cover || post.image;
+      document.title = `${post.title || 'Post'} – Hyggshi OS`;
+      container.innerHTML = `<header class="post-header"><div class="news-meta"><span>${escapeHtml(post.category || 'News')}</span><time datetime="${escapeHtml(post.date || '')}">${escapeHtml(formatPostDate(post.date))}</time></div><h1>${escapeHtml(post.title || post.slug)}</h1>${post.excerpt ? `<p class="post-excerpt">${escapeHtml(post.excerpt)}</p>` : ''}</header>${image ? `<img class="post-cover" src="${escapeHtml(image)}" alt="${escapeHtml(post.title || '')}" loading="eager">` : ''}<div class="markdown-body">${marked.parse(post.content)}</div>`;
+    } catch (error) { document.title = 'Post not found – Hyggshi OS'; container.innerHTML = '<h1>Article not found</h1><p>The article you are looking for does not exist or the link is invalid.</p><a class="btn btn-primary" href="news.html">Back to News</a>'; }
+  </script>
+  <script src="theme.js"></script>
+</body>
+</html>

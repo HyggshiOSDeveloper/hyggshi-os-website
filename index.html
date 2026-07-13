@@ -1,131 +1,162 @@
 <!DOCTYPE html>
-<html lang="vi">
-
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hyggshi OS – Hệ điều hành mã nguồn mở trên Roblox</title>
-  <meta name="description"
-    content="Hyggshi OS - Hệ điều hành mô phỏng mã nguồn mở cho Roblox. Giao diện hiện đại, tùy biến cao.">
+  <title>Hyggshi OS – Open Source Operating System</title>
+  <meta name="description" content="Hyggshi OS - Open Source Operating System. Modern interface, high customizability.">
   <link rel="icon" href="Resources/favicon.ico">
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
   <header class="header">
-    <div class="container nav">
-      <div class="logo">
-        <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo">
-        <span>Hyggshi OS</span>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo">
+          <span>Hyggshi OS</span>
+        </div>
+        <nav class="nav">
+          <ul class="nav-menu">
+            <li><a href="index.html" class="nav-link active">Home</a></li>
+            <li><a href="About.html" class="nav-link">About</a></li>
+            <li><a href="projects.html" class="nav-link">Projects</a></li>
+            <li><a href="History.html" class="nav-link">History</a></li>
+            <li><a href="news.html" class="nav-link">News</a></li>
+            <li><a href="download.html" class="nav-link">Download</a></li>
+          </ul>
+        </nav>
+        <button class="theme-toggle" title="Toggle theme">
+          <span class="toggle-icon"></span>
+        </button>
       </div>
-      <ul class="nav-menu">
-        <li><a href="index.html" class="nav-link active">Home</a></li>
-        <li><a href="About.html" class="nav-link">About</a></li>
-        <li><a href="projects.html" class="nav-link">Projects</a></li>
-        <li><a href="History.html" class="nav-link">History</a></li>
-        <li><a href="download.html" class="nav-link">Download</a></li>
-      </ul>
-      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
     </div>
   </header>
 
   <main class="container">
     <!-- Hero Section -->
     <section class="hero">
-      <div class="hero-content fade-in-up">
-        <span class="badge active cloud-float" style="margin-bottom: 1.5rem; font-size: 1rem;">☁️ Cloudar OS
-          Style</span>
-        <h1>Hệ điều hành <span class="text-gradient">mã nguồn mở</span> trên Roblox</h1>
-        <p>Trải nghiệm giao diện nhẹ nhàng như mây, tuỳ biến cao và hoàn toàn miễn phí. Phát triển bởi cộng đồng, dành
-          cho cộng đồng.</p>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+      <div class="hero-content">
+        <div class="hero-badge">Hyggshi OS</div>
+        <h1 class="hero-title">Open Source Operating System on Roblox</h1>
+        <p class="hero-description">Experience a lightweight interface like the cloud, high customizability, and completely free. Developed by the community, for the community.</p>
+        <div class="hero-actions">
           <a href="download.html" class="btn btn-primary">
-            <span>☁️</span> Tải xuống ngay
+            <span class="btn-icon">↓</span>
+            <span>Download Now</span>
           </a>
-          <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center" target="_blank"
-            class="btn btn-github">
-            <span>⭐</span> GitHub
+          <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center" target="_blank" class="btn btn-secondary">
+            <span class="btn-icon">→</span>
+            <span>GitHub</span>
           </a>
         </div>
       </div>
-      <div class="hero-visual"></div>
+      <div class="hero-visual">
+        <div class="visual-shape shape-1"></div>
+        <div class="visual-shape shape-2"></div>
+        <div class="visual-shape shape-3"></div>
+      </div>
     </section>
 
-    <!-- Features Bento Grid -->
-    <section class="section-spacer">
-      <h2 class="section-title fade-in-up">Tính năng <span>Nổi bật</span></h2>
-
-      <div class="bento-grid fade-in-up delay-1">
-        <div class="bento-item large">
-          <div class="card-icon">☁️</div>
-          <h3>Giao diện Cloud</h3>
-          <p style="color: var(--c-text-muted);">Thiết kế nhẹ nhàng, tông màu Cyan mát mẻ. Hỗ trợ Dark Mode với phong
-            cách "Cloud Night".</p>
+    <!-- Features Section -->
+    <section class="section features">
+      <div class="section-header">
+        <h2 class="section-title">Featured <span class="title-accent">Features</span></h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card feature-large">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+            </svg>
+          </div>
+          <h3>Cloud Interface</h3>
+          <p>Lightweight design with cool Cyan colors. Supports Dark Mode with "Cloud Night" style.</p>
         </div>
-        <div class="bento-item">
-          <div class="card-icon">⚡</div>
-          <h3>Siêu nhẹ</h3>
-          <p style="color: var(--c-text-muted);">Tối ưu hoá hiệu năng, chạy mượt trên mọi thiết bị.</p>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
+          <h3>Ultra Lightweight</h3>
+          <p>Performance optimized, runs smoothly on all devices.</p>
         </div>
-        <div class="bento-item">
-          <div class="card-icon">🔓</div>
-          <h3>Mã nguồn mở</h3>
-          <p style="color: var(--c-text-muted);">Toàn bộ code trên GitHub. Tự do tùy biến.</p>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <h3>Open Source</h3>
+          <p>All code on GitHub. Free to customize.</p>
         </div>
-        <div class="bento-item">
-          <div class="card-icon">🎨</div>
-          <h3>Tuỳ biến cao</h3>
-          <p style="color: var(--c-text-muted);">Theme, Widget, Apps - tất cả đều có thể chỉnh sửa theo ý bạn.</p>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="13.5" cy="6.5" r="2.5"></circle>
+              <circle cx="17.5" cy="10.5" r="2.5"></circle>
+              <circle cx="8.5" cy="7.5" r="2.5"></circle>
+              <circle cx="6.5" cy="12" r="2.5"></circle>
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path>
+            </svg>
+          </div>
+          <h3>Highly Customizable</h3>
+          <p>Themes, Widgets, Apps - everything can be customized your way.</p>
         </div>
-        <div class="bento-item large">
-          <div class="card-icon">🌐</div>
-          <h3>Cộng đồng toàn cầu</h3>
-          <p style="color: var(--c-text-muted);">Tham gia Discord, đóng góp ý tưởng, và cùng phát triển Hyggshi OS với
-            hàng nghìn thành viên khác.</p>
+        <div class="feature-card feature-large">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+          </div>
+          <h3>Global Community</h3>
+          <p>Join Discord, contribute ideas, and develop Hyggshi OS together with thousands of members.</p>
         </div>
       </div>
     </section>
 
     <!-- News Section -->
-    <section class="section-spacer">
-      <h2 class="section-title fade-in-up">Tin tức <span>Mới nhất</span></h2>
-      <div id="github-releases" class="grid-3 fade-in-up delay-1">
-        <div class="card">
-          <div class="card-icon">⏳</div>
-          <h3>Đang tải...</h3>
-          <p style="color: var(--c-text-muted);">Kết nối đến GitHub API...</p>
+    <section class="section news">
+      <div class="section-header">
+        <h2 class="section-title">Latest <span class="title-accent">News</span></h2>
+      </div>
+      <div id="github-releases" class="news-grid">
+        <div class="news-card">
+          <div class="news-badge">Loading</div>
+          <h3>Loading...</h3>
+          <p>Connecting to GitHub API...</p>
         </div>
       </div>
     </section>
 
     <!-- Image Presentation -->
-    <section class="section-spacer">
-      <h2 class="section-title fade-in-up">Image <span>Presentation</span></h2>
-      <div class="presentation-grid fade-in-up delay-1">
-        <figure class="presentation-item card">
-          <img src="Resources/image.png"
-            alt="Cloudar Phone Series (Standard/Plus/Pro/Pro Max) rendered in Blender 4.4">
-          <figcaption>Cloudar Phone Series (Standard/Plus/Pro/Pro Max) rendered in Blender 4.4</figcaption>
+    <section class="section gallery">
+      <div class="section-header">
+        <h2 class="section-title">Image <span class="title-accent">Presentation</span></h2>
+      </div>
+      <div class="gallery-grid">
+        <figure class="gallery-item">
+          <img src="Resources/image.png" alt="Hyggshi Phone Series rendered in Blender 4.4">
+          <figcaption>Hyggshi Phone Series (Standard/Plus/Pro/Pro Max) rendered in Blender 4.4</figcaption>
         </figure>
-        <figure class="presentation-item card">
-          <img src="Resources/image1.png"
-            alt="Cloudar Phone Series (Standard/Plus/Pro/Pro Max) in Blender 4.4">
-          <figcaption>Cloudar Phone Series (Standard/Plus/Pro/Pro Max) in Blender 4.4</figcaption>
+        <figure class="gallery-item">
+          <img src="Resources/image1.png" alt="Hyggshi Phone Series in Blender 4.4">
+          <figcaption>Hyggshi Phone Series (Standard/Plus/Pro/Pro Max) in Blender 4.4</figcaption>
         </figure>
       </div>
     </section>
 
     <!-- CTA Section -->
-    <section class="section-spacer fade-in-up">
-      <div class="card"
-        style="text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, rgba(94, 208, 198, 0.1), rgba(123, 185, 255, 0.1));">
-        <h2 style="margin-bottom: 1rem;">Sẵn sàng trải nghiệm?</h2>
-        <p
-          style="color: var(--c-text-muted); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
-          Tải xuống Hyggshi OS ngay hôm nay và khám phá hệ điều hành nhẹ nhàng như mây.
-        </p>
-        <a href="download.html" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2.5rem;">
-        Bắt đầu ngay
+    <section class="section cta">
+      <div class="cta-card">
+        <h2>Ready to experience?</h2>
+        <p>Download Hyggshi OS today and discover the lightweight operating system.</p>
+        <a href="download.html" class="btn btn-primary btn-large">
+          <span>Get Started</span>
         </a>
       </div>
     </section>
@@ -133,14 +164,16 @@
 
   <footer class="footer">
     <div class="container">
-      <div class="footer-links">
-        <a href="About.html">About</a>
-        <a href="projects.html">Projects</a>
-        <a href="license.html">License</a>
-        <a href="https://discord.gg/PZuDkFzJtc" target="_blank">Discord</a>
-        <a href="https://github.com/HyggshiOSDeveloper" target="_blank">GitHub</a>
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="About.html">About</a>
+          <a href="projects.html">Projects</a>
+          <a href="license.html">License</a>
+          <a href="https://discord.gg/PZuDkFzJtc" target="_blank">Discord</a>
+          <a href="https://github.com/HyggshiOSDeveloper" target="_blank">GitHub</a>
+        </div>
+        <p class="footer-text">© 2024 - 2026 Hyggshi OS Project Center.</p>
       </div>
-      <p style="color: var(--c-text-muted);">© 2024 - 2026 Hyggshi OS Project Center. Cloudar OS Style.</p>
     </div>
   </footer>
 
@@ -155,30 +188,25 @@
         const releases = await res.json();
 
         if (!releases.length) {
-          container.innerHTML = '<div class="card"><p>Chưa có bản phát hành nào.</p></div>';
+          container.innerHTML = '<div class="news-card"><p>No releases available yet.</p></div>';
           return;
         }
 
         container.innerHTML = releases.map(r => `
-                    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-                        <div>
-                            <div class="badge active" style="margin-bottom: 1rem;">${r.tag_name}</div>
-                            <h3>${r.name || r.tag_name}</h3>
-                            <p style="color: var(--c-text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
-                                ${new Date(r.published_at).toLocaleDateString('vi-VN')}
-                            </p>
-                        </div>
-                        <a href="${r.html_url}" target="_blank" class="btn btn-secondary" style="width: 100%; font-size: 0.9rem;">
-                            <span>📦</span> View Release
-                        </a>
-                    </div>
-                `).join('');
+          <div class="news-card">
+            <div class="news-badge">${r.tag_name}</div>
+            <h3>${r.name || r.tag_name}</h3>
+            <p class="news-date">${new Date(r.published_at).toLocaleDateString('en-US')}</p>
+            <a href="${r.html_url}" target="_blank" class="btn btn-secondary btn-small">
+              <span>View Release</span>
+            </a>
+          </div>
+        `).join('');
       } catch (e) {
-        container.innerHTML = '<div class="card"><p style="color: var(--c-text-muted);">Không thể tải dữ liệu.</p></div>';
+        container.innerHTML = '<div class="news-card"><p>Unable to load data.</p></div>';
       }
     })();
   </script>
   <script src="theme.js"></script>
 </body>
-
 </html>

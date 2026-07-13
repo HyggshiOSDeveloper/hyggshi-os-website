@@ -20,16 +20,6 @@
         } else {
             document.documentElement.removeAttribute('data-theme');
         }
-        updateToggleIcon(theme);
-    }
-    
-    // Update toggle button icon
-    function updateToggleIcon(theme) {
-        const toggles = document.querySelectorAll('.theme-toggle');
-        toggles.forEach(btn => {
-            btn.textContent = theme === LIGHT ? '🌙' : '☀️';
-            btn.title = theme === LIGHT ? 'Chuyển sang Dark Mode' : 'Chuyển sang Light Mode';
-        });
     }
     
     // Toggle theme

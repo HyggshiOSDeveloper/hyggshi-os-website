@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>News – Hyggshi OS</title>
+  <meta name="description" content="Latest news, releases and updates from Hyggshi OS.">
+  <link rel="icon" href="Resources/favicon.ico">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header"><div class="container"><div class="header-content">
+    <a class="logo" href="index.html"><img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo"><span>Hyggshi OS</span></a>
+    <nav class="nav" aria-label="Main navigation"><ul class="nav-menu">
+      <li><a href="index.html" class="nav-link">Home</a></li><li><a href="About.html" class="nav-link">About</a></li><li><a href="projects.html" class="nav-link">Projects</a></li><li><a href="History.html" class="nav-link">History</a></li><li><a href="news.html" class="nav-link active">News</a></li><li><a href="download.html" class="nav-link">Download</a></li>
+    </ul></nav>
+    <button class="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme"><span class="toggle-icon"></span></button>
+  </div></div></header>
+
+  <main class="container news-page">
+    <header class="news-page-heading"><p class="eyebrow">Hyggshi OS</p><h1>News &amp; updates</h1><p>The latest announcements, releases and progress from Hyggshi OS.</p></header>
+    <section id="news-list" class="news-list" aria-live="polite"><p class="news-status">Loading articles...</p></section>
+  </main>
+
+  <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-links"><a href="About.html">About</a><a href="projects.html">Projects</a><a href="license.html">License</a><a href="https://discord.gg/PZuDkFzJtc" target="_blank" rel="noreferrer">Discord</a><a href="https://github.com/HyggshiOSDeveloper" target="_blank" rel="noreferrer">GitHub</a></div><p class="footer-text">© 2024 - 2026 Hyggshi OS Project Center.</p></div></div></footer>
+
+  <script type="module">
+    import { formatPostDate, loadPosts } from './scripts/news.js?v=2';
+    const container = document.getElementById('news-list');
+    const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+    try {
+      const posts = await loadPosts();
+      container.innerHTML = posts.length ? posts.map(post => `<article class="news-item">${post.cover ? `<a class="news-item-cover" href="post.html?slug=${encodeURIComponent(post.slug)}"><img src="${escapeHtml(post.cover)}" alt="" loading="lazy"></a>` : ''}<div class="news-item-body"><div class="news-meta"><span>${escapeHtml(post.category || 'News')}</span><time datetime="${escapeHtml(post.date || '')}">${escapeHtml(formatPostDate(post.date))}</time></div><h2><a href="post.html?slug=${encodeURIComponent(post.slug)}">${escapeHtml(post.title || post.slug)}</a></h2><p>${escapeHtml(post.excerpt || '')}</p><a class="news-read-more" href="post.html?slug=${encodeURIComponent(post.slug)}">Read more <span aria-hidden="true">→</span></a></div></article>`).join('') : '<p class="news-status">No articles available.</p>';
+    } catch (error) { container.innerHTML = '<p class="news-status">The article cannot be loaded at this time. Please try again later.</p>'; }
+  </script>
+  <script src="theme.js"></script>
+</body>
+</html>

@@ -1,92 +1,121 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>License – Hyggshi OS</title>
-  <link rel="icon" href="Resources/favicon.ico">
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License – Hyggshi OS</title>
+    <link rel="icon" href="Resources/favicon.ico">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <header class="header">
-    <div class="container nav">
-      <div class="logo">
-        <img src="Resources/upscalemedia-transformed.png" alt="Logo">
-        <span>☁️ Hyggshi OS</span>
-      </div>
-      <ul class="nav-menu">
-        <li><a href="index.html" class="nav-link">Home</a></li>
-        <li><a href="About.html" class="nav-link">About</a></li>
-        <li><a href="projects.html" class="nav-link">Projects</a></li>
-        <li><a href="license.html" class="nav-link active">License</a></li>
-        <li><a href="download.html" class="nav-link">Download</a></li>
-      </ul>
-      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
-    </div>
-  </header>
-
-  <main class="container section-spacer">
-    <div class="card fade-in-up" style="max-width: 900px; margin: 0 auto;">
-      <div style="text-align: center; margin-bottom: 2rem;">
-        <span class="badge active cloud-float" style="font-size: 1rem;">📜 License</span>
-        <h1 class="text-gradient" style="margin-top: 1rem; font-size: 2.5rem;">HOSL-1.0</h1>
-        <p style="color: var(--c-text-muted);">Hyggshi OS License v1.0</p>
-      </div>
-
-      <div style="border-left: 3px solid var(--c-primary); padding-left: 1.5rem; margin-bottom: 2rem;">
-        <p><strong>Copyright © 2025 Nguyễn Minh Phúc</strong></p>
-      </div>
-
-      <div style="display: grid; gap: 2rem;">
-        <div>
-          <h3 style="color: var(--c-primary); margin-bottom: 0.5rem;">1. Quyền sử dụng</h3>
-          <p style="color: var(--c-text-muted); line-height: 1.8;">
-            Phần mềm này là mã nguồn mở. Bạn được phép sử dụng, sao chép, sửa đổi và phân phối mã nguồn miễn phí.
-          </p>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo">
+                    <span>Hyggshi OS</span>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-menu">
+                        <li><a href="index.html" class="nav-link active">Home</a></li>
+                        <li><a href="About.html" class="nav-link">About</a></li>
+                        <li><a href="projects.html" class="nav-link">Projects</a></li>
+                        <li><a href="History.html" class="nav-link">History</a></li>
+                        <li><a href="news.html" class="nav-link">News</a></li>
+                        <li><a href="download.html" class="nav-link">Download</a></li>
+                    </ul>
+                </nav>
+                <button class="theme-toggle" title="Toggle theme">
+                    <span class="toggle-icon"></span>
+                </button>
+            </div>
         </div>
+    </header>
 
-        <div>
-          <h3 style="color: var(--c-primary); margin-bottom: 0.5rem;">2. Hạn chế thương mại</h3>
-          <p style="color: var(--c-text-muted); line-height: 1.8;">
-            Phần mềm này <strong>KHÔNG</strong> được phép sử dụng cho mục đích thương mại hoặc kiếm lợi nhuận dưới bất
-            kỳ hình thức nào.
-          </p>
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="section">
+            <div class="section-header">
+                <div class="hero-badge">License</div>
+                <h1 class="section-title">HOSL-<span class="title-accent">1.0</span></h1>
+                <p class="hero-description" style="max-width: 600px; margin: 0 auto;">
+                    Hyggshi OS License v1.0
+                </p>
+            </div>
+        </section>
+
+        <!-- License Content -->
+        <section class="section">
+            <div class="feature-card feature-large" style="max-width: 900px; margin: 0 auto;">
+                <div
+                    style="border-left: 3px solid var(--c-primary); padding-left: var(--space-lg); margin-bottom: var(--space-xl);">
+                    <p><strong>Copyright © 2025 Nguyễn Minh Phúc</strong></p>
+                </div>
+
+                <div style="display: grid; gap: var(--space-xl);">
+                    <div>
+                        <h3 style="color: var(--c-primary); margin-bottom: var(--space-sm);">1. Usage Rights</h3>
+                        <p style="color: var(--c-text-secondary); line-height: 1.8;">
+                            This software is open source. You are permitted to use, copy, modify, and distribute the
+                            source code for free.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--c-primary); margin-bottom: var(--space-sm);">2. Commercial Restrictions
+                        </h3>
+                        <p style="color: var(--c-text-secondary); line-height: 1.8;">
+                            This software <strong>MAY NOT</strong> be used for commercial purposes or for profit under
+                            any circumstances.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--c-primary); margin-bottom: var(--space-sm);">3. Special Conditions</h3>
+                        <p style="color: var(--c-text-secondary); line-height: 1.8;">
+                            If you use this source code to create an OS or GUI in Roblox Studio, you must include
+                            attribution:
+                            <code
+                                style="background: rgba(8, 145, 178, 0.1); padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); color: var(--c-primary); display: inline-block; margin-top: var(--space-sm);">By Hyggshi OS Team</code>
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--c-primary); margin-bottom: var(--space-sm);">4. Disclaimer</h3>
+                        <p style="color: var(--c-text-secondary); line-height: 1.8;">
+                            The software is provided "AS IS", without warranty. The author is not liable for any damages
+                            arising from its use.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3 style="color: var(--c-primary); margin-bottom: var(--space-sm);">5. Acceptance</h3>
+                        <p style="color: var(--c-text-secondary); line-height: 1.8;">
+                            By using this software, you agree to comply with the terms of the HOSL-1.0 License.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="About.html">About</a>
+                    <a href="projects.html">Projects</a>
+                    <a href="license.html">License</a>
+                    <a href="https://discord.gg/PZuDkFzJtc" target="_blank">Discord</a>
+                    <a href="https://github.com/HyggshiOSDeveloper" target="_blank">GitHub</a>
+                </div>
+                <p class="footer-text">© 2024 - 2026 Hyggshi OS Project Center.</p>
+            </div>
         </div>
-
-        <div>
-          <h3 style="color: var(--c-primary); margin-bottom: 0.5rem;">3. Điều kiện đặc biệt</h3>
-          <p style="color: var(--c-text-muted); line-height: 1.8;">
-            Nếu bạn sử dụng mã nguồn này để tạo OS hoặc GUI trong Roblox Studio, bạn phải ghi rõ:<br>
-            <code
-              style="background: rgba(94, 208, 198, 0.2); padding: 2px 8px; border-radius: 4px; color: var(--c-primary);">By Hyggshi OS Team</code>
-          </p>
-        </div>
-
-        <div>
-          <h3 style="color: var(--c-primary); margin-bottom: 0.5rem;">4. Miễn trừ trách nhiệm</h3>
-          <p style="color: var(--c-text-muted); line-height: 1.8;">
-            Phần mềm được cung cấp "AS IS", không có bảo đảm. Tác giả không chịu trách nhiệm về thiệt hại phát sinh.
-          </p>
-        </div>
-
-        <div>
-          <h3 style="color: var(--c-primary); margin-bottom: 0.5rem;">5. Chấp thuận</h3>
-          <p style="color: var(--c-text-muted); line-height: 1.8;">
-            Bằng việc sử dụng phần mềm này, bạn đồng ý tuân thủ các điều khoản của License HOSL-1.0.
-          </p>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <footer class="footer">
-    <div class="container">
-      <p style="color: var(--c-text-muted);">© 2024 - 2025 Hyggshi OS Project Center. ☁️ Cloudar OS Style.</p>
-    </div>
-  </footer>
-  <script src="theme.js"></script>
+    </footer>
+    <script src="theme.js"></script>
 </body>
 
 </html>
