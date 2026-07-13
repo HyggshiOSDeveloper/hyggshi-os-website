@@ -34,9 +34,9 @@ export async function onRequestGet(context) {
   }
 }
 
-
 async function fetchPostMeta(slug, env, context) {
-  const mdRes = await fetch(`${SITE_ORIGIN}/content/posts/${slug}.md`);
+
+  const mdRes = await fetch(`${SITE_ORIGIN}/posts/${slug}.md`);
   if (!mdRes.ok) return null;
 
   const raw = await mdRes.text();
@@ -45,12 +45,12 @@ async function fetchPostMeta(slug, env, context) {
 
   return {
     title: frontmatter.title || "Hyggshi OS Blog",
-    description: frontmatter.description || frontmatter.excerpt || "",
+    description: frontmatter.excerpt || frontmatter.description || "",
     image: toAbsoluteUrl(frontmatter.cover || frontmatter.image, SITE_ORIGIN),
     date: frontmatter.date || "",
+    category: frontmatter.category || "",
   };
 }
-
 
 function parseFrontmatter(raw) {
   const match = raw.match(/^---\s*([\s\S]*?)\s*---/);
@@ -88,6 +88,7 @@ function renderMetaHTML(post, slug) {
   const title = escapeHtml(post.title);
   const description = escapeHtml(post.description);
   const image = escapeHtml(post.image);
+  const category = escapeHtml(post.category);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -101,6 +102,7 @@ function renderMetaHTML(post, slug) {
 <meta property="og:url" content="${pageUrl}" />
 <meta property="og:type" content="article" />
 <meta property="og:site_name" content="Hyggshi OS Blog" />
+${category ? `<meta property="article:section" content="${category}" />` : ""}
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${title}" />
