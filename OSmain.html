@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/hyggshi-os.css">
     <link rel="stylesheet" href="css/apps-wallpaper.css">
-   <!-- <link rel="stylesheet" href="css/animations.css"> -->
+    <!-- <link rel="stylesheet" href="css/animations.css"> -->
     <link rel="stylesheet" href="css/apps-cursor.css">
     <link rel="stylesheet" href="css/cursor.css">
     <link rel="stylesheet" href="css/apps-camera.css">
@@ -684,7 +684,8 @@
                     <div class="wp-info-text">
                         <span class="wp-info-label">Interactive YouTube</span>
                         <label class="switch">
-                            <input type="checkbox" id="wp-yt-interactive" onchange="wpSetYoutubeInteractive(this.checked)">
+                            <input type="checkbox" id="wp-yt-interactive"
+                                onchange="wpSetYoutubeInteractive(this.checked)">
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -697,16 +698,20 @@
     <template id="tmpl-camera">
         <div class="app-camera">
             <div class="camera-toolbar">
-                <button class="camera-toolbar-btn" onclick="cameraSwitchCamera()" title="Switch Camera" id="camera-switch-btn">
+                <button class="camera-toolbar-btn" onclick="cameraSwitchCamera()" title="Switch Camera"
+                    id="camera-switch-btn">
                     <span class="material-icons-round">flip_camera_android</span>
                 </button>
-                <button class="camera-toolbar-btn" onclick="cameraToggleTorch()" title="Toggle Flash" id="camera-torch-btn">
+                <button class="camera-toolbar-btn" onclick="cameraToggleTorch()" title="Toggle Flash"
+                    id="camera-torch-btn">
                     <span class="material-icons-round">flash_on</span>
                 </button>
-                <button class="camera-toolbar-btn" onclick="cameraToggleMirror()" title="Toggle Mirror" id="camera-mirror-btn">
+                <button class="camera-toolbar-btn" onclick="cameraToggleMirror()" title="Toggle Mirror"
+                    id="camera-mirror-btn">
                     <span class="material-icons-round">flip</span>
                 </button>
-                <select class="camera-quality-select" id="camera-quality-select" onchange="cameraChangeQuality(this.value)">
+                <select class="camera-quality-select" id="camera-quality-select"
+                    onchange="cameraChangeQuality(this.value)">
                     <option value="640x480">640×480</option>
                     <option value="1280x720" selected>HD (720p)</option>
                     <option value="1920x1080">Full HD (1080p)</option>
@@ -724,7 +729,8 @@
             <div class="camera-overlay-focus" id="camera-overlay-focus"></div>
             <div class="camera-status" id="camera-status">Ready</div>
             <div class="camera-controls">
-                <button class="camera-control-btn camera-capture-btn" id="camera-capture-btn" onclick="cameraCapture()" title="Capture Photo">
+                <button class="camera-control-btn camera-capture-btn" id="camera-capture-btn" onclick="cameraCapture()"
+                    title="Capture Photo">
                     <span class="material-icons-round">radio_button_checked</span>
                 </button>
                 <button class="camera-control-btn camera-start-btn" id="camera-start-btn" onclick="cameraStart()">
@@ -773,7 +779,8 @@
                     Settings</div>
                 <div class="set-nav" onclick="setTab('cursor')"><span class="material-icons-round">mouse</span> Cursor
                 </div>
-                <div class="set-nav" onclick="setTab('desktop-env')"><span class="material-icons-round">desktop</span> Desktop Environment
+                <div class="set-nav" onclick="setTab('desktop-env')"><span class="material-icons-round">desktop</span>
+                    Desktop Environment
                 </div>
             </div>
             <div class="set-content" id="set-content">
@@ -970,6 +977,17 @@
                                     placeholder="Paste your API key here..." onchange="saveGeminiKey(this.value)">
                                 <p class="set-hint">Get one at <a href="https://aistudio.google.com/app/apikey"
                                         target="_blank" style="color:var(--accent)">Google AI Studio</a>.</p>
+                            </div>
+                        </div>
+                        <div class="set-group api-key-box">
+                            <label>Pollinations API Key</label>
+                            <div class="api-key-input-container">
+                                <input type="password" id="pollinations-api-key" class="set-input-text"
+                                    placeholder="Paste your Pollinations key here..."
+                                    onchange="savePollinationsKey(this.value)">
+                                <p class="set-hint">Used by Pollinations-powered chat and image features. Get one at <a
+                                        href="https://pollinations.ai/" target="_blank"
+                                        style="color:var(--accent)">Pollinations</a>.</p>
                             </div>
                         </div>
                         <div class="set-group api-key-box">
@@ -1220,7 +1238,8 @@
                     <div class="mp-visualizer-settings">
                         <span class="mp-viz-settings-label">Bars</span>
                         <div class="mp-fft-select-wrap">
-                            <select id="mp-fft-select" class="mp-fft-select" onchange="mpSetFftSize(parseInt(this.value))">
+                            <select id="mp-fft-select" class="mp-fft-select"
+                                onchange="mpSetFftSize(parseInt(this.value))">
                                 <option value="64">64</option>
                                 <option value="128">128</option>
                                 <option value="256" selected>256</option>
@@ -1244,17 +1263,18 @@
                     </div>
 
                     <!-- Favorite Button -->
-                    <button onclick="mpToggleFavorite()" id="mp-fav-btn" class="mp-ctrl-btn mp-fav-btn" title="Favorite">
+                    <button onclick="mpToggleFavorite()" id="mp-fav-btn" class="mp-ctrl-btn mp-fav-btn"
+                        title="Favorite">
                         <span class="material-icons-round">favorite_border</span>
                     </button>
                 </div>
             </div>
 
             <!-- Hidden elements -->
-            <input type="file" id="mp-upload-input" accept="audio/*" multiple
-                style="display: none;" onchange="mpHandleFilesUpload(this)">
-            <input type="file" id="mp-folder-input" accept="audio/*" multiple
-                style="display: none;" onchange="mpHandleFilesUpload(this)" webkitdirectory>
+            <input type="file" id="mp-upload-input" accept="audio/*" multiple style="display: none;"
+                onchange="mpHandleFilesUpload(this)">
+            <input type="file" id="mp-folder-input" accept="audio/*" multiple style="display: none;"
+                onchange="mpHandleFilesUpload(this)" webkitdirectory>
             <audio id="mp-audio" style="display: none;"></audio>
         </div>
     </template>
@@ -1424,12 +1444,20 @@
                                     </span>
                                     <span class="chat-model-item-check material-icons-round">check</span>
                                 </button>
-                                <button class="chat-model-item" type="button" data-model="gemini-3.1-flash-lite-preview"
-                                    onclick="chatSelectModel('gemini-3.1-flash-lite-preview', this)">
+                                <button class="chat-model-item" type="button" data-model="gemini-3.1-flash-lite"
+                                    onclick="chatSelectModel('gemini-3.1-flash-lite', this)">
                                     <span class="chat-model-item-copy">
-                                        <strong>Gemini 3.1 Flash Lite Preview</strong>
-                                        <span>Smaller preview model optimized for speed and local-feel
+                                        <strong>Gemini 3.1 Flash Lite</strong>
+                                        <span>Smaller model optimized for speed and local-feel
                                             interactions.</span>
+                                    </span>
+                                    <span class="chat-model-item-check material-icons-round">check</span>
+                                </button>
+                                <button class="chat-model-item" type="button" data-model="gemini-3.5-flash"
+                                    onclick="chatSelectModel('gemini-3.5-flash', this)">
+                                    <span class="chat-model-item-copy">
+                                        <strong>gemini 3.5 flash</strong>
+                                        <span>New Model</span>
                                     </span>
                                     <span class="chat-model-item-check material-icons-round">check</span>
                                 </button>
@@ -1647,11 +1675,13 @@
                     <form id="gc-login-form" onsubmit="event.preventDefault(); gcLogin();">
                         <div class="gc-setup-group">
                             <label class="gc-setup-label">Username</label>
-                            <input type="text" id="gc-login-user" class="gc-setup-input" placeholder="Your username..." autocomplete="username">
+                            <input type="text" id="gc-login-user" class="gc-setup-input" placeholder="Your username..."
+                                autocomplete="username">
                         </div>
                         <div class="gc-setup-group">
                             <label class="gc-setup-label">Password</label>
-                            <input type="password" id="gc-login-pass" class="gc-setup-input" placeholder="Your password..." autocomplete="current-password">
+                            <input type="password" id="gc-login-pass" class="gc-setup-input"
+                                placeholder="Your password..." autocomplete="current-password">
                         </div>
                         <button type="submit" class="gc-setup-btn">
                             <span class="material-icons-round">login</span>
@@ -1677,7 +1707,8 @@
                     <form id="gc-register-form" onsubmit="event.preventDefault(); gcRegister();">
                         <div class="gc-setup-group">
                             <label class="gc-setup-label">Username</label>
-                            <input type="text" id="gc-reg-user" class="gc-setup-input" placeholder="Min 3 characters..." autocomplete="username">
+                            <input type="text" id="gc-reg-user" class="gc-setup-input" placeholder="Min 3 characters..."
+                                autocomplete="username">
                         </div>
                         <div class="gc-setup-group">
                             <label class="gc-setup-label">Password</label>

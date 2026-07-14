@@ -1017,6 +1017,11 @@ function initSettings(win) {
         keyInput.value = localStorage.getItem('webos-gemini-key') || '';
     }
 
+    const pollinationsKeyInput = win.querySelector('#pollinations-api-key');
+    if (pollinationsKeyInput) {
+        pollinationsKeyInput.value = localStorage.getItem('webos-pollinations-key') || '';
+    }
+
     // Load Lock Settings
     const lockBlur = win.querySelector('#set-lock-blur');
     if (lockBlur) lockBlur.checked = localStorage.getItem('webos-lock-blur') !== 'false';
@@ -1189,6 +1194,11 @@ function saveGeminiKey(key) {
     localStorage.setItem('webos-gemini-key', key);
     localStorage.removeItem('webos-chat-preview-fallbacks');
     showNotification('AI Settings', 'Gemini API key saved.');
+}
+
+function savePollinationsKey(key) {
+    localStorage.setItem('webos-pollinations-key', key);
+    showNotification('AI Settings', 'Pollinations API key saved.');
 }
 
 function initAnimatedWallpaper() {
