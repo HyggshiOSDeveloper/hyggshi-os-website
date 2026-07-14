@@ -7,3 +7,5 @@ cover: "/Resources/posts/14-07-2026/Zashi1.png"
 ---
 
 Zashi A new update has been released adding emoji features.
+
+[here](https://hyggshi-os-website.pages.dev/OSmain)
