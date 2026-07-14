@@ -146,10 +146,16 @@ function gcApplyEnglishCopy(win) {
     const membersBtn = win.querySelector('.gc-header-actions .gc-header-btn:nth-of-type(4)');
     if (membersBtn) membersBtn.title = 'Members';
 
-    const toolButtons = win.querySelectorAll('.gc-composer-tools .gc-tool-btn');
-    if (toolButtons[0]) toolButtons[0].title = 'Image';
-    if (toolButtons[1]) toolButtons[1].title = 'Sticker';
-    if (toolButtons[2]) toolButtons[2].title = 'Image upload';
+    // NOTE: previously used .gc-tool-btn (indexed by position), which broke
+    // as soon as the emoji button also carried the .gc-tool-btn class —
+    // index 1 (sticker) and the emoji button pointed at the same node.
+    // Now each composer button is targeted by its own dedicated class.
+    const imageBtn = win.querySelector('.gc-composer-tools .gc-image-btn');
+    const emojiBtn = win.querySelector('.gc-composer-tools .gc-emoji-btn');
+    const stickerBtn = win.querySelector('.gc-composer-tools .gc-sticker-btn');
+    if (imageBtn) imageBtn.title = 'Image';
+    if (emojiBtn) emojiBtn.title = 'Emoji';
+    if (stickerBtn) stickerBtn.title = 'Sticker';
 
     const uploadBtn = win.querySelector('.gc-input-box .gc-header-btn');
     if (uploadBtn) uploadBtn.title = 'Upload image';

@@ -995,8 +995,12 @@ function gcBindComposer(win) {
     const textarea = win.querySelector('.gc-input-box textarea');
     const inputArea = win.querySelector('.gc-input-area');
     const fileInput = win.querySelector('#gc-file-input');
-    const imageTool = win.querySelector('.gc-composer-tools .gc-tool-btn:nth-of-type(1)');
-    const stickerTool = win.querySelector('.gc-composer-tools .gc-tool-btn:nth-of-type(2)');
+    // NOTE: selectors now target dedicated classes instead of :nth-of-type,
+    // because :nth-of-type counted ALL <button> children (not just .gc-tool-btn),
+    // which made the sticker button and emoji button resolve to the SAME element.
+    const imageTool = win.querySelector('.gc-composer-tools .gc-image-btn');
+    const emojiTool = win.querySelector('.gc-composer-tools .gc-emoji-btn');
+    const stickerTool = win.querySelector('.gc-composer-tools .gc-sticker-btn');
 
     if (textarea && !textarea.dataset.gcBound) {
         textarea.dataset.gcBound = 'true';
@@ -1053,12 +1057,254 @@ function gcBindComposer(win) {
         stickerTool.dataset.gcBound = 'true';
         stickerTool.addEventListener('click', () => gcShowStickerPicker());
     }
+
+    if (emojiTool && !emojiTool.dataset.gcBound) {
+        emojiTool.dataset.gcBound = 'true';
+        emojiTool.addEventListener('click', () => {
+            if (gcEmojiPickerState.isOpen) {
+                gcHideEmojiPicker();
+            } else {
+                gcShowEmojiPicker();
+            }
+        });
+    }
 }
 
 function gcResizeTextarea(textarea) {
     if (!textarea) return;
     textarea.style.height = 'auto';
     textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`;
+}
+
+/* ===== EMOJI PICKER ===== */
+const GC_EMOJI_CATEGORIES = [
+    { id: 'recent', icon: '🕒', label: 'Recent' },
+    { id: 'smileys', icon: '😀', label: 'Smileys' },
+    { id: 'gestures', icon: '👋', label: 'Gestures' },
+    { id: 'hearts', icon: '❤️', label: 'Hearts' },
+    { id: 'objects', icon: '🎁', label: 'Objects' },
+    { id: 'nature', icon: '🌿', label: 'Nature' },
+    { id: 'food', icon: '🍕', label: 'Food' },
+    { id: 'activities', icon: '⚽', label: 'Activities' },
+    { id: 'travel', icon: '✈️', label: 'Travel' },
+    { id: 'symbols', icon: '💯', label: 'Symbols' }
+];
+
+const GC_EMOJIS = {
+    smileys: ['😀','😃','😄','😁','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','💩','👻','💀','☠️','👽','👾','🤖','🎃','😺','😸','😹','😻','😼','😽','🙀','😿','😾'],
+    gestures: ['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','🫵','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','👐','🤲','🤝','🙏','✍️','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🧠','🫀','🫁','🦷','🦴','👀','👁️','👅','👄','🫦','💋','🩷','❤️','🧡','💛','💚','💙','💜','🖤','🩶','🤍','🤎','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','♿','🅿️','🛗','🈳','🈂️','🛂','🛃','🛄','🛅','🛜','🚹','🚺','🚼','⚧️','🚻','🚮','🎦','📶','🈁','🔣','ℹ️','🔤','🔡','🔠','🔟','🔢','⏺️','⏮️','⏭️','⏩','⏪','⏫','⏬','🎵','🎶','➕','➖','✖️','➗','💲','💱','™️','©️','®️','👁️‍🗨️','🔚','🔙','🔛','🔝','🔜','〰️','➰','➿','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','📣','📢','💬','💭','🗯️','♠️','♣️','♥️','♦️','🃏','🎴','🀄','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛','🕜','🕝','🕞','🕟','🕠','🕡','🕢','🕣','🕤','🕥','🕦','🕧','🛎️','🔋','🪫','🔌','💻','🖥️','🖨️','⌨️','🖱️','🖲️','💽','💾','💿','📀','🧮','🎥','🎞️','📽️','🎬','📺','📷','📸','📹','📼','🔍','🔎','🕯️','💡','🔦','🏮','🪔','📔','📕','📖','📗','📘','📙','📚','📓','📒','📃','📜','📄','📰','🗞️','📑','🔖','🏷️','💰','🪙','💴','💵','💶','💷','💸','💳','🧾','✉️','📧','📨','📩','📤','📥','📦','📫','📪','📬','📭','📮','🗳️','✏️','✒️','🖋️','🖊️','🖌️','🖍️','📝','💼','📁','📂','🗂️','📅','📆','🗒️','🗓️','📇','📈','📉','📊','📋','📌','📍','📎','🖇️','📏','📐','✂️','🗃️','🗄️','🗑️','🔒','🔓','🔏','🔐','🔑','🗝️','🔨','🪓','⛏️','⚒️','🛠️','🗡️','⚔️','💣','🪃','🏹','🛡️','🪚','🔧','🪛','🔩','⚙️','🗜️','⚗️','🪜','🧪','🧫','🧬','🔬','🔭','📡','💉','🩸','💊','🩹','🩼','🩺','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🎊','🎉','🎎','🏮','🎐','🧧','✉️','📩','📨','📧','💌','📮','📪','📫','📬','📭','📦','📫','📪','📬','📭','📮','📯','📜','📃','📄','📑','🧾','📊','📈','📉','🗒️','🗓️','📆','📅','📇','🗃️','🗳️','🗄️','📋','📁','📂','🗂️','🗞️','📰','📓','📔','📒','📕','📗','📘','📙','📚','📖','🔖','🧷','🔗','📎','🖇️','📐','📏','🧮','📌','📍','✂️','🖊️','🖋️','✒️','🖌️','🖍️','📝','✏️','🔍','🔎','🔐','🔒','🔓','🔏','🖇️','📁','📂','🗂️','📅','📆','🗒️','🗓️','📇','📈','📉','📊','📋','📌','📍','📎','🖇️','📏','📐','✂️','🗃️','🗄️','🗑️','🔒','🔓','🔏','🔐','🔑','🗝️','🔨','🪓','⛏️','⚒️','🛠️','🗡️','⚔️','💣','🪃','🏹','🛡️','🪚','🔧','🪛','🔩','⚙️','🗜️','⚗️','🪜','🧪','🧫','🧬','🔬','🔭','📡','💉','🩸','💊','🩹','🩼','🩺','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🎊','🎉','🎎','🏮','🎐','🧧'],
+    hearts: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','♥️','🫀','💌','💋','💍','💎','👩‍❤️‍👨','👨‍❤️‍👨','👩‍❤️‍👩','💑','👩‍❤️‍💋‍👨','👨‍❤️‍💋‍👨','👩‍❤️‍💋‍👩','👪️','👨‍👩‍👦','👨‍👩‍👧','👨‍👩‍👧‍👦','👨‍👩‍👦‍👦','👨‍👩‍👧‍👧','👩‍👩‍👦','👩‍👩‍👧','👩‍👩‍👧‍👦','👩‍👩‍👦‍👦','👩‍👩‍👧‍👧','👨‍👨‍👦','👨‍👨‍👧','👨‍👨‍👧‍👦','👨‍👨‍👦‍👦','👨‍👨‍👧‍👧','👩‍👦','👩‍👧','👩‍👧‍👦','👩‍👦‍👦','👩‍👧‍👧','👨‍👦','👨‍👧','👨‍👧‍👦','👨‍👦‍👦','👨‍👧‍👧','👶','🧒','👦','👧','🧑','👱','👨','🧔','👩','🧓','👴','👵','🙍','🙎','🙅','🙆','💁','🙋','🧏','🙇','🤦','🤷','💆','💇','🚶','🧍','🧎','🏃','💃','🕺','🕴️','👯','🧖','🧗','🤺','🏇','⛷️','🏂','🏌️','🏄','🚣','🏊','⛹️','🏋️','🚴','🚵','🤸','🤼','🤽','🤾','🤹','🧘','🛀','🛌','👭','👫','👬','💏','💑','👨‍👩‍👦','👨‍👩‍👧','👨‍👩‍👧‍👦','👨‍👩‍👦‍👦','👨‍👩‍👧‍👧','👩‍👩‍👦','👩‍👩‍👧','👩‍👩‍👧‍👦','👩‍👩‍👦‍👦','👩‍👩‍👧‍👧','👨‍👨‍👦','👨‍👨‍👧','👨‍👨‍👧‍👦','👨‍👨‍👦‍👦','👨‍👨‍👧‍👧','👩‍👦','👩‍👧','👩‍👧‍👦','👩‍👦‍👦','👩‍👧‍👧','👨‍👦','👨‍👧','👨‍👧‍👦','👨‍👦‍👦','👨‍👧‍👧'],
+    objects: ['⌚','📱','💻','⌨️','🖥️','🖨️','🖱️','🖲️','🕹️','🗜️','💽','💾','💿','📀','📼','📷','📸','📹','🎥','📽️','🎞️','📞','☎️','📟','📠','📺','📻','🎙️','🎚️','🎛️','🧭','⏱️','⏲️','⏰','🕰️','⌛','⏳','📡','🔋','🪫','🔌','💡','🔦','🕯️','🪔','🧯','🛢️','💸','💵','💴','💶','💷','🪙','💰','💳','💎','⚖️','🪜','🧰','🪛','🔧','🔨','⚒️','🛠️','⛏️','🪚','🔩','⚙️','🪜','🧱','⛓️','⛓️‍💥','🧲','🔫','🏹','🛡️','🪚','🔧','🪛','🔩','⚙️','🗜️','⚗️','🪜','🧪','🧫','🧬','🔬','🔭','📡','💉','🩸','💊','🩹','🩼','🩺','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🎊','🎉','🎎','🏮','🎐','🧧','✉️','📩','📨','📧','💌','📮','📪','📫','📬','📭','📦','📫','📪','📬','📭','📮','📯','📜','📃','📄','📑','🧾','📊','📈','📉','🗒️','🗓️','📆','📅','📇','🗃️','🗳️','🗄️','📋','📁','📂','🗂️','🗞️','📰','📓','📔','📒','📕','📗','📘','📙','📚','📖','🔖','🧷','🔗','📎','🖇️','📐','📏','🧮','📌','📍','✂️','🗃️','🗄️','🗑️','🔒','🔓','🔏','🔐','🔑','🗝️','🔨','🪓','⛏️','⚒️','🛠️','🗡️','⚔️','💣','🪃','🏹','🛡️','🪚','🔧','🪛','🔩','⚙️','🗜️','⚗️','🪜','🧪','🧫','🧬','🔬','🔭','📡','💉','🩸','💊','🩹','🩼','🩺','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴'],
+    nature: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨','🐯','🦁','🐮','🐷','🐽','🐸','🐵','🙈','🙉','🙊','🐒','🐔','🐧','🐦','🐤','🐣','🐥','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🕸️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🐓','🦃','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿️','🦔'],
+    food: ['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🍍','🥝','🥑','🍆','🥕','🌽','🌶️','🫑','🥒','🥬','🥦','🧄','🧅','🍄','🥜','🌰','🍞','🥐','🥖','🥨','🥯','🥞','🧇','🧀','🍖','🍗','🥩','🥓','🍔','🍟','🍕','🌭','🥪','🌮','🌯','🫔','🥙','🧆','🥚','🍳','🥘','🍲','🫕','🥣','🥗','🍿','🧈','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍣','🍤','🍥','🥮','🍡','🥟','🥠','🥡','🦀','🦞','🦐','🦑','🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','☕','🫖','🍵','🍶','🍾','🍷','🍸','🍹','🍺','🍻','🥂','🥃','🥤','🧋','🧃','🧉','🧊','🥢','🍽️','🍴','🥄','🔪','🫙','🏺'],
+    activities: ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🎱','🏓','🏸','🏒','🏑','🥍','🏏','🥅','⛳','🪁','🏹','🎣','🤿','🎽','🛹','🛼','🛷','⛸️','🥋','🥊','🎽','🛹','🛼','🛷','⛸️','🥋','🥊','🎿','⛷️','🏂','🏋️','🤼','🤽','🤾','🤺','⛹️','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴','🏆','🥇','🥈','🥉','🏅','🎖️','🏵️','🎗️','🎫','🎟️','🎪','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎹','🥁','🎷','🎺','🎸','🪕','🎻','🪗','🎲','♟️','🎯','🎳','🎮','🎰','🧩'],
+    travel: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🦯','🦽','🦼','🛴','🚲','🛵','🏍️','🛺','🚨','🚔','🚍','🚘','🚖','🚡','🚠','🚟','🚃','🚋','🚞','🚝','🚄','🚅','🚈','🚂','🚆','🚇','🚊','🚉','✈️','🛫','🛬','🛩️','💺','🛰️','🚀','🛸','🚁','🛶','⛵','🚤','🛥️','🛳️','⛴️','🚢','⚓','⛽','🚧','🚦','🚥','🚏','🗺️','🗿','🗽','🗼','🏰','🏯','🏟️','🎡','🎢','🎠','⛲','⛱️','🏖️','🏝️','🏜️','🌋','⛰️','🏔️','🗻','🏕️','⛺','🛖','🏠','🏡','🏘️','🏚️','🏗️','🏭','🏢','🏬','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏩','💒','🏛️','⛪','🕌','🕍','🛕','🕋','⛩️','🛤️','🛣️','🌅','🌄','🌠','🎇','🎆','🌇','🌆','🏙️','🌃','🌌','🌉','🌁'],
+    symbols: ['💰','🪙','💴','💵','💶','💷','💸','💳','🧾','✉️','📧','📨','📩','📤','📥','📦','📫','📪','📬','📭','📮','🗳️','✏️','✒️','🖋️','🖊️','🖌️','🖍️','📝','💼','📁','📂','🗂️','📅','📆','🗒️','🗓️','📇','📈','📉','📊','📋','📌','📍','📎','🖇️','📏','📐','✂️','🗃️','🗄️','🗑️','🔒','🔓','🔏','🔐','🔑','🗝️','🔨','🪓','⛏️','⚒️','🛠️','🗡️','⚔️','💣','🪃','🏹','🛡️','🪚','🔧','🪛','🔩','⚙️','🗜️','⚗️','🪜','🧪','🧫','🧬','🔬','🔭','📡','💉','🩸','💊','🩹','🩼','🩺','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🎊','🎉','🎎','🏮','🎐','🧧','✉️','📩','📨','📧','💌','📮','📪','📫','📬','📭','📦','📫','📪','📬','📭','📮','📯','📜','📃','📄','📑','🧾','📊','📈','📉','🗒️','🗓️','📆','📅','📇','🗃️','🗳️','🗄️','📋','📁','📂','🗂️','🗞️','📰','📓','📔','📒','📕','📗','📘','📙','📚','📖','🔖','🧷','🔗','📎','🖇️','📐','📏','🧮','📌','📍','✂️','🗃️','🗄️','🗑️','🔒','🔓','🔏','🔐','🔑','🗝️','🔨','🪓','⛏️','⚒️','🛠️','🗡️','⚔️','💣','🪃','🏹','🛡️','🪚','🔧','🪛','🔩','⚙️','🗜️','⚗️','🪜','🧪','🧫','🧬','🔬','🔭','📡','💉','🩸','💊','🩹','🩼','🩺','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🎊','🎉','🎎','🏮','🎐','🧧','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','♿','🅿️','🛗','🈳','🈂️','🛂','🛃','🛄','🛅','🛜','🚹','🚺','🚼','⚧️','🚻','🚮','🎦','📶','🈁','🔣','ℹ️','🔤','🔡','🔠','🔟','🔢','⏺️','⏮️','⏭️','⏩','⏪','⏫','⏬','🎵','🎶','➕','➖','✖️','➗','💲','💱','™️','©️','®️','👁️‍🗨️','🔚','🔙','🔛','🔝','🔜','〰️','➰','➿','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','📣','📢','💬','💭','🗯️','♠️','♣️','♥️','♦️','🃏','🎴','🀄','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛','🕜','🕝','🕞','🕟','🕠','🕡','🕢','🕣','🕤','🕥','🕦','🕧','🛎️','🔋','🪫','🔌','💻','🖥️','🖨️','⌨️','🖱️','🖲️','💽','💾','💿','📀','🧮','🎥','🎞️','📽️','🎬','📺','📷','📸','📹','📼','🔍','🔎','🕯️','💡','🔦','🏮','🪔','📔','📕','📖','📗','📘','📙','📚','📓','📒','📃','📜','📄','📰','🗞️','📑','🔖','🏷️','💰','🪙','💴','💵','💶','💷','💸','💳','🧾','✉️','📧','📨','📩','📤','📥','📦','📫','📪','📬','📭','📮','🗳️','✏️','✒️','🖋️','🖊️','🖌️','🖍️','📝','💼','📁','📂','🗂️','📅','📆','🗒️','🗓️','📇','📈','📉','📊','📋','📌','📍','📎','🖇️','📏','📐','✂️','🗃️','🗄️','🗑️','🔒','🔓','🔏','🔐','🔑','🗝️','🔨','🪓','⛏️','⚒️','🛠️','🗡️','⚔️','💣','🪃','🏹','🛡️','🪚','🔧','🪛','🔩','⚙️','🗜️','⚗️','🪜','🧪','🧫','🧬','🔬','🔭','📡','💉','🩸','💊','🩹','🩼','🩺','🌡️','🧹','🪠','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧽','🪣','🧴','🛎️','🔑','🗝️','🚪','🪑','🛋️','🛏️','🛌','🧸','🪆','🖼️','🪞','🪟','🛍️','🛒','🎁','🎈','🎏','🎀','🎊','🎉','🎎','🏮','🎐','🧧']
+};
+
+// Newer Unicode additions and high-use chat reactions.  Merge these after the
+// base catalogue so each category stays tidy even if a base list contains a
+// duplicate.
+const GC_EMOJI_EXPANSIONS = {
+    smileys: ['🫠','🫡','🫢','🫣','🫤','🥹','🫥','🫨','🙂‍↔️','🙂‍↕️','😶‍🌫️','😮‍💨','🫩','🫪','🫧'],
+    gestures: ['🫱','🫲','🫳','🫴','🫷','🫸','🫵','🫶','🫂','🫰','🫃','🫄','🫅','👋🏻','👋🏽','👋🏿','👍🏻','👍🏽','👍🏿','👏🏻','👏🏽','👏🏿'],
+    hearts: ['🩷','🩵','🩶','🫶','❤️‍🔥','❤️‍🩹','🫂','🫰','👩‍❤️‍💋‍👩','👨‍❤️‍💋‍👨','💏','🫶🏻','🫶🏼','🫶🏽','🫶🏾','🫶🏿'],
+    objects: ['🪩','🪭','🪮','🪈','🪇','🪤','🪪','🪬','🪯','🛜','🪫','🧌','🪏','🪾','🪻','🪪','🫟','🪭','🪮','🪉','🪊'],
+    nature: ['🫎','🫏','🪽','🐦‍⬛','🪿','🪼','🪻','🫚','🫛','🪸','🪺','🪹','🐦‍🔥','🪲','🪳','🪰','🪱','🪴','🪵','🪨','🪹','🪺','🫜'],
+    food: ['🫚','🫛','🫜','🧆','🫙','🫗','🍋‍🟩','🍄‍🟫','🫐','🫒','🫓','🫔','🫕','🫖','🫘','🧇'],
+    activities: ['🪩','🪇','🪈','🪄','🛝','🛞','🪀','🪢','🧿','🪅','🪄','🪘','🪇','🛼','🛹','🧩'],
+    travel: ['🛜','🛻','🛝','🛞','🪽','🪂','🛟','🏕️','🛖','🛟','🛜','🪂','🛰️','🛸','🗺️'],
+    symbols: ['🫨','🩷','🩵','🩶','🪯','🪬','🛜','🪪','🪫','🆕','🆗','🆒','🆓','🆙','🆘','🔀','🔁','🔂','▶️','⏸️','⏹️','⏏️','🫟','🪪']
+};
+
+Object.entries(GC_EMOJI_EXPANSIONS).forEach(([category, emojis]) => {
+    GC_EMOJIS[category] = [...new Set([...GC_EMOJIS[category], ...emojis])];
+});
+
+let gcEmojiPickerState = {
+    isOpen: false,
+    currentCategory: 'smileys',
+    recentEmojis: []
+};
+
+function gcCreateEmojiPicker() {
+    const picker = document.createElement('div');
+    picker.className = 'gc-emoji-picker hidden';
+    picker.id = 'gc-emoji-picker';
+    picker.innerHTML = `
+        <div class="gc-emoji-picker-header">
+            <input type="text" class="gc-emoji-search" placeholder="Search emoji..." id="gc-emoji-search">
+        </div>
+        <div class="gc-emoji-categories" id="gc-emoji-categories">
+            ${GC_EMOJI_CATEGORIES.map(cat => `
+                <button class="gc-emoji-category-btn" data-category="${cat.id}" title="${cat.label}">
+                    ${cat.icon}
+                </button>
+            `).join('')}
+        </div>
+        <div class="gc-emoji-grid" id="gc-emoji-grid"></div>
+        <div class="gc-emoji-picker-footer">
+            <div class="gc-emoji-recent" id="gc-emoji-recent"></div>
+        </div>
+    `;
+    return picker;
+}
+
+function gcShowEmojiPicker() {
+    if (!gcWin) return;
+    if (gcIsSystemRoom()) {
+        gcNotifyError('System inbox is read-only. You can only view notifications.');
+        return;
+    }
+    if (gcIsGlobalRoom() && gcIsGlobalChatBanned()) {
+        gcNotifyError('You are banned from Global Chat.');
+        return;
+    }
+    if (gcIsUserMuted()) {
+        gcNotifyError(`You are muted and cannot send emojis for ${gcGetMuteRemainingText()}.`);
+        return;
+    }
+
+    let picker = document.getElementById('gc-emoji-picker');
+    if (!picker) {
+        picker = gcCreateEmojiPicker();
+        document.body.appendChild(picker);
+        gcBindEmojiPickerEvents(picker);
+    }
+
+    // Position the picker above the emoji button
+    const emojiBtn = gcWin.querySelector('.gc-emoji-btn');
+    if (emojiBtn && picker) {
+        const btnRect = emojiBtn.getBoundingClientRect();
+        picker.style.position = 'fixed';
+        picker.style.bottom = `${window.innerHeight - btnRect.top + 8}px`;
+        picker.style.left = `${btnRect.left}px`;
+    }
+
+    picker.classList.remove('hidden');
+    gcEmojiPickerState.isOpen = true;
+    gcRenderEmojiCategory('smileys');
+
+    const searchInput = picker.querySelector('#gc-emoji-search');
+    if (searchInput) searchInput.focus();
+}
+
+function gcHideEmojiPicker() {
+    const picker = document.getElementById('gc-emoji-picker');
+    if (picker) picker.classList.add('hidden');
+    gcEmojiPickerState.isOpen = false;
+}
+
+function gcBindEmojiPickerEvents(picker) {
+    const searchInput = picker.querySelector('#gc-emoji-search');
+    const grid = picker.querySelector('#gc-emoji-grid');
+    const categories = picker.querySelector('#gc-emoji-categories');
+
+    searchInput?.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        gcRenderEmojiSearchResults(query);
+    });
+
+    categories?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.gc-emoji-category-btn');
+        if (!btn) return;
+        const category = btn.dataset.category;
+        gcRenderEmojiCategory(category);
+    });
+
+    grid?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.gc-emoji-item');
+        if (!btn) return;
+        const emoji = btn.dataset.emoji;
+        gcInsertEmoji(emoji);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!gcEmojiPickerState.isOpen) return;
+        const emojiBtn = gcWin?.querySelector('.gc-emoji-btn');
+        if (picker.contains(e.target) || (emojiBtn && emojiBtn.contains(e.target))) return;
+        gcHideEmojiPicker();
+    });
+}
+
+function gcRenderEmojiCategory(categoryId) {
+    gcEmojiPickerState.currentCategory = categoryId;
+    const picker = document.getElementById('gc-emoji-picker');
+    const grid = picker?.querySelector('#gc-emoji-grid');
+    if (!grid) return;
+
+    const categories = picker?.querySelectorAll('#gc-emoji-categories .gc-emoji-category-btn');
+    categories?.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.category === categoryId);
+    });
+
+    let emojis = [];
+    if (categoryId === 'recent') {
+        emojis = gcEmojiPickerState.recentEmojis;
+    } else {
+        emojis = GC_EMOJIS[categoryId] || [];
+    }
+
+    grid.innerHTML = emojis.length ? emojis.map(emoji => `
+        <button class="gc-emoji-item" type="button" data-emoji="${emoji}" title="${emoji}">
+            ${emoji}
+        </button>
+    `).join('') : `<div class="gc-emoji-empty">No recent emojis yet.</div>`;
+}
+
+function gcRenderEmojiSearchResults(query) {
+    const picker = document.getElementById('gc-emoji-picker');
+    const grid = picker?.querySelector('#gc-emoji-grid');
+    if (!grid) return;
+
+    if (!query) {
+        gcRenderEmojiCategory(gcEmojiPickerState.currentCategory);
+        return;
+    }
+
+    const allEmojis = Object.values(GC_EMOJIS).flat();
+    const filtered = allEmojis.filter(emoji => emoji.includes(query));
+
+    grid.innerHTML = filtered.map(emoji => `
+        <button class="gc-emoji-item" type="button" data-emoji="${emoji}" title="${emoji}">
+            ${emoji}
+        </button>
+    `).join('');
+}
+
+function gcInsertEmoji(emoji) {
+    if (!emoji || !gcWin) return;
+
+    const textarea = gcWin.querySelector('.gc-input-box textarea');
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+
+    textarea.value = text.substring(0, start) + emoji + text.substring(end);
+    textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+    textarea.focus();
+
+    gcResizeTextarea(textarea);
+
+    gcEmojiPickerState.recentEmojis = [emoji, ...gcEmojiPickerState.recentEmojis.filter(e => e !== emoji)].slice(0, 20);
+    gcRenderRecentEmojis();
+
+    gcHideEmojiPicker();
+}
+
+function gcRenderRecentEmojis() {
+    const picker = document.getElementById('gc-emoji-picker');
+    const recentContainer = picker?.querySelector('#gc-emoji-recent');
+    if (!recentContainer) return;
+
+    const recent = gcEmojiPickerState.recentEmojis.slice(0, 8);
+    recentContainer.innerHTML = recent.map(emoji => `
+        <button class="gc-emoji-recent-item" type="button" data-emoji="${emoji}" title="${emoji}">
+            ${emoji}
+        </button>
+    `).join('');
 }
 
 function gcPrepareAttachment(file) {
@@ -1161,4 +1407,3 @@ function gcEnsureAvatarInput(win = gcWin) {
     }
     return input;
 }
-

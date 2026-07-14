@@ -1096,39 +1096,166 @@
     <!-- Music Player -->
     <template id="tmpl-music-player">
         <div class="app-music-player">
-            <div class="mp-artwork">
-                <span class="material-icons-round">album</span>
-            </div>
-            <div class="mp-info">
-                <div class="mp-title">No Track Playing</div>
-                <div class="mp-artist">Unknown Artist</div>
-            </div>
-            <div class="mp-visualizer" aria-label="Audio visualizer">
-                <canvas class="mp-visualizer-canvas"></canvas>
-            </div>
-            <div class="mp-progress">
-                <div class="mp-bar">
-                    <div class="mp-bar-fill" id="mp-bar-fill"></div>
+            <!-- Split Layout: Library Sidebar + Player View -->
+            <div class="mp-sidebar">
+                <div class="mp-sidebar-header">
+                    <span class="material-icons-round">library_music</span>
+                    <span>Your Library</span>
                 </div>
-                <div class="mp-times">
-                    <span>0:00</span><span>3:45</span>
+                <div class="mp-sidebar-actions">
+                    <button onclick="mpImportFiles()" title="Import audio files">
+                        <span class="material-icons-round">queue_music</span>
+                        <span>Import Files</span>
+                    </button>
+                    <button onclick="mpImportFolder()" title="Import folder">
+                        <span class="material-icons-round">create_new_folder</span>
+                        <span>Import Folder</span>
+                    </button>
+                </div>
+                <div class="mp-library-list" id="mp-library-list">
+                    <div class="mp-library-empty">
+                        <span class="material-icons-round">album</span>
+                        <p>No songs yet. Import some music to get started!</p>
+                    </div>
+                </div>
+                <div class="mp-playlists-section">
+                    <div class="mp-playlists-header">
+                        <span class="material-icons-round">playlist_play</span>
+                        <span>Playlists</span>
+                    </div>
+                    <div class="mp-playlists-list" id="mp-playlists-list">
+                        <div class="mp-playlist-item" onclick="mpSetFilter('all')">
+                            <span class="material-icons-round">all_inclusive</span>
+                            <span>All Songs</span>
+                            <span class="mp-playlist-count" id="mp-count-all">0</span>
+                        </div>
+                        <div class="mp-playlist-item" onclick="mpSetFilter('favorites')">
+                            <span class="material-icons-round">favorite</span>
+                            <span>Favorites</span>
+                            <span class="mp-playlist-count" id="mp-count-favorites">0</span>
+                        </div>
+                        <div class="mp-playlist-item" onclick="mpSetFilter('recent')">
+                            <span class="material-icons-round">schedule</span>
+                            <span>Recently Added</span>
+                            <span class="mp-playlist-count" id="mp-count-recent">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mp-sidebar-footer">
+                    <span id="mp-library-stats">0 songs</span>
                 </div>
             </div>
-            <div class="mp-controls">
-                <button onclick="mpSelectAudio()" title="Open .mp3"><span
-                        class="material-icons-round">folder_open</span></button>
-                <button><span class="material-icons-round">skip_previous</span></button>
-                <button class="mp-play" onclick="mpToggle()" id="mp-play-btn"><span
-                        class="material-icons-round">play_arrow</span></button>
-                <button><span class="material-icons-round">skip_next</span></button>
-                <button><span class="material-icons-round">repeat</span></button>
 
-                <!-- Hidden input for file selection -->
-                <input type="file" id="mp-upload-input" accept="audio/mpeg, audio/mp3, audio/wav, audio/ogg"
-                    style="display: none;" onchange="mpHandleUpload(this)">
-                <!-- Hidden audio element for playback -->
-                <audio id="mp-audio" style="display: none;"></audio>
+            <!-- Main Player Area -->
+            <div class="mp-main">
+                <!-- Queue / Now Playing View -->
+                <div class="mp-queue-view" id="mp-queue-view">
+                    <div class="mp-queue-header">
+                        <span class="mp-queue-title">Now Playing</span>
+                        <div class="mp-queue-actions">
+                            <button onclick="mpClearQueue()" title="Clear queue">
+                                <span class="material-icons-round">clear_all</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mp-queue-list" id="mp-queue-list">
+                        <div class="mp-queue-empty">
+                            <span class="material-icons-round">music_note</span>
+                            <p>Queue is empty. Select a song to play.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Music Player Controls -->
+                <div class="mp-player-bar">
+                    <!-- Artwork -->
+                    <div class="mp-artwork" id="mp-artwork">
+                        <span class="material-icons-round">album</span>
+                        <div class="mp-artwork-gradient"></div>
+                    </div>
+
+                    <!-- Track Info -->
+                    <div class="mp-info">
+                        <div class="mp-title" id="mp-title">No Track Playing</div>
+                        <div class="mp-artist" id="mp-artist">Unknown Artist</div>
+                    </div>
+
+                    <!-- Visualizer -->
+                    <div class="mp-visualizer" aria-label="Audio visualizer">
+                        <canvas class="mp-visualizer-canvas" id="mp-visualizer-canvas"></canvas>
+                    </div>
+
+                    <!-- Progress -->
+                    <div class="mp-progress">
+                        <div class="mp-bar" id="mp-bar">
+                            <div class="mp-bar-fill" id="mp-bar-fill"></div>
+                            <div class="mp-bar-thumb" id="mp-bar-thumb"></div>
+                        </div>
+                        <div class="mp-times">
+                            <span id="mp-current-time">0:00</span>
+                            <span id="mp-duration">0:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="mp-controls">
+                        <button onclick="mpToggleShuffle()" id="mp-shuffle-btn" title="Shuffle" class="mp-ctrl-btn">
+                            <span class="material-icons-round">shuffle</span>
+                        </button>
+                        <button onclick="mpPrev()" title="Previous" class="mp-ctrl-btn">
+                            <span class="material-icons-round">skip_previous</span>
+                        </button>
+                        <button class="mp-play" onclick="mpToggle()" id="mp-play-btn">
+                            <span class="material-icons-round">play_arrow</span>
+                        </button>
+                        <button onclick="mpNext()" title="Next" class="mp-ctrl-btn">
+                            <span class="material-icons-round">skip_next</span>
+                        </button>
+                        <button onclick="mpToggleRepeat()" id="mp-repeat-btn" title="Repeat" class="mp-ctrl-btn">
+                            <span class="material-icons-round">repeat</span>
+                        </button>
+                    </div>
+
+                    <!-- Visualizer Settings Row -->
+                    <div class="mp-visualizer-settings">
+                        <span class="mp-viz-settings-label">Bars</span>
+                        <div class="mp-fft-select-wrap">
+                            <select id="mp-fft-select" class="mp-fft-select" onchange="mpSetFftSize(parseInt(this.value))">
+                                <option value="64">64</option>
+                                <option value="128">128</option>
+                                <option value="256" selected>256</option>
+                                <option value="512">512</option>
+                                <option value="1024">1024</option>
+                                <option value="2048">2048</option>
+                            </select>
+                            <span class="material-icons-round mp-fft-select-icon">tune</span>
+                        </div>
+                    </div>
+
+                    <!-- Volume -->
+                    <div class="mp-volume">
+                        <button onclick="mpToggleMute()" id="mp-mute-btn" title="Mute" class="mp-ctrl-btn">
+                            <span class="material-icons-round">volume_up</span>
+                        </button>
+                        <div class="mp-volume-bar" id="mp-volume-bar">
+                            <div class="mp-volume-fill" id="mp-volume-fill" style="width: 80%"></div>
+                            <div class="mp-volume-thumb" style="left: 80%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Favorite Button -->
+                    <button onclick="mpToggleFavorite()" id="mp-fav-btn" class="mp-ctrl-btn mp-fav-btn" title="Favorite">
+                        <span class="material-icons-round">favorite_border</span>
+                    </button>
+                </div>
             </div>
+
+            <!-- Hidden elements -->
+            <input type="file" id="mp-upload-input" accept="audio/*" multiple
+                style="display: none;" onchange="mpHandleFilesUpload(this)">
+            <input type="file" id="mp-folder-input" accept="audio/*" multiple
+                style="display: none;" onchange="mpHandleFilesUpload(this)" webkitdirectory>
+            <audio id="mp-audio" style="display: none;"></audio>
         </div>
     </template>
 
@@ -1622,11 +1749,13 @@
                 <div class="gc-messages"></div>
                 <div class="gc-input-area">
                     <div class="gc-composer-tools">
-                        <button class="gc-tool-btn" title="áº¢nh"><span
+                        <button class="gc-tool-btn gc-image-btn" title="image"><span
                                 class="material-icons-round">image</span></button>
-                        <button class="gc-tool-btn" title="Sticker"><span
+                        <button class="gc-tool-btn gc-emoji-btn" title="Emoji"><span
+                                class="material-icons-round">emoji_emotions</span></button>
+                        <button class="gc-tool-btn gc-sticker-btn" title="Sticker"><span
                                 class="material-icons-round">mood</span></button>
-                        <button class="gc-tool-btn" title="Tá»‡p"><span
+                        <button class="gc-tool-btn" title="Tệp"><span
                                 class="material-icons-round">folder</span></button>
                     </div>
                     <div class="gc-input-box">

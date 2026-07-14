@@ -75,21 +75,406 @@
     transition: transform var(--transition);
 }
 
-/* === Music Player === */
+/* === Music Player (Redesigned) === */
 .app-music-player {
+    display: flex;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(108, 92, 231, 0.08), transparent);
+    overflow: hidden;
+}
+
+/* ─── Sidebar ─── */
+.mp-sidebar {
+    width: 240px;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.25);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.mp-sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 14px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border);
+}
+
+.mp-sidebar-header .material-icons-round {
+    color: var(--accent);
+    font-size: 22px;
+}
+
+.mp-sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.mp-sidebar-actions button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    transition: background var(--transition), color var(--transition);
+}
+
+.mp-sidebar-actions button:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.mp-sidebar-actions button .material-icons-round {
+    font-size: 20px;
+}
+
+/* ─── Library List ─── */
+.mp-library-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 0;
+}
+
+.mp-library-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 8px;
+    padding: 30px 16px;
+    color: var(--text-muted);
+    text-align: center;
+    font-size: 13px;
+}
+
+.mp-library-empty .material-icons-round {
+    font-size: 40px;
+    opacity: 0.5;
+}
+
+.mp-library-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background var(--transition);
+    border-left: 3px solid transparent;
+}
+
+.mp-library-item:hover {
+    background: var(--bg-hover);
+}
+
+.mp-library-item.active {
+    background: rgba(108, 92, 231, 0.12);
+    border-left-color: var(--accent);
+}
+
+.mp-library-item .mp-li-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: rgba(108, 92, 231, 0.15);
+    display: flex;
+    align-items: center;
     justify-content: center;
-    height: 100%;
-    padding: 24px;
-    gap: 16px;
-    background: linear-gradient(180deg, rgba(108, 92, 231, 0.15), transparent);
+    flex-shrink: 0;
+}
+
+.mp-library-item .mp-li-icon .material-icons-round {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+.mp-library-item .mp-li-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mp-library-item .mp-li-title {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mp-library-item .mp-li-artist {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mp-library-item .mp-li-duration {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.mp-library-item .mp-li-fav {
+    font-size: 16px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--transition);
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    padding: 2px;
+}
+
+.mp-library-item .mp-li-fav:hover,
+.mp-library-item .mp-li-fav.favorited {
+    color: #ff6b6b;
+}
+
+/* ─── Playlists Section ─── */
+.mp-playlists-section {
+    border-top: 1px solid var(--border);
+    padding: 8px 0;
+}
+
+.mp-playlists-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mp-playlists-header .material-icons-round {
+    font-size: 16px;
+}
+
+.mp-playlist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: background var(--transition), color var(--transition);
+}
+
+.mp-playlist-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.mp-playlist-item.active {
+    color: var(--accent);
+    background: rgba(108, 92, 231, 0.08);
+}
+
+.mp-playlist-item .material-icons-round {
+    font-size: 18px;
+}
+
+.mp-playlist-count {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 1px 8px;
+    border-radius: 10px;
+}
+
+.mp-sidebar-footer {
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+}
+
+/* ─── Main Area ─── */
+.mp-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ─── Queue View ─── */
+.mp-queue-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.mp-queue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.mp-queue-title {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.mp-queue-actions button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition), background var(--transition);
+}
+
+.mp-queue-actions button:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.mp-queue-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+.mp-queue-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.mp-queue-empty .material-icons-round {
+    font-size: 36px;
+    opacity: 0.4;
+}
+
+.mp-queue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background var(--transition);
+    border-left: 3px solid transparent;
+}
+
+.mp-queue-item:hover {
+    background: var(--bg-hover);
+}
+
+.mp-queue-item.playing {
+    background: rgba(108, 92, 231, 0.1);
+    border-left-color: var(--accent);
+}
+
+.mp-queue-item .mp-qi-index {
+    width: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.mp-queue-item.playing .mp-qi-index {
+    color: var(--accent);
+}
+
+.mp-queue-item .mp-qi-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mp-queue-item .mp-qi-title {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mp-queue-item .mp-qi-artist {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mp-queue-item .mp-qi-duration {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.mp-queue-item .mp-qi-remove {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition), color var(--transition);
+    flex-shrink: 0;
+}
+
+.mp-queue-item:hover .mp-qi-remove {
+    opacity: 1;
+}
+
+.mp-queue-item .mp-qi-remove:hover {
+    color: #ff6b6b;
+}
+
+.mp-queue-item .mp-qi-remove .material-icons-round {
+    font-size: 16px;
+}
+
+/* ─── Player Bar ─── */
+.mp-player-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px 14px;
+    border-top: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .mp-artwork {
-    width: 160px;
-    height: 160px;
+    width: 100px;
+    height: 100px;
     background: var(--bg-glass);
     border-radius: var(--radius-lg);
     display: flex;
@@ -97,66 +482,120 @@
     justify-content: center;
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
 .mp-artwork .material-icons-round {
-    font-size: 64px;
+    font-size: 48px;
     color: var(--accent);
+    z-index: 1;
+}
+
+.mp-artwork-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(162, 155, 254, 0.1));
+    z-index: 0;
 }
 
 .mp-info {
     text-align: center;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .mp-title {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mp-artist {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-secondary);
-    margin-top: 2px;
-}
-
-.mp-progress {
-    width: 100%;
-    max-width: 280px;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mp-visualizer {
     width: 100%;
-    max-width: 280px;
-    height: 88px;
-    padding: 0;
-    border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--border);
+    max-width: 420px;
+    height: 64px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(108, 92, 231, 0.2);
     overflow: hidden;
-    box-shadow: inset 0 -1px 0 rgba(108, 92, 231, 0.2), 0 6px 16px rgba(0, 0, 0, 0.18);
+    position: relative;
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        0 0 20px rgba(108, 92, 231, 0.08);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.mp-visualizer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(108, 92, 231, 0.06), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .mp-visualizer-canvas {
     width: 100%;
     height: 100%;
     display: block;
+    position: relative;
+    z-index: 1;
+}
+
+.mp-progress {
+    width: 100%;
+    max-width: 400px;
 }
 
 .mp-bar {
-    height: 6px;
+    height: 5px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 999px;
-    overflow: hidden;
     cursor: pointer;
     touch-action: none;
+    position: relative;
 }
 
 .mp-bar-fill {
     height: 100%;
     width: 0%;
-    background: var(--accent);
+    background: linear-gradient(90deg, var(--accent), rgba(162, 155, 254, 0.8));
     border-radius: 999px;
     transition: width 0.08s linear;
+    position: relative;
+}
+
+.mp-bar-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+}
+
+.mp-bar:hover .mp-bar-thumb {
+    opacity: 1;
 }
 
 .mp-times {
@@ -164,18 +603,18 @@
     justify-content: space-between;
     font-size: 11px;
     color: var(--text-muted);
-    margin-top: 4px;
+    margin-top: 3px;
 }
 
 .mp-controls {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
-.mp-controls button {
-    width: 36px;
-    height: 36px;
+.mp-ctrl-btn {
+    width: 32px;
+    height: 32px;
     border: none;
     background: transparent;
     color: var(--text-secondary);
@@ -187,27 +626,172 @@
     transition: color var(--transition), background var(--transition);
 }
 
-.mp-controls button:hover {
+.mp-ctrl-btn:hover {
     color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.06);
 }
 
-.mp-controls button .material-icons-round {
-    font-size: 22px;
+.mp-ctrl-btn .material-icons-round {
+    font-size: 20px;
+}
+
+.mp-ctrl-btn.active {
+    color: var(--accent);
 }
 
 .mp-play {
-    width: 48px !important;
-    height: 48px !important;
+    width: 44px !important;
+    height: 44px !important;
     background: var(--accent) !important;
     color: #fff !important;
+    box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);
 }
 
 .mp-play:hover {
     filter: brightness(1.15);
+    background: var(--accent) !important;
 }
 
 .mp-play .material-icons-round {
-    font-size: 28px !important;
+    font-size: 26px !important;
+}
+
+/* ─── Volume ─── */
+.mp-volume {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 200px;
+}
+
+.mp-volume-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    cursor: pointer;
+    touch-action: none;
+    position: relative;
+}
+
+.mp-volume-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 0.05s linear;
+}
+
+.mp-volume-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+}
+
+.mp-volume-bar:hover .mp-volume-thumb {
+    opacity: 1;
+}
+
+/* ─── Visualizer Settings ─── */
+.mp-visualizer-settings {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 200px;
+    justify-content: center;
+}
+
+.mp-viz-settings-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mp-fft-select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.mp-fft-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    padding: 4px 28px 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--transition), background var(--transition);
+    min-width: 70px;
+    text-align: center;
+}
+
+.mp-fft-select:hover {
+    border-color: rgba(108, 92, 231, 0.4);
+    background: rgba(255, 255, 255, 0.09);
+}
+
+.mp-fft-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.15);
+}
+
+.mp-fft-select option {
+    background: #1a1a2e;
+    color: var(--text-primary);
+}
+
+.mp-fft-select-icon {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* ─── Favorite Button ─── */
+.mp-fav-btn {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+}
+
+.mp-fav-btn.active .material-icons-round {
+    color: #ff6b6b;
+}
+
+/* ─── Scrollbar ─── */
+.mp-library-list::-webkit-scrollbar,
+.mp-queue-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.mp-library-list::-webkit-scrollbar-track,
+.mp-queue-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mp-library-list::-webkit-scrollbar-thumb,
+.mp-queue-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
 }
 
 /* === Video Player === */
