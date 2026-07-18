@@ -65,7 +65,7 @@ function main() {
   const items = posts.map(p => `
     <item>
       <title>${escapeXml(p.title)}</title>
-      <link>${SITE_URL}/post.html?slug=${encodeURIComponent(p.slug)}</link>
+      <link>${escapeXml(`${SITE_URL}/post.html?slug=${encodeURIComponent(p.slug)}`)}</link>
       <guid isPermaLink="false">${escapeXml(p.slug)}</guid>
       <pubDate>${toRfc822(p.date)}</pubDate>
       <description>${escapeXml(p.excerpt)}</description>
