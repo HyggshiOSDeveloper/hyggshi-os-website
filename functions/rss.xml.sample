@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Hyggshi OS News</title>
+    <link>https://hyggshi-os-website.pages.dev/news.html</link>
+    <description>Hyggshi OS latest updates</description>
+    <item>
+      <title>New Game</title>
+      <link>https://hyggshi-os-website.pages.dev/post.html?slug=2026-07-17-New-Game</link>
+      <guid isPermaLink="false">2026-07-17-New-Game</guid>
+      <pubDate>Fri, 17 Jul 2026 00:00:00 GMT</pubDate>
+      <description>A new game, huh?</description>
+    </item>
+    <item>
+      <title>Introducing Emojis on Zashi</title>
+      <link>https://hyggshi-os-website.pages.dev/post.html?slug=2026-07-14-Update-zashi</link>
+      <guid isPermaLink="false">2026-07-14-Update-zashi</guid>
+      <pubDate>Tue, 14 Jul 2026 00:00:00 GMT</pubDate>
+      <description>Are you using a laptop or PC? You already have hundreds of emojis built in. No need to search &quot;emoji website&quot; every time. 😭</description>
+    </item>
+    <item>
+      <title>The expansion of the Hyggshi OS Web Edition desktop web community.</title>
+      <link>https://hyggshi-os-website.pages.dev/post.html?slug=2026-07-13-Research</link>
+      <guid isPermaLink="false">2026-07-13-Research</guid>
+      <pubDate>Mon, 13 Jul 2026 00:00:00 GMT</pubDate>
+      <description>What happened to Hyggshi OS Web Edition?</description>
+    </item>
+    <item>
+      <title>Introducing Content Certificates for Hyggshi OS</title>
+      <link>https://hyggshi-os-website.pages.dev/post.html?slug=2026-07-10-Safety-HDMCARST</link>
+      <guid isPermaLink="false">2026-07-10-Safety-HDMCARST</guid>
+      <pubDate>Tue, 07 Jul 2026 00:00:00 GMT</pubDate>
+      <description>Content certificates provide a transparent way to verify the origin, ownership, and licensing information of assets shared across the entire Hyggshi OS ecosystem.</description>
+    </item>
+  </channel>
+</rss>
