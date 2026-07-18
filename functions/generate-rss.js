@@ -1,4 +1,4 @@
-// Chạy lúc build (Cloudflare Pages) để generate rss.xml từ posts/*.md
+
 const fs = require("fs");
 const path = require("path");
 
