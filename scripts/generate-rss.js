@@ -54,10 +54,12 @@ function main() {
     const slug = file.replace(/\.md$/i, "");
     const raw  = fs.readFileSync(path.join(POSTS_DIR, file), "utf8");
     const { data } = parseFrontmatter(raw);
+    const cover = data.cover || data.image || "";
     return {
       title:   data.title || slug,
       date:    data.date || "",
       excerpt: data.excerpt || "",
+      cover:   cover ? (cover.startsWith("http") ? cover : `${SITE_URL}${cover.startsWith("/") ? "" : "/"}${cover}`) : "",
       slug
     };
   }).sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -65,14 +67,16 @@ function main() {
   const items = posts.map(p => `
     <item>
       <title>${escapeXml(p.title)}</title>
-      <link>${escapeXml(`${SITE_URL}/post.html?slug=${encodeURIComponent(p.slug)}`)}</link>
+      <link>${SITE_URL}/post.html?slug=${encodeURIComponent(p.slug)}</link>
       <guid isPermaLink="false">${escapeXml(p.slug)}</guid>
       <pubDate>${toRfc822(p.date)}</pubDate>
-      <description>${escapeXml(p.excerpt)}</description>
+      <description>${escapeXml(p.excerpt)}</description>${p.cover ? `
+      <enclosure url="${escapeXml(p.cover)}" type="image/png" length="0"/>
+      <media:content url="${escapeXml(p.cover)}" medium="image"/>` : ""}
     </item>`).join("");
 
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>Hyggshi OS News</title>
     <link>${SITE_URL}/news.html</link>
