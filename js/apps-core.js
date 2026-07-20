@@ -875,6 +875,12 @@ function initBrowser(win) {
     });
 }
 
+// Domains that require proxy to bypass X-Frame-Options
+const PROXY_DOMAINS = [
+    'game.chronodivide.com',
+    'chronodivide.com'
+];
+
 function brGo() {
     for (const [wid, w] of Object.entries(windows)) {
         if (w.appId === 'browser') {
@@ -884,7 +890,24 @@ function brGo() {
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 fullUrl = 'https://' + url;
             }
-            frame.src = fullUrl;
+            
+            // Check if URL needs to be proxied
+            const needsProxy = PROXY_DOMAINS.some(domain => {
+                try {
+                    const urlObj = new URL(fullUrl);
+                    return urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain);
+                } catch {
+                    return false;
+                }
+            });
+            
+            if (needsProxy) {
+                // Use Cloudflare Worker proxy
+                const proxyUrl = `https://hyggshi-web-proxy.workers.dev/?url=${encodeURIComponent(fullUrl)}`;
+                frame.src = proxyUrl;
+            } else {
+                frame.src = fullUrl;
+            }
             break;
         }
     }
