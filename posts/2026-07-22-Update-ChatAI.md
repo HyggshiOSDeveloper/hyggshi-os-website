@@ -1,12 +1,12 @@
 ---
-title: "Chat AI New Update in Hyggshi OS Web Edition"
+title: "Chat AI Gets a Major Update in Hyggshi OS Web Edition"
 date: 2026-07-22
 category: "Update"
 excerpt: "Chat AI just got a major upgrade — image generation, collections, favorites, and a smoother multi-model chat experience."
 cover: "/Resources/posts/22-07-2026/ChatAI1.png"
 ---
 
-We've shipped a big update to **Chat AI** in Hyggshi OS Web Edition! This release focuses on making AI-generated content easier to create, browse, and manage right from your desktop.
+Today we're rolling out a major update to Chat AI in Hyggshi OS Web Edition, bringing built-in image generation, a redesigned Collections experience, multi-model support, and a smoother creative workflow.
 
 ## What's New
 
@@ -17,7 +17,7 @@ Chat AI now supports image generation directly in the chat window. Just describe
 You can now switch between models right from the chat header, including **Gemini 2.5 Flash** for conversation and **GPT Image** for generation. Pick the right model for the task without leaving your chat.
 
 ### Collections
-Generated images are automatically organized into **Collections**, so you never lose track of what you've created. Browse everything in a clean gallery view, with quick filters for:
+Generated images are automatically organized into **Collections**, so you never lose track of what you've created. Browse everything in a clean gallery view, with Quick filters include:
 - **All**
 - **Favorites**
 - **Today**
