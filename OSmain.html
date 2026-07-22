@@ -1597,50 +1597,83 @@
             </div>
             <div class="chat-collections-view hidden" id="chat-collections-view">
                 <div class="ccv-header">
-                    <button class="ccv-back-btn" type="button" onclick="ChatAI.closeCollectionsView()">
+                    <button class="ccv-back-btn" type="button" id="ccv-back-btn" onclick="ChatAI.onCollectionsBack()">
                         <span class="material-icons-round">arrow_back</span>
                     </button>
-                    <div class="ccv-title">Collections</div>
+                    <div class="ccv-title" id="ccv-title">Collections</div>
                     <div class="ccv-count" id="ccv-count"></div>
+                    <button class="ccv-new-folder-btn" type="button" id="ccv-new-folder-btn"
+                        onclick="ChatAI.createFolder()">
+                        <span class="material-icons-round">create_new_folder</span> New folder
+                    </button>
                 </div>
-                <div class="ccv-toolbar">
-                    <div class="ccv-search">
-                        <span class="material-icons-round">search</span>
-                        <input type="text" id="ccv-search-input" placeholder="Search collections..."
-                            oninput="ChatAI.onCollectionsSearch(this.value)">
-                    </div>
-                    <div class="ccv-filters" id="ccv-filters">
-                        <button class="ccv-filter-chip active" data-filter="all" type="button"
-                            onclick="ChatAI.setCollectionsFilter('all', this)">All</button>
-                        <button class="ccv-filter-chip" data-filter="favorites" type="button"
-                            onclick="ChatAI.setCollectionsFilter('favorites', this)">Favorites</button>
-                        <button class="ccv-filter-chip" data-filter="today" type="button"
-                            onclick="ChatAI.setCollectionsFilter('today', this)">Today</button>
-                        <button class="ccv-filter-chip" data-filter="week" type="button"
-                            onclick="ChatAI.setCollectionsFilter('week', this)">This week</button>
+
+                <!-- Root screen: folder browser -->
+                <div class="ccv-folders-screen" id="ccv-folders-screen">
+                    <div class="ccv-folders-grid" id="ccv-folders-grid">
+                        <!-- Folder tiles injected here -->
                     </div>
                 </div>
-                <div class="ccv-selection-bar hidden" id="ccv-selection-bar">
-                    <span id="ccv-selection-count">0 selected</span>
-                    <div class="ccv-selection-actions">
-                        <button type="button" onclick="ChatAI.bulkFavoriteSelected()"><span
-                                class="material-icons-round">favorite</span> Favorite</button>
-                        <button type="button" onclick="ChatAI.bulkDownloadSelected()"><span
-                                class="material-icons-round">download</span> Download</button>
-                        <button type="button" class="ccv-danger" onclick="ChatAI.bulkDeleteSelected()"><span
-                                class="material-icons-round">delete</span> Delete</button>
-                        <button type="button" class="ccv-selection-clear" onclick="ChatAI.clearSelection()"><span
-                                class="material-icons-round">close</span></button>
+
+                <!-- Gallery screen: images inside "All" or a folder -->
+                <div class="ccv-gallery-screen hidden" id="ccv-gallery-screen">
+                    <div class="ccv-toolbar">
+                        <div class="ccv-search">
+                            <span class="material-icons-round">search</span>
+                            <input type="text" id="ccv-search-input" placeholder="Search collections..."
+                                oninput="ChatAI.onCollectionsSearch(this.value)">
+                        </div>
+                        <div class="ccv-filters" id="ccv-filters">
+                            <button class="ccv-filter-chip active" data-filter="all" type="button"
+                                onclick="ChatAI.setCollectionsFilter('all', this)">All</button>
+                            <button class="ccv-filter-chip" data-filter="favorites" type="button"
+                                onclick="ChatAI.setCollectionsFilter('favorites', this)">Favorites</button>
+                            <button class="ccv-filter-chip" data-filter="today" type="button"
+                                onclick="ChatAI.setCollectionsFilter('today', this)">Today</button>
+                            <button class="ccv-filter-chip" data-filter="week" type="button"
+                                onclick="ChatAI.setCollectionsFilter('week', this)">This week</button>
+                        </div>
+                    </div>
+                    <div class="ccv-selection-bar hidden" id="ccv-selection-bar">
+                        <span id="ccv-selection-count">0 selected</span>
+                        <div class="ccv-selection-actions">
+                            <button type="button" onclick="ChatAI.bulkFavoriteSelected()"><span
+                                    class="material-icons-round">favorite</span> Favorite</button>
+                            <button type="button" onclick="ChatAI.bulkDownloadSelected()"><span
+                                    class="material-icons-round">download</span> Download</button>
+                            <button type="button" onclick="ChatAI.openMoveMenu(event, null)"><span
+                                    class="material-icons-round">drive_file_move</span> Move</button>
+                            <button type="button" class="ccv-danger" onclick="ChatAI.bulkDeleteSelected()"><span
+                                    class="material-icons-round">delete</span> Delete</button>
+                            <button type="button" class="ccv-selection-clear" onclick="ChatAI.clearSelection()"><span
+                                    class="material-icons-round">close</span></button>
+                        </div>
+                    </div>
+                    <div class="ccv-grid" id="ccv-grid">
+                        <!-- Images will be injected here -->
                     </div>
                 </div>
-                <div class="ccv-grid" id="ccv-grid">
-                    <!-- All generated images will be injected here -->
+            </div>
+
+            <!-- Image info / metadata panel -->
+            <div class="ccv-info-overlay hidden" id="ccv-info-overlay" onclick="ChatAI.closeInfoPanel(event)">
+                <div class="ccv-info-panel" onclick="event.stopPropagation()">
+                    <div class="ccv-info-header">
+                        <div class="ccv-info-title">Image Info</div>
+                        <button class="cil-icon-btn" type="button" onclick="ChatAI.closeInfoPanel()">
+                            <span class="material-icons-round">close</span>
+                        </button>
+                    </div>
+                    <div class="ccv-info-body" id="ccv-info-body"></div>
                 </div>
             </div>
             <div class="chat-image-lightbox hidden" id="chat-image-lightbox">
                 <div class="cil-topbar">
                     <div class="cil-meta" id="cil-meta"></div>
                     <div class="cil-topbar-actions">
+                        <button class="cil-icon-btn" type="button" onclick="ChatAI.lightboxOpenInfo()" title="Info">
+                            <span class="material-icons-round">info</span>
+                        </button>
                         <button class="cil-icon-btn" id="cil-favorite-btn" type="button"
                             onclick="ChatAI.lightboxToggleFavorite()" title="Favorite">
                             <span class="material-icons-round">favorite_border</span>

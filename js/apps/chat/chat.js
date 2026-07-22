@@ -26,6 +26,8 @@ const ChatAI = {
     collectionsRenderLimit: 30,
     collectionsPageSize: 30,
     lightboxState: { items: [], index: 0 },
+    collectionsFolders: [],
+    currentCollectionsFolder: null, // null = folder browser (root screen), 'all' = all images, or a folder name
 
     // --- Constants ---
     HF_PROXY_URL: 'https://hyggshi-hf-proxy.tfhy5321.workers.dev',
@@ -78,6 +80,7 @@ const ChatAI = {
     async init(win) {
         this.bindEvents(win);
         this.previewFallbacks = this.getPreviewFallbacks();
+        this.loadCollectionsFolders();
         this.updateModelPicker(win);
         this.updateModePicker(win);
         this.updateAspectPicker(win);
@@ -514,7 +517,10 @@ const ChatAI = {
                             service: msg.service,
                             model: msg.model || msg.service,
                             prompt: msg.prompt || '',
+                            negativePrompt: msg.negativePrompt || '',
+                            folder: msg.folder || null,
                             favorite: !!msg.favorite,
+                            durationMs: typeof msg.durationMs === 'number' ? msg.durationMs : null,
                             timestamp: msg.timestamp || 0
                         });
                     });
@@ -525,6 +531,9 @@ const ChatAI = {
     },
     getFilteredCollectionItems() {
         let items = this.getCollectionImages();
+        if (this.currentCollectionsFolder && this.currentCollectionsFolder !== 'all') {
+            items = items.filter(it => it.folder === this.currentCollectionsFolder);
+        }
         const q = (this.collectionsSearch || '').trim().toLowerCase();
         if (q) items = items.filter(it => (it.prompt || '').toLowerCase().includes(q) || (it.model || '').toLowerCase().includes(q) || (it.service || '').toLowerCase().includes(q));
         const now = Date.now(), DAY = 86400000;
@@ -587,6 +596,22 @@ const ChatAI = {
         a.click();
         a.remove();
     },
+    buildImageFilename(item, i) {
+        const base = (item.prompt || 'image').slice(0, 40).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'image';
+        return `${base}${i != null ? '-' + (i + 1) : ''}.jpg`;
+    },
+    ensureJSZip() {
+        if (window.JSZip) return Promise.resolve(window.JSZip);
+        if (this._jszipLoading) return this._jszipLoading;
+        this._jszipLoading = new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+            s.onload = () => resolve(window.JSZip);
+            s.onerror = () => reject(new Error('Failed to load JSZip'));
+            document.head.appendChild(s);
+        });
+        return this._jszipLoading;
+    },
     escAttr(str) { return String(str).replace(/'/g, "\\'"); },
     escHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; },
     formatCollectionDate(ts) {
@@ -600,6 +625,117 @@ const ChatAI = {
                 <div class="cce-sub">Generate your first image.</div>
             </div>
         `;
+    },
+
+    // --- Folders ---
+    loadCollectionsFolders() {
+        try { this.collectionsFolders = JSON.parse(localStorage.getItem('webos-chat-collections-folders')) || []; }
+        catch (_) { this.collectionsFolders = []; }
+    },
+    saveCollectionsFolders() {
+        localStorage.setItem('webos-chat-collections-folders', JSON.stringify(this.collectionsFolders));
+    },
+    getFolderCount(name) {
+        return this.getCollectionImages().filter(it => it.folder === name).length;
+    },
+    getFolderCover(name) {
+        const items = this.getCollectionImages().filter(it => it.folder === name);
+        return items[0]?.url || null;
+    },
+    createFolder() {
+        const name = (prompt('New folder name:') || '').trim();
+        if (!name) return;
+        if (this.collectionsFolders.some(f => f.toLowerCase() === name.toLowerCase())) {
+            showNotification('Chat AI', 'A folder with that name already exists.');
+            return;
+        }
+        this.collectionsFolders.push(name);
+        this.saveCollectionsFolders();
+        this.renderFoldersScreen();
+        showNotification('Chat AI', `Folder "${name}" created.`);
+    },
+    renameFolder(oldName) {
+        const name = (prompt('Rename folder:', oldName) || '').trim();
+        if (!name || name === oldName) return;
+        if (this.collectionsFolders.some(f => f.toLowerCase() === name.toLowerCase())) {
+            showNotification('Chat AI', 'A folder with that name already exists.');
+            return;
+        }
+        this.collectionsFolders = this.collectionsFolders.map(f => f === oldName ? name : f);
+        for (const session of this.sessions) {
+            for (const msg of session.messages) {
+                if (msg.folder === oldName) msg.folder = name;
+            }
+        }
+        this.saveCollectionsFolders();
+        this.saveToDisk();
+        this.renderFoldersScreen();
+    },
+    deleteFolder(name) {
+        if (!confirm(`Delete folder "${name}"? Images stay in Collections, only the folder is removed.`)) return;
+        this.collectionsFolders = this.collectionsFolders.filter(f => f !== name);
+        for (const session of this.sessions) {
+            for (const msg of session.messages) {
+                if (msg.folder === name) msg.folder = null;
+            }
+        }
+        this.saveCollectionsFolders();
+        this.saveToDisk();
+        this.renderFoldersScreen();
+    },
+    assignFolder(ids, folderName) {
+        const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
+        for (const session of this.sessions) {
+            for (const msg of session.messages) {
+                if (msg.role !== 'ai' || !msg.service || !Array.isArray(msg.images)) continue;
+                for (let i = 0; i < msg.images.length; i++) {
+                    const itemId = msg.id ? `${msg.id}${i > 0 ? '-' + i : ''}` : `${session.id}-${msg.timestamp}-${i}`;
+                    if (idSet.has(itemId)) msg.folder = folderName || null;
+                }
+            }
+        }
+        this.saveToDisk();
+        this.renderCollections();
+        this.renderCollectionsView();
+    },
+    openMoveMenu(e, singleId) {
+        this.closeMoveMenu();
+        const anchor = e.currentTarget;
+        const rect = anchor.getBoundingClientRect();
+        const ids = singleId ? [singleId] : [...this.collectionsSelection];
+        if (ids.length === 0) return;
+        const menu = document.createElement('div');
+        menu.className = 'ccv-more-menu';
+        menu.style.top = `${Math.min(rect.bottom + 4, window.innerHeight - 220)}px`;
+        menu.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 200))}px`;
+        const folderButtons = this.collectionsFolders.map(f => `<button type="button" onclick="ChatAI.applyMoveMenu(${JSON.stringify(ids).replace(/"/g, '&quot;')}, '${this.escAttr(f)}')">${this.escHtml(f)}</button>`).join('');
+        menu.innerHTML = `
+            <button type="button" onclick="ChatAI.applyMoveMenu(${JSON.stringify(ids).replace(/"/g, '&quot;')}, '')">Unfiled</button>
+            ${folderButtons}
+            <button type="button" onclick="ChatAI.promptNewFolderAndMove(${JSON.stringify(ids).replace(/"/g, '&quot;')})">+ New folder…</button>
+        `;
+        document.body.appendChild(menu);
+        this._activeMoreMenu = menu;
+        setTimeout(() => {
+            this._closeMoreMenuOnOutside = (ev) => { if (!menu.contains(ev.target)) this.closeMoveMenu(); };
+            document.addEventListener('pointerdown', this._closeMoreMenuOnOutside);
+        }, 0);
+    },
+    closeMoveMenu() { this.closeThumbMoreMenu(); },
+    applyMoveMenu(ids, folderName) {
+        this.assignFolder(ids, folderName || null);
+        this.closeMoveMenu();
+        showNotification('Chat AI', folderName ? `Moved to "${folderName}".` : 'Moved to Unfiled.');
+    },
+    promptNewFolderAndMove(ids) {
+        const name = (prompt('New folder name:') || '').trim();
+        this.closeMoveMenu();
+        if (!name) return;
+        if (!this.collectionsFolders.some(f => f.toLowerCase() === name.toLowerCase())) {
+            this.collectionsFolders.push(name);
+            this.saveCollectionsFolders();
+        }
+        this.assignFolder(ids, name);
     },
 
     // --- Mini sidebar grid ---
@@ -647,14 +783,17 @@ const ChatAI = {
         if (this.sessions.some(s => s.id === sessionId)) this.loadSession(sessionId);
     },
 
-    // --- Full gallery view ---
+    // --- Full gallery view (folders root + image gallery) ---
     openCollectionsView() {
         const win = this.getWindowEl();
         const view = win?.querySelector('#chat-collections-view');
         if (!view) return;
-        this.collectionsRenderLimit = this.collectionsPageSize;
+        this.currentCollectionsFolder = null;
+        this.collectionsSearch = '';
+        this.collectionsFilterMode = 'all';
         this.clearSelection(false);
-        this.renderCollectionsView(win);
+        this.renderFoldersScreen(win);
+        this.updateCollectionsHeader(win);
         view.classList.remove('hidden');
         requestAnimationFrame(() => view.classList.add('is-open'));
         const grid = view.querySelector('#ccv-grid');
@@ -669,6 +808,119 @@ const ChatAI = {
         if (!view) return;
         view.classList.remove('is-open');
         setTimeout(() => view.classList.add('hidden'), 200);
+    },
+    onCollectionsBack() {
+        if (this.currentCollectionsFolder !== null) {
+            this.currentCollectionsFolder = null;
+            this.collectionsSearch = '';
+            this.collectionsFilterMode = 'all';
+            this.clearSelection(false);
+            this.renderFoldersScreen();
+            this.updateCollectionsHeader();
+        } else {
+            this.closeCollectionsView();
+        }
+    },
+    updateCollectionsHeader(win) {
+        const appEl = win || this.getWindowEl();
+        const title = appEl?.querySelector('#ccv-title');
+        const newFolderBtn = appEl?.querySelector('#ccv-new-folder-btn');
+        const atRoot = this.currentCollectionsFolder === null;
+        if (title) title.textContent = atRoot ? 'Collections' : (this.currentCollectionsFolder === 'all' ? 'All Images' : this.currentCollectionsFolder);
+        if (newFolderBtn) newFolderBtn.classList.toggle('hidden', !atRoot);
+    },
+    renderFoldersScreen(win) {
+        const appEl = win || this.getWindowEl();
+        const foldersScreen = appEl?.querySelector('#ccv-folders-screen');
+        const galleryScreen = appEl?.querySelector('#ccv-gallery-screen');
+        const grid = appEl?.querySelector('#ccv-folders-grid');
+        const count = appEl?.querySelector('#ccv-count');
+        if (!grid) return;
+        foldersScreen?.classList.remove('hidden');
+        galleryScreen?.classList.add('hidden');
+        const allCount = this.getCollectionImages().length;
+        if (count) count.textContent = `${allCount} image${allCount === 1 ? '' : 's'}`;
+        const allCover = this.getCollectionImages()[0]?.url;
+        let html = `
+            <button class="ccv-folder-tile ccv-folder-tile-all" type="button" onclick="ChatAI.openAllImages()">
+                <div class="ccv-folder-cover">${allCover ? `<img src="${allCover}" alt="">` : '<span class="material-icons-round">photo_library</span>'}</div>
+                <div class="ccv-folder-info">
+                    <span class="material-icons-round">photo_library</span>
+                    <div class="ccv-folder-name">All Images</div>
+                    <div class="ccv-folder-count">${allCount}</div>
+                </div>
+            </button>
+        `;
+        html += this.collectionsFolders.map(name => {
+            const cover = this.getFolderCover(name);
+            const n = this.getFolderCount(name);
+            return `
+                <div class="ccv-folder-tile" data-folder="${this.escHtml(name)}">
+                    <button class="ccv-folder-open" type="button" onclick="ChatAI.openFolder('${this.escAttr(name)}')">
+                        <div class="ccv-folder-cover">${cover ? `<img src="${cover}" alt="">` : '<span class="material-icons-round">folder</span>'}</div>
+                        <div class="ccv-folder-info">
+                            <span class="material-icons-round">folder</span>
+                            <div class="ccv-folder-name">${this.escHtml(name)}</div>
+                            <div class="ccv-folder-count">${n}</div>
+                        </div>
+                    </button>
+                    <button class="ccv-folder-menu-btn" type="button" onclick="ChatAI.openFolderMenu(event, '${this.escAttr(name)}')" title="Folder options">
+                        <span class="material-icons-round">more_vert</span>
+                    </button>
+                </div>
+            `;
+        }).join('');
+        html += `
+            <button class="ccv-folder-tile ccv-folder-tile-new" type="button" onclick="ChatAI.createFolder()">
+                <span class="material-icons-round">create_new_folder</span>
+                <div class="ccv-folder-name">New folder</div>
+            </button>
+        `;
+        grid.innerHTML = html;
+    },
+    openFolderMenu(e, name) {
+        e.stopPropagation();
+        this.closeThumbMoreMenu();
+        const btn = e.currentTarget;
+        const rect = btn.getBoundingClientRect();
+        const menu = document.createElement('div');
+        menu.className = 'ccv-more-menu';
+        menu.style.top = `${rect.bottom + 4}px`;
+        menu.style.left = `${Math.max(8, rect.right - 150)}px`;
+        menu.innerHTML = `
+            <button type="button" onclick="ChatAI.renameFolder('${this.escAttr(name)}')">Rename</button>
+            <button type="button" onclick="ChatAI.deleteFolder('${this.escAttr(name)}')">Delete folder</button>
+        `;
+        document.body.appendChild(menu);
+        this._activeMoreMenu = menu;
+        setTimeout(() => {
+            this._closeMoreMenuOnOutside = (ev) => { if (!menu.contains(ev.target)) this.closeThumbMoreMenu(); };
+            document.addEventListener('pointerdown', this._closeMoreMenuOnOutside);
+        }, 0);
+    },
+    openAllImages() {
+        this.currentCollectionsFolder = 'all';
+        this.enterGalleryScreen();
+    },
+    openFolder(name) {
+        this.currentCollectionsFolder = name;
+        this.enterGalleryScreen();
+    },
+    enterGalleryScreen() {
+        const win = this.getWindowEl();
+        const foldersScreen = win?.querySelector('#ccv-folders-screen');
+        const galleryScreen = win?.querySelector('#ccv-gallery-screen');
+        const searchInput = win?.querySelector('#ccv-search-input');
+        foldersScreen?.classList.add('hidden');
+        galleryScreen?.classList.remove('hidden');
+        this.collectionsSearch = '';
+        this.collectionsFilterMode = 'all';
+        if (searchInput) searchInput.value = '';
+        win?.querySelectorAll('.ccv-filter-chip').forEach(chip => chip.classList.toggle('active', chip.dataset.filter === 'all'));
+        this.collectionsRenderLimit = this.collectionsPageSize;
+        this.clearSelection(false);
+        this.renderCollectionsView(win);
+        this.updateCollectionsHeader(win);
     },
     onCollectionsGridScroll(grid) {
         if (grid.scrollTop + grid.clientHeight > grid.scrollHeight - 200) {
@@ -731,6 +983,9 @@ const ChatAI = {
                         <button type="button" title="Download" onclick="ChatAI.onThumbAction(event, 'download', '${item.id}')">
                             <span class="material-icons-round">download</span>
                         </button>
+                        <button type="button" title="Info" onclick="ChatAI.onThumbAction(event, 'info', '${item.id}')">
+                            <span class="material-icons-round">info</span>
+                        </button>
                         <button type="button" title="Delete" onclick="ChatAI.onThumbAction(event, 'delete', '${item.id}')">
                             <span class="material-icons-round">delete</span>
                         </button>
@@ -757,8 +1012,9 @@ const ChatAI = {
         const item = this.getCollectionImages().find(it => it.id === id);
         if (!item) return;
         if (action === 'favorite') this.toggleFavoriteImage(id);
-        else if (action === 'download') this.downloadImageUrl(item.url, `${(item.prompt || 'image').slice(0, 40).replace(/[^a-z0-9]+/gi, '-') || 'image'}.jpg`);
+        else if (action === 'download') this.downloadImageUrl(item.url, this.buildImageFilename(item));
         else if (action === 'delete') { if (confirm('Delete this image?')) this.deleteCollectionImages([id]); }
+        else if (action === 'info') this.openInfoPanel(id);
         else if (action === 'more') this.openThumbMoreMenu(e, item);
     },
     openThumbMoreMenu(e, item) {
@@ -772,6 +1028,7 @@ const ChatAI = {
         menu.innerHTML = `
             <button type="button" onclick="ChatAI.copyImageLink('${this.escAttr(item.url)}')">Copy link</button>
             <button type="button" onclick="ChatAI.useAsReference('${this.escAttr(item.url)}')">Use as reference</button>
+            <button type="button" onclick="ChatAI.openMoveMenuFor('${this.escAttr(item.id)}', event)">Move to folder…</button>
             <button type="button" onclick="ChatAI.openCollectionImage('${item.sessionId}', '${this.escAttr(item.url)}')">Open in chat</button>
         `;
         document.body.appendChild(menu);
@@ -780,6 +1037,10 @@ const ChatAI = {
             this._closeMoreMenuOnOutside = (ev) => { if (!menu.contains(ev.target)) this.closeThumbMoreMenu(); };
             document.addEventListener('pointerdown', this._closeMoreMenuOnOutside);
         }, 0);
+    },
+    openMoveMenuFor(id, e) {
+        // Called from within the More menu; reuse that menu's position as anchor
+        this.openMoveMenu({ currentTarget: e?.target?.closest('.ccv-more-menu') || e?.target }, id);
     },
     closeThumbMoreMenu() {
         if (this._activeMoreMenu) { this._activeMoreMenu.remove(); this._activeMoreMenu = null; }
@@ -798,6 +1059,40 @@ const ChatAI = {
         this.closeLightbox();
         this.closeCollectionsView();
         showNotification('Chat AI', 'Added as reference image.');
+    },
+
+    // --- Image info / metadata panel ---
+    openInfoPanel(id) {
+        const item = this.getCollectionImages().find(it => it.id === id);
+        if (!item) return;
+        const win = this.getWindowEl();
+        const overlay = win?.querySelector('#ccv-info-overlay');
+        const body = win?.querySelector('#ccv-info-body');
+        if (!overlay || !body) return;
+        const dims = item.width && item.height ? `${item.width}×${item.height}` : '—';
+        const genTime = typeof item.durationMs === 'number' ? `${(item.durationMs / 1000).toFixed(1)} s` : '—';
+        body.innerHTML = `
+            <div class="ccv-info-row"><span class="ccv-info-label">Model</span><span class="ccv-info-value">${this.escHtml(item.model || '—')}</span></div>
+            <div class="ccv-info-row"><span class="ccv-info-label">Size</span><span class="ccv-info-value">${dims}</span></div>
+            <div class="ccv-info-row ccv-info-block"><span class="ccv-info-label">Prompt</span><span class="ccv-info-value">${this.escHtml(item.prompt || '—')}</span></div>
+            <div class="ccv-info-row ccv-info-block"><span class="ccv-info-label">Negative Prompt</span><span class="ccv-info-value">${this.escHtml(item.negativePrompt || '—')}</span></div>
+            <div class="ccv-info-row"><span class="ccv-info-label">Seed</span><span class="ccv-info-value">${item.seed ?? '—'}</span></div>
+            <div class="ccv-info-row"><span class="ccv-info-label">Created</span><span class="ccv-info-value">${this.formatCollectionDate(item.timestamp) || '—'}</span></div>
+            <div class="ccv-info-row"><span class="ccv-info-label">Generation Time</span><span class="ccv-info-value">${genTime}</span></div>
+        `;
+        overlay.classList.remove('hidden');
+        requestAnimationFrame(() => overlay.classList.add('is-open'));
+    },
+    closeInfoPanel(e) {
+        const win = this.getWindowEl();
+        const overlay = win?.querySelector('#ccv-info-overlay');
+        if (!overlay) return;
+        overlay.classList.remove('is-open');
+        setTimeout(() => overlay.classList.add('hidden'), 200);
+    },
+    lightboxOpenInfo() {
+        const item = this.getLightboxItem();
+        if (item) this.openInfoPanel(item.id);
     },
 
     // --- Multi-select ---
@@ -837,9 +1132,39 @@ const ChatAI = {
         this.renderCollections();
         this.renderCollectionsView();
     },
-    bulkDownloadSelected() {
+    async bulkDownloadSelected() {
         const items = this.getCollectionImages().filter(it => this.collectionsSelection.has(it.id));
-        items.forEach((item, i) => setTimeout(() => this.downloadImageUrl(item.url, `image-${i + 1}.jpg`), i * 300));
+        if (items.length === 0) return;
+        if (items.length === 1) {
+            this.downloadImageUrl(items[0].url, this.buildImageFilename(items[0]));
+            return;
+        }
+        showNotification('Chat AI', `Zipping ${items.length} images...`);
+        try {
+            const JSZip = await this.ensureJSZip();
+            const zip = new JSZip();
+            const usedNames = new Set();
+            const results = await Promise.allSettled(items.map(async (item, i) => {
+                const res = await fetch(item.url);
+                if (!res.ok) throw new Error('fetch failed');
+                const blob = await res.blob();
+                let name = this.buildImageFilename(item, i);
+                while (usedNames.has(name)) name = `dup-${i}-${name}`;
+                usedNames.add(name);
+                zip.file(name, blob);
+            }));
+            const failed = results.filter(r => r.status === 'rejected').length;
+            if (failed === items.length) throw new Error('All images failed to fetch');
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(blob);
+            this.downloadImageUrl(url, `collections-${Date.now()}.zip`);
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+            showNotification('Chat AI', failed > 0 ? `Zipped ${items.length - failed}/${items.length} images (some were blocked by the host).` : `Downloaded ${items.length} images as a zip.`);
+        } catch (err) {
+            console.error('Zip failed:', err);
+            showNotification('Chat AI', 'Zip failed — downloading images individually instead.');
+            items.forEach((item, i) => setTimeout(() => this.downloadImageUrl(item.url, this.buildImageFilename(item, i)), i * 300));
+        }
     },
     bulkDeleteSelected() {
         const ids = [...this.collectionsSelection];
@@ -943,7 +1268,7 @@ const ChatAI = {
     lightboxDownload() {
         const item = this.getLightboxItem();
         if (!item) return;
-        this.downloadImageUrl(item.url, `${(item.prompt || 'image').slice(0, 40).replace(/[^a-z0-9]+/gi, '-') || 'image'}.jpg`);
+        this.downloadImageUrl(item.url, this.buildImageFilename(item));
     },
     lightboxEdit() {
         const item = this.getLightboxItem();
@@ -1179,7 +1504,8 @@ const ChatAI = {
             const randomSeed = Math.floor(Math.random() * 2147483647);
             const modelInfo = this.getImageModelInfo();
             const provider = modelInfo?.provider || 'pollinations';
-            
+            const genStartedAt = Date.now();
+
             let imageUrl = null;
             let usedService = provider;
 
@@ -1188,6 +1514,7 @@ const ChatAI = {
             } else {
                 imageUrl = await this.generateWithPollinations(prompt, aspectConfig, randomSeed, referenceImages);
             }
+            const genDurationMs = Date.now() - genStartedAt;
 
             await this.addMessageElement(`Generated image via ${usedService} (Seed: ${randomSeed})`, 'ai', { winEl: appEl, images: [{ full: imageUrl, mimeType: 'image/jpeg' }], typewriter: true });
             const sess = this.sessions.find(s => s.id === sessionId);
@@ -1202,7 +1529,10 @@ const ChatAI = {
                     service: usedService,
                     model: modelInfo?.label || usedService,
                     prompt,
+                    negativePrompt: '',
+                    folder: null,
                     favorite: false,
+                    durationMs: genDurationMs,
                     timestamp: Date.now()
                 });
                 this.saveToDisk();
