@@ -1377,10 +1377,26 @@
                         </span>
                     </button>
                 </div>
-                <div class="chat-sidebar-section chat-sidebar-section-fill">
+                <div class="chat-sidebar-section" id="chat-collections-section">
+                    <div class="chat-sidebar-section-header">
+                        <div class="chat-sidebar-section-title">Collections</div>
+                        <div class="chat-sidebar-section-header-actions">
+                            <button class="chat-collections-open-btn" type="button" onclick="ChatAI.openCollectionsView()" title="View all collections">
+                                <span class="material-icons-round">arrow_forward</span>
+                            </button>
+                            <button class="chat-section-chevron active" type="button" onclick="ChatAI.toggleCollections(this)">
+                                <span class="material-icons-round">keyboard_arrow_down</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chat-collections-grid" id="chat-collections-grid">
+                        <!-- Generated images will be injected here -->
+                    </div>
+                </div>
+                <div class="chat-sidebar-section chat-sidebar-section-fill" id="chat-allchats-section">
                     <div class="chat-sidebar-section-header">
                         <div class="chat-sidebar-section-title">All chats</div>
-                        <button class="chat-section-chevron" type="button" onclick="chatFocusSearch()">
+                        <button class="chat-section-chevron active" type="button" onclick="ChatAI.toggleAllChats(this)">
                             <span class="material-icons-round">keyboard_arrow_down</span>
                         </button>
                     </div>
@@ -1479,7 +1495,8 @@
                         <!-- Messages will be injected here -->
                     </div>
                     <div class="chat-input-container">
-                        <div class="chat-input-box">
+                        <div class="chat-input-box" id="chat-input-box" ondragover="ChatAI.onComposerDragOver(event)"
+                            ondragleave="ChatAI.onComposerDragLeave(event)" ondrop="ChatAI.onComposerDrop(event)">
                             <div id="chat-image-preview" class="chat-image-preview"></div>
                             <textarea id="chat-textarea" placeholder="How can I help you today?" rows="1"
                                 oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
@@ -1575,6 +1592,85 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-collections-view hidden" id="chat-collections-view">
+                <div class="ccv-header">
+                    <button class="ccv-back-btn" type="button" onclick="ChatAI.closeCollectionsView()">
+                        <span class="material-icons-round">arrow_back</span>
+                    </button>
+                    <div class="ccv-title">Collections</div>
+                    <div class="ccv-count" id="ccv-count"></div>
+                </div>
+                <div class="ccv-toolbar">
+                    <div class="ccv-search">
+                        <span class="material-icons-round">search</span>
+                        <input type="text" id="ccv-search-input" placeholder="Search collections..."
+                            oninput="ChatAI.onCollectionsSearch(this.value)">
+                    </div>
+                    <div class="ccv-filters" id="ccv-filters">
+                        <button class="ccv-filter-chip active" data-filter="all" type="button"
+                            onclick="ChatAI.setCollectionsFilter('all', this)">All</button>
+                        <button class="ccv-filter-chip" data-filter="favorites" type="button"
+                            onclick="ChatAI.setCollectionsFilter('favorites', this)">Favorites</button>
+                        <button class="ccv-filter-chip" data-filter="today" type="button"
+                            onclick="ChatAI.setCollectionsFilter('today', this)">Today</button>
+                        <button class="ccv-filter-chip" data-filter="week" type="button"
+                            onclick="ChatAI.setCollectionsFilter('week', this)">This week</button>
+                    </div>
+                </div>
+                <div class="ccv-selection-bar hidden" id="ccv-selection-bar">
+                    <span id="ccv-selection-count">0 selected</span>
+                    <div class="ccv-selection-actions">
+                        <button type="button" onclick="ChatAI.bulkFavoriteSelected()"><span
+                                class="material-icons-round">favorite</span> Favorite</button>
+                        <button type="button" onclick="ChatAI.bulkDownloadSelected()"><span
+                                class="material-icons-round">download</span> Download</button>
+                        <button type="button" class="ccv-danger" onclick="ChatAI.bulkDeleteSelected()"><span
+                                class="material-icons-round">delete</span> Delete</button>
+                        <button type="button" class="ccv-selection-clear" onclick="ChatAI.clearSelection()"><span
+                                class="material-icons-round">close</span></button>
+                    </div>
+                </div>
+                <div class="ccv-grid" id="ccv-grid">
+                    <!-- All generated images will be injected here -->
+                </div>
+            </div>
+            <div class="chat-image-lightbox hidden" id="chat-image-lightbox">
+                <div class="cil-topbar">
+                    <div class="cil-meta" id="cil-meta"></div>
+                    <div class="cil-topbar-actions">
+                        <button class="cil-icon-btn" id="cil-favorite-btn" type="button"
+                            onclick="ChatAI.lightboxToggleFavorite()" title="Favorite">
+                            <span class="material-icons-round">favorite_border</span>
+                        </button>
+                        <button class="cil-icon-btn" type="button" onclick="ChatAI.closeLightbox()" title="Close">
+                            <span class="material-icons-round">close</span>
+                        </button>
+                    </div>
+                </div>
+                <button class="cil-nav cil-prev" type="button" onclick="ChatAI.lightboxPrev()" title="Previous">
+                    <span class="material-icons-round">chevron_left</span>
+                </button>
+                <div class="cil-stage">
+                    <img id="cil-image" src="" alt="Preview" draggable="true"
+                        ondragstart="ChatAI.onImageDragStart(event, this.src)">
+                </div>
+                <button class="cil-nav cil-next" type="button" onclick="ChatAI.lightboxNext()" title="Next">
+                    <span class="material-icons-round">chevron_right</span>
+                </button>
+                <div class="cil-bottombar">
+                    <div class="cil-counter" id="cil-counter">1 / 1</div>
+                    <div class="cil-toolbar">
+                        <button type="button" onclick="ChatAI.lightboxDownload()"><span
+                                class="material-icons-round">download</span> Download</button>
+                        <button type="button" onclick="ChatAI.lightboxEdit()"><span
+                                class="material-icons-round">edit</span> Edit</button>
+                        <button type="button" onclick="ChatAI.lightboxShare()"><span
+                                class="material-icons-round">share</span> Share</button>
+                        <button type="button" class="cil-danger" onclick="ChatAI.lightboxDelete()"><span
+                                class="material-icons-round">delete</span> Delete</button>
                     </div>
                 </div>
             </div>

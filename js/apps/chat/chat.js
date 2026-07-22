@@ -20,6 +20,12 @@ const ChatAI = {
     ttsActiveButton: null,
     scrollRafId: 0,
     typingIndicatorState: { element: null, shownAt: 0, sessionId: null },
+    collectionsSearch: '',
+    collectionsFilterMode: 'all',
+    collectionsSelection: new Set(),
+    collectionsRenderLimit: 30,
+    collectionsPageSize: 30,
+    lightboxState: { items: [], index: 0 },
 
     // --- Constants ---
     HF_PROXY_URL: 'https://hyggshi-hf-proxy.tfhy5321.workers.dev',
@@ -86,6 +92,7 @@ const ChatAI = {
             this.loadSession(this.sessions[0].id);
         }
         this.renderHistory();
+        this.renderCollections();
     },
 
     bindEvents(win) {
@@ -312,6 +319,7 @@ const ChatAI = {
             else this.createNewConversation(true);
         } else this.renderHistory();
         this.saveToDisk();
+        this.renderCollections();
     },
 
     // --- Messaging ---
@@ -486,6 +494,478 @@ const ChatAI = {
         container.innerHTML = this.currentImages.map((img, i) => `
             <div class="chat-preview-item"><img src="${img.full}"><div class="chat-preview-remove" onclick="ChatAI.removePreview(${i}, this)"><span class="material-icons-round">close</span></div></div>
         `).join('');
+    },
+
+    // --- Collections (self-generated images) ---
+    getCollectionImages() {
+        const items = [];
+        for (const session of this.sessions) {
+            for (const msg of session.messages) {
+                // Only images produced by the image generation engine, not uploaded/reference images
+                if (msg.role === 'ai' && msg.service && Array.isArray(msg.images)) {
+                    msg.images.forEach((img, i) => {
+                        items.push({
+                            id: msg.id ? `${msg.id}${i > 0 ? '-' + i : ''}` : `${session.id}-${msg.timestamp}-${i}`,
+                            url: img.full,
+                            width: img.width || null,
+                            height: img.height || null,
+                            sessionId: session.id,
+                            seed: msg.seed,
+                            service: msg.service,
+                            model: msg.model || msg.service,
+                            prompt: msg.prompt || '',
+                            favorite: !!msg.favorite,
+                            timestamp: msg.timestamp || 0
+                        });
+                    });
+                }
+            }
+        }
+        return items.sort((a, b) => b.timestamp - a.timestamp);
+    },
+    getFilteredCollectionItems() {
+        let items = this.getCollectionImages();
+        const q = (this.collectionsSearch || '').trim().toLowerCase();
+        if (q) items = items.filter(it => (it.prompt || '').toLowerCase().includes(q) || (it.model || '').toLowerCase().includes(q) || (it.service || '').toLowerCase().includes(q));
+        const now = Date.now(), DAY = 86400000;
+        if (this.collectionsFilterMode === 'favorites') items = items.filter(it => it.favorite);
+        else if (this.collectionsFilterMode === 'today') items = items.filter(it => now - it.timestamp < DAY);
+        else if (this.collectionsFilterMode === 'week') items = items.filter(it => now - it.timestamp < DAY * 7);
+        return items;
+    },
+    findCollectionMessage(id) {
+        for (const session of this.sessions) {
+            for (const msg of session.messages) {
+                if (msg.role !== 'ai' || !msg.service || !Array.isArray(msg.images)) continue;
+                for (let i = 0; i < msg.images.length; i++) {
+                    const itemId = msg.id ? `${msg.id}${i > 0 ? '-' + i : ''}` : `${session.id}-${msg.timestamp}-${i}`;
+                    if (itemId === id) return { session, msg, imageIndex: i };
+                }
+            }
+        }
+        return null;
+    },
+    toggleFavoriteImage(id) {
+        const found = this.findCollectionMessage(id);
+        if (!found) return;
+        found.msg.favorite = !found.msg.favorite;
+        this.saveToDisk();
+        this.renderCollections();
+        this.renderCollectionsView();
+        if (this.lightboxState.items.some(it => it.id === id)) {
+            const target = this.lightboxState.items.find(it => it.id === id);
+            if (target) target.favorite = found.msg.favorite;
+            this.renderLightbox();
+        }
+    },
+    deleteCollectionImages(ids) {
+        const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
+        let changed = false;
+        for (const session of this.sessions) {
+            session.messages = session.messages.filter(msg => {
+                if (msg.role !== 'ai' || !msg.service || !Array.isArray(msg.images)) return true;
+                for (let i = 0; i < msg.images.length; i++) {
+                    const itemId = msg.id ? `${msg.id}${i > 0 ? '-' + i : ''}` : `${session.id}-${msg.timestamp}-${i}`;
+                    if (idSet.has(itemId)) { changed = true; return false; }
+                }
+                return true;
+            });
+        }
+        if (!changed) return;
+        this.saveToDisk();
+        this.renderCollections();
+        this.renderCollectionsView();
+        this.renderHistory();
+        if (this.currentChatId) this.loadSession(this.currentChatId);
+    },
+    downloadImageUrl(url, filename) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || 'image.jpg';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    },
+    escAttr(str) { return String(str).replace(/'/g, "\\'"); },
+    escHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; },
+    formatCollectionDate(ts) {
+        return ts ? new Date(ts).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+    },
+    collectionsEmptyStateHtml() {
+        return `
+            <div class="chat-collections-empty-state">
+                <span class="material-icons-round">image</span>
+                <div class="cce-title">No images yet</div>
+                <div class="cce-sub">Generate your first image.</div>
+            </div>
+        `;
+    },
+
+    // --- Mini sidebar grid ---
+    renderCollections() {
+        const win = this.getWindowEl();
+        const grid = win?.querySelector('#chat-collections-grid');
+        if (!grid) return;
+        const images = this.getCollectionImages();
+        if (images.length === 0) {
+            grid.innerHTML = this.collectionsEmptyStateHtml();
+            return;
+        }
+        const MAX_VISIBLE = 9;
+        const visible = images.slice(0, MAX_VISIBLE);
+        const remaining = images.length - visible.length;
+        grid.innerHTML = visible.map(item => `
+            <button class="chat-collection-thumb" type="button" title="Preview" draggable="true"
+                ondragstart="ChatAI.onImageDragStart(event, '${this.escAttr(item.url)}')"
+                onclick="ChatAI.openLightbox('${item.id}')">
+                ${item.favorite ? '<span class="chat-collection-fav material-icons-round">favorite</span>' : ''}
+                <img src="${item.url}" alt="Generated image" loading="lazy">
+            </button>
+        `).join('') + (remaining > 0 ? `<button class="chat-collection-thumb chat-collection-more" type="button" title="View all collections" onclick="ChatAI.openCollectionsView()">+${remaining}</button>` : '');
+    },
+    toggleCollections(btn) {
+        const section = btn.closest('#chat-collections-section');
+        const grid = section?.querySelector('#chat-collections-grid');
+        if (!grid) return;
+        const expanded = btn.classList.toggle('active');
+        grid.classList.toggle('is-collapsed', !expanded);
+    },
+    toggleAllChats(btn) {
+        const section = btn.closest('#chat-allchats-section');
+        const list = section?.querySelector('#chat-history-list');
+        const subtitle = section?.querySelector('.chat-sidebar-subtitle');
+        if (!list) return;
+        const expanded = btn.classList.toggle('active');
+        list.classList.toggle('is-collapsed', !expanded);
+        subtitle?.classList.toggle('is-collapsed', !expanded);
+    },
+    openCollectionImage(sessionId, url) {
+        this.closeThumbMoreMenu();
+        this.closeLightbox();
+        this.closeCollectionsView();
+        if (this.sessions.some(s => s.id === sessionId)) this.loadSession(sessionId);
+    },
+
+    // --- Full gallery view ---
+    openCollectionsView() {
+        const win = this.getWindowEl();
+        const view = win?.querySelector('#chat-collections-view');
+        if (!view) return;
+        this.collectionsRenderLimit = this.collectionsPageSize;
+        this.clearSelection(false);
+        this.renderCollectionsView(win);
+        view.classList.remove('hidden');
+        requestAnimationFrame(() => view.classList.add('is-open'));
+        const grid = view.querySelector('#ccv-grid');
+        if (grid && !grid.dataset.scrollBound) {
+            grid.addEventListener('scroll', () => this.onCollectionsGridScroll(grid));
+            grid.dataset.scrollBound = 'true';
+        }
+    },
+    closeCollectionsView() {
+        const win = this.getWindowEl();
+        const view = win?.querySelector('#chat-collections-view');
+        if (!view) return;
+        view.classList.remove('is-open');
+        setTimeout(() => view.classList.add('hidden'), 200);
+    },
+    onCollectionsGridScroll(grid) {
+        if (grid.scrollTop + grid.clientHeight > grid.scrollHeight - 200) {
+            const total = this.getFilteredCollectionItems().length;
+            if (this.collectionsRenderLimit < total) {
+                this.collectionsRenderLimit += this.collectionsPageSize;
+                this.renderCollectionsView();
+            }
+        }
+    },
+    onCollectionsSearch(value) {
+        this.collectionsSearch = value;
+        this.collectionsRenderLimit = this.collectionsPageSize;
+        this.renderCollectionsView();
+    },
+    setCollectionsFilter(mode, btn) {
+        this.collectionsFilterMode = mode;
+        this.collectionsRenderLimit = this.collectionsPageSize;
+        const win = this.getWindowEl();
+        win?.querySelectorAll('.ccv-filter-chip').forEach(chip => chip.classList.toggle('active', chip === btn));
+        this.renderCollectionsView();
+    },
+    renderCollectionsView(win) {
+        const appEl = win || this.getWindowEl();
+        const grid = appEl?.querySelector('#ccv-grid');
+        const count = appEl?.querySelector('#ccv-count');
+        if (!grid) return;
+        const all = this.getFilteredCollectionItems();
+        if (count) count.textContent = all.length ? `${all.length} image${all.length === 1 ? '' : 's'}` : '';
+        if (all.length === 0) {
+            grid.innerHTML = this.collectionsEmptyStateHtml();
+            this.updateSelectionBar();
+            return;
+        }
+        const visible = all.slice(0, this.collectionsRenderLimit);
+        grid.innerHTML = visible.map(item => this.renderCollectionThumb(item)).join('');
+        this.updateSelectionBar();
+    },
+    renderCollectionThumb(item) {
+        const selected = this.collectionsSelection.has(item.id);
+        const dateStr = this.formatCollectionDate(item.timestamp);
+        const dims = item.width && item.height ? `${item.width}×${item.height}` : '';
+        return `
+            <div class="ccv-thumb ${selected ? 'is-selected' : ''}" data-id="${item.id}">
+                <button class="ccv-thumb-select" type="button" onclick="ChatAI.onThumbSelectClick(event, '${item.id}')" title="Select">
+                    <span class="material-icons-round">${selected ? 'check_circle' : 'radio_button_unchecked'}</span>
+                </button>
+                <img src="${item.url}" alt="Generated image" loading="lazy" draggable="true"
+                    ondragstart="ChatAI.onImageDragStart(event, '${this.escAttr(item.url)}')"
+                    onclick="ChatAI.onThumbClick(event, '${item.id}')">
+                <div class="ccv-thumb-overlay">
+                    <div class="ccv-thumb-meta">
+                        <strong>${this.escHtml(item.model)}</strong>
+                        <span>${dims}${dims && dateStr ? ' · ' : ''}${dateStr}</span>
+                    </div>
+                    <div class="ccv-thumb-actions">
+                        <button type="button" title="Favorite" onclick="ChatAI.onThumbAction(event, 'favorite', '${item.id}')">
+                            <span class="material-icons-round">${item.favorite ? 'favorite' : 'favorite_border'}</span>
+                        </button>
+                        <button type="button" title="Download" onclick="ChatAI.onThumbAction(event, 'download', '${item.id}')">
+                            <span class="material-icons-round">download</span>
+                        </button>
+                        <button type="button" title="Delete" onclick="ChatAI.onThumbAction(event, 'delete', '${item.id}')">
+                            <span class="material-icons-round">delete</span>
+                        </button>
+                        <button type="button" title="More" onclick="ChatAI.onThumbAction(event, 'more', '${item.id}')">
+                            <span class="material-icons-round">more_vert</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    onThumbClick(e, id) {
+        if (e.ctrlKey || e.metaKey) { e.preventDefault(); this.toggleSelect(id); return; }
+        if (e.shiftKey) { e.preventDefault(); this.toggleSelectRange(id); return; }
+        if (this.collectionsSelection.size > 0) { this.toggleSelect(id); return; }
+        this.openLightbox(id);
+    },
+    onThumbSelectClick(e, id) {
+        e.stopPropagation();
+        this.toggleSelect(id);
+    },
+    onThumbAction(e, action, id) {
+        e.stopPropagation();
+        const item = this.getCollectionImages().find(it => it.id === id);
+        if (!item) return;
+        if (action === 'favorite') this.toggleFavoriteImage(id);
+        else if (action === 'download') this.downloadImageUrl(item.url, `${(item.prompt || 'image').slice(0, 40).replace(/[^a-z0-9]+/gi, '-') || 'image'}.jpg`);
+        else if (action === 'delete') { if (confirm('Delete this image?')) this.deleteCollectionImages([id]); }
+        else if (action === 'more') this.openThumbMoreMenu(e, item);
+    },
+    openThumbMoreMenu(e, item) {
+        this.closeThumbMoreMenu();
+        const btn = e.currentTarget;
+        const rect = btn.getBoundingClientRect();
+        const menu = document.createElement('div');
+        menu.className = 'ccv-more-menu';
+        menu.style.top = `${rect.bottom + 4}px`;
+        menu.style.left = `${Math.max(8, rect.right - 190)}px`;
+        menu.innerHTML = `
+            <button type="button" onclick="ChatAI.copyImageLink('${this.escAttr(item.url)}')">Copy link</button>
+            <button type="button" onclick="ChatAI.useAsReference('${this.escAttr(item.url)}')">Use as reference</button>
+            <button type="button" onclick="ChatAI.openCollectionImage('${item.sessionId}', '${this.escAttr(item.url)}')">Open in chat</button>
+        `;
+        document.body.appendChild(menu);
+        this._activeMoreMenu = menu;
+        setTimeout(() => {
+            this._closeMoreMenuOnOutside = (ev) => { if (!menu.contains(ev.target)) this.closeThumbMoreMenu(); };
+            document.addEventListener('pointerdown', this._closeMoreMenuOnOutside);
+        }, 0);
+    },
+    closeThumbMoreMenu() {
+        if (this._activeMoreMenu) { this._activeMoreMenu.remove(); this._activeMoreMenu = null; }
+        if (this._closeMoreMenuOnOutside) { document.removeEventListener('pointerdown', this._closeMoreMenuOnOutside); this._closeMoreMenuOnOutside = null; }
+    },
+    copyImageLink(url) {
+        navigator.clipboard?.writeText(url).catch(() => {});
+        showNotification('Chat AI', 'Link copied.');
+        this.closeThumbMoreMenu();
+    },
+    useAsReference(url) {
+        if (this.currentImages.length >= 4) { showNotification('Chat AI', 'Reference limit reached (4).'); return; }
+        this.currentImages.push({ full: url, mimeType: 'image/jpeg' });
+        this.renderPreviews(this.getWindowEl());
+        this.closeThumbMoreMenu();
+        this.closeLightbox();
+        this.closeCollectionsView();
+        showNotification('Chat AI', 'Added as reference image.');
+    },
+
+    // --- Multi-select ---
+    toggleSelect(id) {
+        if (this.collectionsSelection.has(id)) this.collectionsSelection.delete(id);
+        else this.collectionsSelection.add(id);
+        this.lastSelectedId = id;
+        this.renderCollectionsView();
+    },
+    toggleSelectRange(id) {
+        const ids = this.getFilteredCollectionItems().map(it => it.id);
+        const lastIdx = ids.indexOf(this.lastSelectedId);
+        const curIdx = ids.indexOf(id);
+        if (lastIdx === -1 || curIdx === -1) { this.toggleSelect(id); return; }
+        const [start, end] = lastIdx < curIdx ? [lastIdx, curIdx] : [curIdx, lastIdx];
+        for (let i = start; i <= end; i++) this.collectionsSelection.add(ids[i]);
+        this.renderCollectionsView();
+    },
+    clearSelection(rerender = true) {
+        this.collectionsSelection.clear();
+        this.lastSelectedId = null;
+        if (rerender) this.renderCollectionsView();
+    },
+    updateSelectionBar() {
+        const win = this.getWindowEl();
+        const bar = win?.querySelector('#ccv-selection-bar');
+        const countEl = win?.querySelector('#ccv-selection-count');
+        if (!bar) return;
+        const n = this.collectionsSelection.size;
+        bar.classList.toggle('hidden', n === 0);
+        if (countEl) countEl.textContent = `${n} selected`;
+    },
+    bulkFavoriteSelected() {
+        const ids = [...this.collectionsSelection];
+        ids.forEach(id => { const f = this.findCollectionMessage(id); if (f) f.msg.favorite = true; });
+        this.saveToDisk();
+        this.renderCollections();
+        this.renderCollectionsView();
+    },
+    bulkDownloadSelected() {
+        const items = this.getCollectionImages().filter(it => this.collectionsSelection.has(it.id));
+        items.forEach((item, i) => setTimeout(() => this.downloadImageUrl(item.url, `image-${i + 1}.jpg`), i * 300));
+    },
+    bulkDeleteSelected() {
+        const ids = [...this.collectionsSelection];
+        if (ids.length === 0) return;
+        if (!confirm(`Delete ${ids.length} image(s)?`)) return;
+        this.deleteCollectionImages(ids);
+        this.clearSelection(false);
+    },
+
+    // --- Drag & drop (internal: Collections -> ChatAI composer) ---
+    onImageDragStart(e, url) {
+        if (!url || !e.dataTransfer) return;
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('text/uri-list', url);
+        e.dataTransfer.setData('text/plain', url);
+        try { e.dataTransfer.setDragImage(e.target, 20, 20); } catch (_) {}
+    },
+    onComposerDragOver(e) {
+        const types = e.dataTransfer?.types;
+        if (!types || (!types.includes('text/uri-list') && !types.includes('text/plain'))) return;
+        e.preventDefault();
+        e.currentTarget.classList.add('is-drag-over');
+    },
+    onComposerDragLeave(e) {
+        e.currentTarget.classList.remove('is-drag-over');
+    },
+    onComposerDrop(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('is-drag-over');
+        const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+        if (!url) return;
+        if (this.currentImages.length >= 4) { showNotification('Chat AI', 'Reference limit reached (4).'); return; }
+        this.currentImages.push({ full: url, mimeType: 'image/jpeg' });
+        this.renderPreviews(this.getAppEl(e.currentTarget));
+    },
+
+    // --- Lightbox (Preview) ---
+    openLightbox(id) {
+        const items = this.getCollectionImages();
+        const index = items.findIndex(it => it.id === id);
+        if (index === -1) return;
+        this.lightboxState = { items, index };
+        const win = this.getWindowEl();
+        const el = win?.querySelector('#chat-image-lightbox');
+        if (!el) return;
+        this.renderLightbox();
+        el.classList.remove('hidden');
+        requestAnimationFrame(() => el.classList.add('is-open'));
+        this._lightboxKeyHandler = (e) => this.onLightboxKeydown(e);
+        document.addEventListener('keydown', this._lightboxKeyHandler);
+    },
+    closeLightbox() {
+        const win = this.getWindowEl();
+        const el = win?.querySelector('#chat-image-lightbox');
+        if (!el) return;
+        el.classList.remove('is-open');
+        setTimeout(() => el.classList.add('hidden'), 200);
+        if (this._lightboxKeyHandler) { document.removeEventListener('keydown', this._lightboxKeyHandler); this._lightboxKeyHandler = null; }
+    },
+    onLightboxKeydown(e) {
+        if (e.key === 'Escape') this.closeLightbox();
+        else if (e.key === 'ArrowLeft') this.lightboxPrev();
+        else if (e.key === 'ArrowRight') this.lightboxNext();
+    },
+    lightboxPrev() {
+        const { items, index } = this.lightboxState;
+        if (!items.length) return;
+        this.lightboxState.index = (index - 1 + items.length) % items.length;
+        this.renderLightbox();
+    },
+    lightboxNext() {
+        const { items, index } = this.lightboxState;
+        if (!items.length) return;
+        this.lightboxState.index = (index + 1) % items.length;
+        this.renderLightbox();
+    },
+    getLightboxItem() {
+        const { items, index } = this.lightboxState;
+        return items[index] || null;
+    },
+    renderLightbox() {
+        const item = this.getLightboxItem();
+        if (!item) return;
+        const win = this.getWindowEl();
+        const img = win?.querySelector('#cil-image');
+        const meta = win?.querySelector('#cil-meta');
+        const counter = win?.querySelector('#cil-counter');
+        const favIcon = win?.querySelector('#cil-favorite-btn .material-icons-round');
+        if (img) img.src = item.url;
+        const dims = item.width && item.height ? `${item.width}×${item.height}` : '';
+        const dateStr = this.formatCollectionDate(item.timestamp);
+        if (meta) meta.textContent = [item.model, dims, dateStr].filter(Boolean).join('  ·  ');
+        if (counter) counter.textContent = `${this.lightboxState.index + 1} / ${this.lightboxState.items.length}`;
+        if (favIcon) favIcon.textContent = item.favorite ? 'favorite' : 'favorite_border';
+    },
+    lightboxToggleFavorite() {
+        const item = this.getLightboxItem();
+        if (!item) return;
+        this.toggleFavoriteImage(item.id);
+    },
+    lightboxDownload() {
+        const item = this.getLightboxItem();
+        if (!item) return;
+        this.downloadImageUrl(item.url, `${(item.prompt || 'image').slice(0, 40).replace(/[^a-z0-9]+/gi, '-') || 'image'}.jpg`);
+    },
+    lightboxEdit() {
+        const item = this.getLightboxItem();
+        if (!item) return;
+        this.useAsReference(item.url);
+    },
+    lightboxShare() {
+        const item = this.getLightboxItem();
+        if (!item) return;
+        if (navigator.share) navigator.share({ title: 'Generated image', url: item.url }).catch(() => {});
+        else this.copyImageLink(item.url);
+    },
+    lightboxDelete() {
+        const item = this.getLightboxItem();
+        if (!item) return;
+        if (!confirm('Delete this image?')) return;
+        this.deleteCollectionImages([item.id]);
+        const items = this.lightboxState.items.filter(it => it.id !== item.id);
+        if (items.length === 0) { this.closeLightbox(); return; }
+        this.lightboxState.items = items;
+        this.lightboxState.index = Math.min(this.lightboxState.index, items.length - 1);
+        this.renderLightbox();
     },
 
     // --- Indicators ---
@@ -712,8 +1192,21 @@ const ChatAI = {
             await this.addMessageElement(`Generated image via ${usedService} (Seed: ${randomSeed})`, 'ai', { winEl: appEl, images: [{ full: imageUrl, mimeType: 'image/jpeg' }], typewriter: true });
             const sess = this.sessions.find(s => s.id === sessionId);
             if (sess) {
-                sess.messages.push({ role: 'ai', text: `Generated image via ${usedService} (Seed: ${randomSeed})`, images: [{ full: imageUrl, mimeType: 'image/jpeg' }], seed: randomSeed, service: usedService, timestamp: Date.now() });
+                const imgId = 'img-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+                sess.messages.push({
+                    id: imgId,
+                    role: 'ai',
+                    text: `Generated image via ${usedService} (Seed: ${randomSeed})`,
+                    images: [{ full: imageUrl, mimeType: 'image/jpeg', width: aspectConfig.width, height: aspectConfig.height }],
+                    seed: randomSeed,
+                    service: usedService,
+                    model: modelInfo?.label || usedService,
+                    prompt,
+                    favorite: false,
+                    timestamp: Date.now()
+                });
                 this.saveToDisk();
+                this.renderCollections();
             }
             if (textarea) textarea.value = '';
         } catch (err) {
