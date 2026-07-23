@@ -1381,10 +1381,12 @@
                     <div class="chat-sidebar-section-header">
                         <div class="chat-sidebar-section-title">Collections</div>
                         <div class="chat-sidebar-section-header-actions">
-                            <button class="chat-collections-open-btn" type="button" onclick="ChatAI.openCollectionsView()" title="View all collections">
+                            <button class="chat-collections-open-btn" type="button"
+                                onclick="ChatAI.openCollectionsView()" title="View all collections">
                                 <span class="material-icons-round">arrow_forward</span>
                             </button>
-                            <button class="chat-section-chevron active" type="button" onclick="ChatAI.toggleCollections(this)">
+                            <button class="chat-section-chevron active" type="button"
+                                onclick="ChatAI.toggleCollections(this)">
                                 <span class="material-icons-round">keyboard_arrow_down</span>
                             </button>
                         </div>
@@ -1472,7 +1474,23 @@
                                 <button class="chat-model-item" type="button" data-model="gemini-3.5-flash"
                                     onclick="chatSelectModel('gemini-3.5-flash', this)">
                                     <span class="chat-model-item-copy">
-                                        <strong>gemini 3.5 flash</strong>
+                                        <strong>Gemini 3.5 Flash</strong>
+                                        <span>New Model</span>
+                                    </span>
+                                    <span class="chat-model-item-check material-icons-round">check</span>
+                                </button>
+                                <button class="chat-model-item" type="button" data-model="gemini-3.5-flash-lite"
+                                    onclick="chatSelectModel('gemini-3.5-flash-lite', this)">
+                                    <span class="chat-model-item-copy">
+                                        <strong>Gemini 3.5 Flash Lite</strong>
+                                        <span>New Model</span>
+                                    </span>
+                                    <span class="chat-model-item-check material-icons-round">check</span>
+                                </button>
+                                <button class="chat-model-item" type="button" data-model="gemini-3.6-flash"
+                                    onclick="chatSelectModel('gemini-3.6-flash', this)">
+                                    <span class="chat-model-item-copy">
+                                        <strong>Gemini 3.6 Flash</strong>
                                         <span>New Model</span>
                                     </span>
                                     <span class="chat-model-item-check material-icons-round">check</span>

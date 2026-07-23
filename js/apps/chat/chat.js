@@ -32,12 +32,15 @@ const ChatAI = {
     // --- Constants ---
     HF_PROXY_URL: 'https://hyggshi-hf-proxy.tfhy5321.workers.dev',
 
-    MODELS: { 
+    MODELS: {
         'gemini-2.5-flash-lite': { label: 'Gemini 2.5 Flash Lite', description: 'Fast, lightweight responses for everyday chat.', type: 'chat' },
         'gemini-2.5-flash': { label: 'Gemini 2.5 Flash', description: 'Balanced performance for default experience.', type: 'chat' },
         'gemini-3-flash-preview': { label: 'Gemini 3 Flash Preview', description: 'Stronger reasoning and richer responses.', type: 'chat' },
         'gemini-3.1-pro-preview': { label: 'Gemini 3.1 Pro Preview', description: 'Deep analysis and complex tasks.', type: 'chat' },
-        'gemini-3.1-flash-lite-preview': { label: 'Gemini 3.1 Flash Lite Preview', description: 'Optimized for speed and local-feel.', type: 'chat' }
+        'gemini-3.1-flash-lite': { label: 'Gemini 3.1 Flash Lite', description: 'Optimized for speed and local-feel.', type: 'chat' },
+        'gemini-3.5-flash': { label: 'Gemini 3.5 Flash', description: 'Optimized for speed and local-feel.', type: 'chat' },
+        'gemini-3.5-flash-lite': { label: 'Gemini 3.5 Flash Lite', description: 'Optimized for speed and local-feel.', type: 'chat' },
+        'gemini-3.6-flash': { label: 'Gemini 3.6 Flash', description: 'Optimized for speed and local-feel.', type: 'chat' }
     },
     RESPONSE_MODES: { auto: 'Auto', think: 'Think', fast: 'Fast' },
     ASPECT_RATIOS: {
@@ -59,6 +62,12 @@ const ChatAI = {
         { id: 'gptimage-large', label: 'GPT Image 1.5', premium: true },
         { id: 'gptimage-2', label: 'GPT Image 2', premium: true },
         { id: 'flux', label: 'Flux Schnell' },
+        { id: 'sdxl', label: 'Stable Diffusion XL 1.0', provider: 'cf-workers', description: 'Cloudflare Workers AI - SDXL 1.0' },
+        { id: 'fast', label: 'SDXL Lightning', provider: 'cf-workers', description: 'Cloudflare Workers AI - SDXL Lightning' },
+        { id: 'dreamshaper', label: 'DreamShaper 8 LCM', provider: 'cf-workers', description: 'Cloudflare Workers AI - DreamShaper 8' },
+        { id: 'sd15', label: 'Stable Diffusion 1.5', provider: 'cf-workers', description: 'Cloudflare Workers AI - Stable Diffusion 1.5' },
+        { id: 'openjourney', label: 'OpenJourney v4', provider: 'cf-workers', description: 'Cloudflare Workers AI - OpenJourney' },
+        { id: 'portrait', label: 'Portrait Plus', provider: 'cf-workers', description: 'Cloudflare Workers AI - Portrait Plus' },
         { id: 'zimage', label: 'Z-Image Turbo' },
         { id: 'wan-image', label: 'Wan 2.7 Image' },
         { id: 'wan-image-pro', label: 'Wan 2.7 Image Pro', premium: true },
@@ -424,16 +433,16 @@ const ChatAI = {
         const msg = document.createElement('div');
         msg.className = `chat-msg chat-message ${sender}`;
         msg.id = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    
+
         const avatar = `<div class="chat-msg-avatar"><span class="material-icons-round">${sender === 'ai' ? 'psychology' : 'person'}</span></div>`;
-    
+
         let imagesHtml = '';
         if (images?.length > 0) {
-            imagesHtml = `<div class="chat-msg-images">${images.map(img => 
+            imagesHtml = `<div class="chat-msg-images">${images.map(img =>
                 `<img src="${img.full}" class="chat-msg-img" onclick="ChatAI.viewFullImage('${img.full}')" alt="Generated image">`
             ).join('')}</div>`;
         }
-    
+
         msg.innerHTML = `
             ${avatar}
             <div class="chat-msg-wrapper">
@@ -442,12 +451,14 @@ const ChatAI = {
                     <div class="chat-text"></div>
                 </div>
                 <div class="chat-msg-utils">
-                    <button class="chat-util-btn" onclick="ChatAI.copyMessage('${msg.id}', event)" title="Copy"><span class="material-icons-round">content_copy</span></button>
+                    <button class="chat-action-btn chat-copy-prompt-btn" onclick="ChatAI.copyPromptFromMsg('${msg.id}', event)" title="Copy Prompt"><span class="btn-icon">📋</span> <span class="btn-label">Copy Prompt</span></button>
+                    <button class="chat-action-btn chat-regenerate-btn" onclick="ChatAI.regenerateFromMsg('${msg.id}', event)" title="Regenerate"><span class="btn-icon">↻</span> <span class="btn-label">Regenerate</span></button>
+                    <button class="chat-util-btn" onclick="ChatAI.copyMessage('${msg.id}', event)" title="Copy text"><span class="material-icons-round">content_copy</span></button>
                     ${sender === 'ai' ? `<button class="chat-util-btn chat-tts-btn" onclick="ChatAI.speakMessage('${msg.id}', event)" title="Speak"><span class="material-icons-round">volume_up</span></button>` : ''}
                 </div>
             </div>
         `;
-    
+
         return { msg, textEl: msg.querySelector('.chat-text') };
     },
     async typeEffect(el, text, scrollEl) {
@@ -466,7 +477,7 @@ const ChatAI = {
         el.innerHTML = this.parseMarkdown(text);
         this.scrollToBottom(scrollEl, 'smooth');
     },
-    renderHistory() { 
+    renderHistory() {
         const win = this.getWindowEl();
         const list = win?.querySelector('#chat-history-list');
         if (!list) return;
@@ -1047,7 +1058,7 @@ const ChatAI = {
         if (this._closeMoreMenuOnOutside) { document.removeEventListener('pointerdown', this._closeMoreMenuOnOutside); this._closeMoreMenuOnOutside = null; }
     },
     copyImageLink(url) {
-        navigator.clipboard?.writeText(url).catch(() => {});
+        navigator.clipboard?.writeText(url).catch(() => { });
         showNotification('Chat AI', 'Link copied.');
         this.closeThumbMoreMenu();
     },
@@ -1074,7 +1085,15 @@ const ChatAI = {
         body.innerHTML = `
             <div class="ccv-info-row"><span class="ccv-info-label">Model</span><span class="ccv-info-value">${this.escHtml(item.model || '—')}</span></div>
             <div class="ccv-info-row"><span class="ccv-info-label">Size</span><span class="ccv-info-value">${dims}</span></div>
-            <div class="ccv-info-row ccv-info-block"><span class="ccv-info-label">Prompt</span><span class="ccv-info-value">${this.escHtml(item.prompt || '—')}</span></div>
+            <div class="ccv-info-row ccv-info-block">
+                <span class="ccv-info-label">Prompt</span>
+                <span class="ccv-info-value">${this.escHtml(item.prompt || '—')}</span>
+                ${item.prompt ? `
+                <div class="ccv-info-prompt-actions" style="margin-top: 8px; display: flex; gap: 8px;">
+                    <button class="chat-action-btn" onclick="ChatAI.copyPromptText('${this.escAttr(item.prompt)}', event)"><span class="btn-icon">📋</span> <span class="btn-label">Copy Prompt</span></button>
+                    <button class="chat-action-btn" onclick="ChatAI.regenerateFromPromptText('${this.escAttr(item.prompt)}', event)"><span class="btn-icon">↻</span> <span class="btn-label">Regenerate</span></button>
+                </div>` : ''}
+            </div>
             <div class="ccv-info-row ccv-info-block"><span class="ccv-info-label">Negative Prompt</span><span class="ccv-info-value">${this.escHtml(item.negativePrompt || '—')}</span></div>
             <div class="ccv-info-row"><span class="ccv-info-label">Seed</span><span class="ccv-info-value">${item.seed ?? '—'}</span></div>
             <div class="ccv-info-row"><span class="ccv-info-label">Created</span><span class="ccv-info-value">${this.formatCollectionDate(item.timestamp) || '—'}</span></div>
@@ -1180,7 +1199,7 @@ const ChatAI = {
         e.dataTransfer.effectAllowed = 'copy';
         e.dataTransfer.setData('text/uri-list', url);
         e.dataTransfer.setData('text/plain', url);
-        try { e.dataTransfer.setDragImage(e.target, 20, 20); } catch (_) {}
+        try { e.dataTransfer.setDragImage(e.target, 20, 20); } catch (_) { }
     },
     onComposerDragOver(e) {
         const types = e.dataTransfer?.types;
@@ -1278,7 +1297,7 @@ const ChatAI = {
     lightboxShare() {
         const item = this.getLightboxItem();
         if (!item) return;
-        if (navigator.share) navigator.share({ title: 'Generated image', url: item.url }).catch(() => {});
+        if (navigator.share) navigator.share({ title: 'Generated image', url: item.url }).catch(() => { });
         else this.copyImageLink(item.url);
     },
     lightboxDelete() {
@@ -1346,6 +1365,221 @@ const ChatAI = {
     },
 
     // --- Actions ---
+    copyPromptFromMsg(id, e) {
+        e?.stopPropagation();
+        const btn = e?.currentTarget;
+        const promptText = this.getPromptFromMsgId(id);
+        if (!promptText) {
+            showNotification('Chat AI', 'No prompt text found.');
+            return;
+        }
+        navigator.clipboard.writeText(promptText).then(() => {
+            showNotification('Chat AI', 'Prompt copied to clipboard.');
+            if (btn) {
+                const labelEl = btn.querySelector('.btn-label');
+                const iconEl = btn.querySelector('.btn-icon');
+                const oldLabel = labelEl ? labelEl.textContent : '';
+                const oldIcon = iconEl ? iconEl.textContent : '';
+                if (labelEl) labelEl.textContent = 'Copied!';
+                if (iconEl) iconEl.textContent = '✓';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    if (labelEl) labelEl.textContent = oldLabel;
+                    if (iconEl) iconEl.textContent = oldIcon;
+                    btn.classList.remove('copied');
+                }, 2000);
+            }
+        }).catch(err => {
+            console.error('Copy prompt failed:', err);
+        });
+    },
+    copyPromptText(text, e) {
+        e?.stopPropagation();
+        if (!text) return;
+        const btn = e?.currentTarget;
+        navigator.clipboard.writeText(text).then(() => {
+            showNotification('Chat AI', 'Prompt copied to clipboard.');
+            if (btn) {
+                const labelEl = btn.querySelector('.btn-label');
+                const iconEl = btn.querySelector('.btn-icon');
+                const oldLabel = labelEl ? labelEl.textContent : '';
+                const oldIcon = iconEl ? iconEl.textContent : '';
+                if (labelEl) labelEl.textContent = 'Copied!';
+                if (iconEl) iconEl.textContent = '✓';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    if (labelEl) labelEl.textContent = oldLabel;
+                    if (iconEl) iconEl.textContent = oldIcon;
+                    btn.classList.remove('copied');
+                }, 2000);
+            }
+        });
+    },
+    getPromptFromMsgId(msgId) {
+        const msgEl = document.getElementById(msgId);
+        if (msgEl?.dataset?.prompt) return msgEl.dataset.prompt;
+
+        const isUser = msgEl?.classList.contains('user');
+        if (isUser) {
+            let text = msgEl.dataset.rawText || msgEl.querySelector('.chat-text')?.innerText || '';
+            if (text.startsWith('[Image Gen] ')) text = text.replace('[Image Gen] ', '');
+            if (text.startsWith('Generating image for: "') && text.endsWith('"')) text = text.slice(23, -1);
+            return text.trim();
+        }
+
+        const session = this.sessions.find(s => s.id === this.currentChatId);
+        if (session && Array.isArray(session.messages)) {
+            const idx = session.messages.findIndex(m => m.id === msgId);
+            if (idx !== -1) {
+                const msg = session.messages[idx];
+                if (msg.prompt) return msg.prompt;
+                for (let i = idx - 1; i >= 0; i--) {
+                    if (session.messages[i].role === 'user') {
+                        let txt = session.messages[i].text || '';
+                        if (txt.startsWith('[Image Gen] ')) txt = txt.replace('[Image Gen] ', '');
+                        if (txt.startsWith('Generating image for: "') && txt.endsWith('"')) txt = txt.slice(23, -1);
+                        return txt.trim();
+                    }
+                }
+            } else {
+                const lastUserMsg = [...session.messages].reverse().find(m => m.role === 'user');
+                if (lastUserMsg) {
+                    let txt = lastUserMsg.text || '';
+                    if (txt.startsWith('[Image Gen] ')) txt = txt.replace('[Image Gen] ', '');
+                    if (txt.startsWith('Generating image for: "') && txt.endsWith('"')) txt = txt.slice(23, -1);
+                    return txt.trim();
+                }
+            }
+        }
+        return (msgEl?.dataset?.rawText || msgEl?.querySelector('.chat-text')?.innerText || '').trim();
+    },
+    async regenerateFromMsg(id, e) {
+        e?.stopPropagation();
+        if (this.isSending) return;
+        const promptText = this.getPromptFromMsgId(id);
+        if (!promptText) {
+            showNotification('Chat AI', 'Cannot find prompt to regenerate.');
+            return;
+        }
+        const btn = e?.currentTarget;
+        if (btn) btn.classList.add('spin');
+        try {
+            await this.regenerateWithModel(promptText);
+        } finally {
+            if (btn) btn.classList.remove('spin');
+        }
+    },
+    async regenerateFromPromptText(promptText, e) {
+        e?.stopPropagation();
+        if (!promptText) return;
+        this.closeInfoPanel();
+        this.closeLightbox();
+        const win = this.getWindowEl();
+        const textarea = win?.querySelector('#chat-textarea');
+        if (textarea) textarea.value = promptText;
+        await this.regenerateWithModel(promptText);
+    },
+    async regenerateWithModel(promptText, images = []) {
+        if (this.isSending) return;
+        const appEl = this.getWindowEl();
+        const sessionId = this.currentChatId;
+        this.isSending = true;
+
+        try {
+            const imageModels = ['flux', 'turbo', 'flux-realism', 'flux-anime', 'flux-3d', 'any-dark', 'flux-pro', 'imagen-3'];
+            const isImgModel = imageModels.includes(this.model) || promptText.startsWith('[Image Gen]');
+
+            if (isImgModel) {
+                const cleanPrompt = promptText.replace(/^\[Image Gen\]\s*/, '');
+                const aspectConfig = this.ASPECT_RATIOS[this.aspectRatio] || this.ASPECT_RATIOS['1:1'];
+                const randomSeed = Math.floor(Math.random() * 2147483647);
+                const modelInfo = this.getImageModelInfo();
+                const provider = modelInfo?.provider || 'pollinations';
+                const genStartedAt = Date.now();
+
+                await this.addMessageElement(`↻ Regenerating image (${this.model}) for: "${cleanPrompt}"...`, 'user', {
+                    winEl: appEl,
+                    images: images.length ? images : null,
+                    typewriter: false
+                });
+
+                const session = this.sessions.find(s => s.id === sessionId);
+                if (session) {
+                    session.messages.push({
+                        role: 'user',
+                        text: `[Image Gen] ${cleanPrompt}`,
+                        images: images.length ? images : null,
+                        timestamp: Date.now()
+                    });
+                    this.saveToDisk();
+                    this.renderHistory();
+                }
+
+                this.showTypingIndicator(sessionId, appEl);
+                let imageUrl = null;
+                let usedService = provider;
+                if (provider === 'huggingface') {
+                    imageUrl = await this.generateWithHuggingFace(cleanPrompt, aspectConfig, randomSeed);
+                } else {
+                    imageUrl = await this.generateWithPollinations(cleanPrompt, aspectConfig, randomSeed, images);
+                }
+                const genDurationMs = Date.now() - genStartedAt;
+                await this.hideTypingIndicator(sessionId, appEl);
+                await this.addMessageElement(`Generated image via ${usedService} (${this.model}, Seed: ${randomSeed})`, 'ai', {
+                    winEl: appEl,
+                    images: [{ full: imageUrl, mimeType: 'image/jpeg' }],
+                    typewriter: true
+                });
+
+                if (session) {
+                    const imgId = 'img-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+                    session.messages.push({
+                        id: imgId,
+                        role: 'ai',
+                        text: `Generated image via ${usedService} (${this.model}, Seed: ${randomSeed})`,
+                        images: [{ full: imageUrl, mimeType: 'image/jpeg', width: aspectConfig.width, height: aspectConfig.height }],
+                        seed: randomSeed,
+                        service: usedService,
+                        model: this.model,
+                        prompt: cleanPrompt,
+                        durationMs: genDurationMs,
+                        timestamp: Date.now()
+                    });
+                    this.saveToDisk();
+                    this.renderCollections();
+                }
+            } else {
+                await this.addMessageElement(`↻ Regenerating response with ${this.model}...`, 'user', {
+                    winEl: appEl,
+                    typewriter: false
+                });
+
+                const session = this.sessions.find(s => s.id === sessionId);
+                if (session) {
+                    session.messages.push({
+                        role: 'user',
+                        text: promptText,
+                        timestamp: Date.now()
+                    });
+                    this.saveToDisk();
+                    this.renderHistory();
+                }
+
+                this.showTypingIndicator(sessionId, appEl);
+                const apiKey = localStorage.getItem('webos-gemini-key');
+                if (apiKey && apiKey.trim().length > 10) {
+                    await this.callGeminiApi(apiKey.trim(), promptText, images, sessionId);
+                } else {
+                    await this.simulateResponse(promptText, sessionId);
+                }
+            }
+        } catch (error) {
+            console.error('Regenerate Error:', error);
+            showNotification('Chat AI', 'Regeneration failed: ' + error.message);
+        } finally {
+            this.isSending = false;
+        }
+    },
     copyMessage(id, e) {
         e?.stopPropagation();
         const text = document.getElementById(id)?.querySelector('.chat-text').innerText;
@@ -1374,7 +1608,7 @@ const ChatAI = {
 
     // --- Storage ---
     async saveToDisk() {
-        try { const db = await this.openDB(); db.transaction('sessions', 'readwrite').objectStore('sessions').put(this.sessions, 'all_sessions'); } catch (e) {}
+        try { const db = await this.openDB(); db.transaction('sessions', 'readwrite').objectStore('sessions').put(this.sessions, 'all_sessions'); } catch (e) { }
     },
     async loadFromDisk() {
         try {
@@ -1412,7 +1646,7 @@ const ChatAI = {
         const msgEl = document.getElementById(msgId);
         const btn = e?.currentTarget || msgEl?.querySelector('.chat-tts-btn');
         const text = msgEl?.dataset.rawText;
-        if (!text || !btn) return; 
+        if (!text || !btn) return;
         if (this.ttsActiveButton === btn) { this.resetTtsPlayback(); return; }
         this.resetTtsPlayback();
         this.ttsActiveButton = btn;
@@ -1511,6 +1745,8 @@ const ChatAI = {
 
             if (provider === 'huggingface') {
                 imageUrl = await this.generateWithHuggingFace(prompt, aspectConfig, randomSeed);
+            } else if (provider === 'cf-workers') {
+                imageUrl = await this.generateWithWorkersAI(prompt, aspectConfig, randomSeed, modelInfo?.id);
             } else {
                 imageUrl = await this.generateWithPollinations(prompt, aspectConfig, randomSeed, referenceImages);
             }
@@ -1558,8 +1794,8 @@ const ChatAI = {
         const modelInfo = this.getImageModelInfo(requestModelId);
         const key = this.getPollinationsKeyIfNeeded(modelInfo);
         if (modelInfo?.premium && !key) throw new Error('Pollinations key required for this premium model.');
-        const buildUrl = (apiKey = '') => {
-            const baseUrl = 'https://gen.pollinations.ai/image/';
+
+        const buildUrl = (baseUrl, apiKey = '') => {
             const encodedPrompt = encodeURIComponent(prompt);
             const params = new URLSearchParams({
                 width: aspectConfig.width,
@@ -1567,7 +1803,7 @@ const ChatAI = {
                 seed,
                 model: requestModelId || 'flux',
                 enhance: 'true',
-                noStore: 'true'
+                nologo: 'true'
             });
             if (hasReference) {
                 params.set('image', referenceImages.map(img => img.full).join('|'));
@@ -1575,22 +1811,54 @@ const ChatAI = {
             if (apiKey) params.set('key', apiKey);
             return `${baseUrl}${encodedPrompt}?${params.toString()}`;
         };
-        let response = await fetch(buildUrl(key));
-        if (response.status === 401 && !key) {
-            const retryKey = this.getPollinationsKeyIfNeeded(modelInfo, true);
-            if (!retryKey) throw new Error('Pollinations key required for this model.');
-            response = await fetch(buildUrl(retryKey));
+
+        const primaryUrl = buildUrl('https://gen.pollinations.ai/image/', key);
+        const fallbackUrl = buildUrl('https://image.pollinations.ai/prompt/', key);
+
+        for (const targetUrl of [primaryUrl, fallbackUrl]) {
+            try {
+                let response = await fetch(targetUrl);
+                if (response.status === 401 && !key) {
+                    const retryKey = this.getPollinationsKeyIfNeeded(modelInfo, true);
+                    if (!retryKey) throw new Error('Pollinations key required for this model.');
+                    const retryUrl = buildUrl('https://gen.pollinations.ai/image/', retryKey);
+                    response = await fetch(retryUrl);
+                }
+                if (response.ok) {
+                    const blob = await response.blob();
+                    return await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = () => reject(new Error('Failed to convert image'));
+                        reader.readAsDataURL(blob);
+                    });
+                }
+            } catch (err) {
+                console.warn(`Fetch error for ${targetUrl}:`, err);
+            }
         }
-        if (!response.ok) {
-            const detail = await response.text().catch(() => '');
-            throw new Error(`Pollinations.ai error: ${response.status}${detail ? ` - ${detail}` : ''}`);
-        }
-        const blob = await response.blob();
-        return await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = () => reject(new Error('Failed to convert image'));
-            reader.readAsDataURL(blob);
+
+        return await new Promise((resolve) => {
+            const img = new Image();
+            const timer = setTimeout(() => resolve(primaryUrl), 12000);
+
+            img.onload = () => {
+                clearTimeout(timer);
+                resolve(primaryUrl);
+            };
+            img.onerror = () => {
+                const img2 = new Image();
+                img2.onload = () => {
+                    clearTimeout(timer);
+                    resolve(fallbackUrl);
+                };
+                img2.onerror = () => {
+                    clearTimeout(timer);
+                    resolve(primaryUrl);
+                };
+                img2.src = fallbackUrl;
+            };
+            img.src = primaryUrl;
         });
     },
 
@@ -1626,6 +1894,40 @@ const ChatAI = {
         });
     },
 
+    async generateWithWorkersAI(prompt, aspectConfig, seed, modelKey = 'flux') {
+        const response = await fetch('/api/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt,
+                model: modelKey,
+                width: aspectConfig.width,
+                height: aspectConfig.height,
+                seed
+            })
+        });
+
+        if (!response.ok) {
+            const errJson = await response.json().catch(() => ({}));
+            const msg = errJson.error || `Workers AI error (${response.status})`;
+            throw new Error(msg);
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            const data = await response.json();
+            if (data.image) return data.image;
+        }
+
+        const blob = await response.blob();
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('Failed to read image data'));
+            reader.readAsDataURL(blob);
+        });
+    },
+
     async generateMusic(btn) {
         const appEl = this.getAppEl(btn);
         const textarea = appEl?.querySelector('#chat-textarea');
@@ -1634,7 +1936,7 @@ const ChatAI = {
         const oldIcon = icon ? icon.textContent : 'mic';
         if (icon) icon.textContent = 'hourglass_empty';
         btn.classList.add('loading');
-        try { await new Promise(r => setTimeout(r, 2000)); showNotification('Chat AI', 'Music engine in preview.'); } 
+        try { await new Promise(r => setTimeout(r, 2000)); showNotification('Chat AI', 'Music engine in preview.'); }
         finally { if (icon) icon.textContent = oldIcon; btn.classList.remove('loading'); }
     },
 
@@ -1682,6 +1984,8 @@ const ChatAI = {
     chatSelectImageModel(modelId, btn) { this.selectImageModel(modelId, btn); },
     chatSelectMode(mode, btn) { this.selectMode(mode, btn); },
     chatSelectAspectRatio(aspect, btn) { this.selectAspectRatio(aspect, btn); },
+    chatCopyPromptFromMsg(id, e) { this.copyPromptFromMsg(id, e); },
+    chatRegenerateFromMsg(id, e) { this.regenerateFromMsg(id, e); },
     chatDeleteSession(id, e) { this.deleteSession(id, e); }
 };
 
@@ -1702,6 +2006,8 @@ function chatSelectImageModel(modelId, btn) { ChatAI.chatSelectImageModel(modelI
 function chatSelectMode(mode, btn) { ChatAI.chatSelectMode(mode, btn); }
 function chatSelectAspectRatio(aspect, btn) { ChatAI.chatSelectAspectRatio(aspect, btn); }
 function chatExpandMoreModels(btn) { ChatAI.chatExpandMoreModels(btn); }
+function chatCopyPromptFromMsg(id, e) { ChatAI.copyPromptFromMsg(id, e); }
+function chatRegenerateFromMsg(id, e) { ChatAI.regenerateFromMsg(id, e); }
 
 window.ChatAI = ChatAI;
 window.chatExpandMoreModels = chatExpandMoreModels;

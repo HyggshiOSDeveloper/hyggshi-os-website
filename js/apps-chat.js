@@ -663,6 +663,21 @@ function createChatMessageElement(sender, images = null) {
 
     const utils = document.createElement('div');
     utils.className = 'chat-msg-utils';
+    
+    const copyPromptBtn = document.createElement('button');
+    copyPromptBtn.className = 'chat-action-btn chat-copy-prompt-btn';
+    copyPromptBtn.title = 'Copy Prompt';
+    copyPromptBtn.innerHTML = '<span class="btn-icon">📋</span> <span class="btn-label">Copy Prompt</span>';
+    copyPromptBtn.onclick = (event) => chatCopyPromptFromMsg(msg.id, event);
+    utils.appendChild(copyPromptBtn);
+
+    const regenBtn = document.createElement('button');
+    regenBtn.className = 'chat-action-btn chat-regenerate-btn';
+    regenBtn.title = 'Regenerate';
+    regenBtn.innerHTML = '<span class="btn-icon">↻</span> <span class="btn-label">Regenerate</span>';
+    regenBtn.onclick = (event) => chatRegenerateFromMsg(msg.id, event);
+    utils.appendChild(regenBtn);
+
     const copyBtn = document.createElement('button');
     copyBtn.className = 'chat-util-btn';
     copyBtn.title = 'Copy Message';
