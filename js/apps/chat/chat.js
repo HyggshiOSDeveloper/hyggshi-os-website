@@ -623,7 +623,13 @@ const ChatAI = {
         });
         return this._jszipLoading;
     },
-    escAttr(str) { return String(str).replace(/'/g, "\\'"); },
+    escAttr(str) {
+        return String(str)
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/"/g, '&quot;')
+            .replace(/\r?\n/g, '\\n');
+    },
     escHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; },
     formatCollectionDate(ts) {
         return ts ? new Date(ts).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
@@ -1090,8 +1096,8 @@ const ChatAI = {
                 <span class="ccv-info-value">${this.escHtml(item.prompt || '—')}</span>
                 ${item.prompt ? `
                 <div class="ccv-info-prompt-actions" style="margin-top: 8px; display: flex; gap: 8px;">
-                    <button class="chat-action-btn" onclick="ChatAI.copyPromptText('${this.escAttr(item.prompt)}', event)"><span class="btn-icon">📋</span> <span class="btn-label">Copy Prompt</span></button>
-                    <button class="chat-action-btn" onclick="ChatAI.regenerateFromPromptText('${this.escAttr(item.prompt)}', event)"><span class="btn-icon">↻</span> <span class="btn-label">Regenerate</span></button>
+                    <button class="chat-action-btn" onclick="ChatAI.copyPromptById('${this.escAttr(item.id)}', event)"><span class="btn-icon">📋</span> <span class="btn-label">Copy Prompt</span></button>
+                    <button class="chat-action-btn" onclick="ChatAI.regenerateFromInfoId('${this.escAttr(item.id)}', event)"><span class="btn-icon">↻</span> <span class="btn-label">Regenerate</span></button>
                 </div>` : ''}
             </div>
             <div class="ccv-info-row ccv-info-block"><span class="ccv-info-label">Negative Prompt</span><span class="ccv-info-value">${this.escHtml(item.negativePrompt || '—')}</span></div>
@@ -1414,6 +1420,14 @@ const ChatAI = {
                 }, 2000);
             }
         });
+    },
+    copyPromptById(id, e) {
+        const item = this.getCollectionImages().find(it => it.id === id);
+        this.copyPromptText(item?.prompt || '', e);
+    },
+    async regenerateFromInfoId(id, e) {
+        const item = this.getCollectionImages().find(it => it.id === id);
+        await this.regenerateFromPromptText(item?.prompt || '', e);
     },
     getPromptFromMsgId(msgId) {
         const msgEl = document.getElementById(msgId);
