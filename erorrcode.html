@@ -10,91 +10,120 @@
   <style>
     .search-input {
       width: 100%;
-      padding: 1rem 1.5rem;
-      background: var(--glass-bg);
-      border: var(--glass-border);
-      border-radius: 50px;
-      color: white;
-      font-size: 1.1rem;
-      font-family: inherit;
+      padding: 0.85rem 1.25rem;
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-full);
+      color: var(--c-text);
+      font-size: var(--text-base);
+      font-family: var(--font-sans);
       outline: none;
-      transition: all 0.3s ease;
+      transition: all var(--transition-fast);
     }
 
     .search-input:focus {
-      border-color: var(--c-primary);
-      box-shadow: 0 0 20px var(--c-primary-glow);
+      border-color: var(--c-primary-light);
+      box-shadow: 0 0 0 3px var(--c-primary-glow);
     }
 
     .search-input::placeholder {
       color: var(--c-text-muted);
+    }
+
+    .error-notice {
+      background: rgba(2, 132, 199, 0.06);
+      border: 1px solid var(--c-border);
+      border-left: 3px solid var(--c-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
     }
   </style>
 </head>
 
 <body>
   <header class="header">
-    <div class="container nav">
-      <div class="logo">
-        <img src="Resources/upscalemedia-transformed.png" alt="Logo">
-        <span>Hyggshi OS</span>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo">
+          <span>Hyggshi OS</span>
+        </div>
+        <nav class="nav">
+          <ul class="nav-menu">
+            <li><a href="index.html" class="nav-link">Home</a></li>
+            <li><a href="About.html" class="nav-link">About</a></li>
+            <li><a href="projects.html" class="nav-link">Projects</a></li>
+            <li><a href="erorrcode.html" class="nav-link active">Errors</a></li>
+            <li><a href="download.html" class="nav-link">Download</a></li>
+          </ul>
+        </nav>
+        <button class="theme-toggle" title="Toggle theme">
+          <span class="toggle-icon"></span>
+        </button>
       </div>
-      <ul class="nav-menu">
-        <li><a href="index.html" class="nav-link">Home</a></li>
-        <li><a href="About.html" class="nav-link">About</a></li>
-        <li><a href="projects.html" class="nav-link">Projects</a></li>
-        <li><a href="erorrcode.html" class="nav-link active">Errors</a></li>
-        <li><a href="download.html" class="nav-link">Download</a></li>
-      </ul>
-      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
     </div>
   </header>
 
-  <main class="container section-spacer">
-    <div style="text-align: center; margin-bottom: 3rem;">
-      <span class="badge active cloud-float fade-in-up">⚠️ Errors</span>
-      <h1 class="fade-in-up" style="margin-top: 1rem;">Tra cứu <span class="text-gradient">Mã Lỗi</span></h1>
-      <p class="fade-in-up delay-1" style="color: var(--c-text-muted); margin-bottom: 2rem;">
-        Tìm kiếm mã lỗi hoặc từ khóa để xem cách khắc phục.
+  <main class="container section">
+    <div style="text-align: center; margin-bottom: var(--space-2xl);">
+      <div class="hero-badge" style="margin: 0 auto var(--space-sm) auto;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>Error Reference</span>
+      </div>
+      <h1 style="font-size: var(--text-4xl); font-weight: 800; letter-spacing: -0.02em; margin-top: var(--space-md);">
+        Tra cứu <span class="title-accent">Mã Lỗi</span>
+      </h1>
+      <p style="color: var(--c-text-secondary); margin: var(--space-sm) auto var(--space-xl) auto; max-width: 520px;">
+        Tìm kiếm mã lỗi hoặc từ khóa để xem hướng dẫn khắc phục.
       </p>
 
-      <div class="fade-in-up delay-2" style="max-width: 600px; margin: 0 auto;">
+      <div style="max-width: 580px; margin: 0 auto;">
         <input id="errorSearch" class="search-input" type="search"
-          placeholder="🔍 Tìm kiếm (ví dụ: 0x0001214, API, network)..." />
+          placeholder="Search error code (e.g. 0x0001214, API, network)..." />
       </div>
     </div>
 
-    <div id="errorGrid" class="grid-2 fade-in-up delay-3">
+    <div id="errorGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-lg);">
 
-      <div class="card error-item" data-tags="0x0001214 network api github">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-          <span class="badge danger">0x0001214</span>
-          <span style="font-size: 1.5rem;">⚠️</span>
+      <div class="feature-card error-item" data-tags="0x0001214 network api github">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md);">
+          <span class="news-badge" style="border-color: rgba(239, 68, 68, 0.3); color: #ef4444; background: rgba(239, 68, 68, 0.1);">0x0001214</span>
+          <div class="feature-icon" style="width: 36px; height: 36px; border-radius: var(--radius-md); border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.08); color: #ef4444; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
         </div>
         <h3>Lỗi kết nối API</h3>
-        <p style="color: var(--c-text-muted); margin-bottom: 1rem;">"No response text found" / "Connection Failed"</p>
-
-        <div
-          style="background: rgba(94, 208, 198, 0.1); padding: 1rem; border-radius: 12px; border-left: 3px solid var(--c-primary);">
-          <p style="font-size: 0.9rem;"><strong>Nguyên nhân:</strong> Lỗi mạng hoặc GitHub API rate limit.</p>
-          <p style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--c-accent);"><strong>Khắc phục:</strong> Kiểm tra
-            mạng và thử lại sau 5 phút.</p>
+        <p style="color: var(--c-text-muted); margin-bottom: var(--space-md); font-size: var(--text-sm);">"No response text found" / "Connection Failed"</p>
+        <div class="error-notice">
+          <p style="font-size: var(--text-sm);"><strong>Nguyên nhân:</strong> Lỗi mạng hoặc GitHub API rate limit.</p>
+          <p style="font-size: var(--text-sm); margin-top: var(--space-xs); color: var(--c-primary-light);"><strong>Khắc phục:</strong> Kiểm tra mạng và thử lại sau 5 phút.</p>
         </div>
       </div>
 
-      <div class="card error-item" data-tags="boot crash startup">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-          <span class="badge warning">SYS_BOOT_ERR</span>
-          <span style="font-size: 1.5rem;">🚫</span>
+      <div class="feature-card error-item" data-tags="boot crash startup">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md);">
+          <span class="news-badge" style="border-color: rgba(245, 158, 11, 0.3); color: #f59e0b; background: rgba(245, 158, 11, 0.1);">SYS_BOOT_ERR</span>
+          <div class="feature-icon" style="width: 36px; height: 36px; border-radius: var(--radius-md); border-color: rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.08); color: #f59e0b; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+              <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
         </div>
         <h3>Lỗi Khởi động</h3>
-        <p style="color: var(--c-text-muted); margin-bottom: 1rem;">Treo logo hoặc màn hình đen khi bật.</p>
-
-        <div
-          style="background: rgba(94, 208, 198, 0.1); padding: 1rem; border-radius: 12px; border-left: 3px solid var(--c-primary);">
-          <p style="font-size: 0.9rem;"><strong>Nguyên nhân:</strong> Xung đột script hoặc thiếu assets.</p>
-          <p style="font-size: 0.9rem; margin-top: 0.5rem; color: var(--c-accent);"><strong>Khắc phục:</strong> Cài đặt
-            lại Hyggshi OS Core.</p>
+        <p style="color: var(--c-text-muted); margin-bottom: var(--space-md); font-size: var(--text-sm);">Treo logo hoặc màn hình đen khi bật.</p>
+        <div class="error-notice">
+          <p style="font-size: var(--text-sm);"><strong>Nguyên nhân:</strong> Xung đột script hoặc thiếu assets.</p>
+          <p style="font-size: var(--text-sm); margin-top: var(--space-xs); color: var(--c-primary-light);"><strong>Khắc phục:</strong> Cài đặt lại Hyggshi OS Core.</p>
         </div>
       </div>
 
@@ -103,7 +132,7 @@
 
   <footer class="footer">
     <div class="container">
-      <p style="color: var(--c-text-muted);">© 2024 - 2025 Hyggshi OS Project Center.</p>
+      <p class="footer-text">© 2024 - 2026 Hyggshi OS Project Center.</p>
     </div>
   </footer>
 

@@ -13,42 +13,49 @@
       max-width: 1000px;
       margin: 2rem auto;
       height: 450px;
-      background: var(--c-bg-surface);
-      border: var(--glass-border);
-      border-radius: 16px;
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--radius-xl);
       overflow: hidden;
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
     }
 
     .ide-sidebar {
-      width: 50px;
-      background: rgba(30, 35, 42, 0.9);
+      width: 52px;
+      background: rgba(9, 13, 22, 0.9);
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 1rem 0;
       gap: 1rem;
-      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      border-right: 1px solid var(--c-border);
     }
 
     .ide-icon {
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all var(--transition-fast);
+      color: var(--c-text-muted);
+    }
+
+    .ide-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
     .ide-icon:hover {
-      background: rgba(94, 208, 198, 0.2);
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--c-primary-light);
     }
 
     .ide-icon.active {
       background: var(--c-primary);
-      color: var(--c-bg-deep);
+      color: #ffffff;
     }
 
     .ide-main {
@@ -59,10 +66,10 @@
 
     .ide-tabs {
       display: flex;
-      background: rgba(30, 35, 42, 0.9);
-      height: 40px;
+      background: rgba(9, 13, 22, 0.85);
+      height: 42px;
       align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--c-border);
     }
 
     .ide-tab {
@@ -71,154 +78,215 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      border-right: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 0.9rem;
+      border-right: 1px solid var(--c-border);
+      font-size: var(--text-sm);
       color: var(--c-text-muted);
+      font-family: var(--font-mono);
     }
 
     .ide-tab.active {
-      background: var(--c-bg-surface);
-      color: white;
-      border-bottom: 2px solid var(--c-primary);
+      background: var(--c-surface);
+      color: var(--c-text);
+      border-bottom: 2px solid var(--c-primary-light);
     }
 
     .ide-editor {
       flex: 1;
-      background: var(--c-bg-surface);
+      background: var(--c-surface);
       padding: 1.5rem 2rem;
       overflow: hidden;
-      font-family: 'JetBrains Mono', 'Consolas', monospace;
+      font-family: var(--font-mono);
       font-size: 14px;
       color: #e0e0e0;
       line-height: 1.8;
     }
 
-    .token-keyword {
-      color: var(--c-primary);
-    }
-
-    .token-string {
-      color: #FFD166;
-    }
-
-    .token-comment {
-      color: #6a9955;
-      font-style: italic;
-    }
-
-    .token-func {
-      color: var(--c-accent);
-    }
+    .token-keyword { color: #38bdf8; }
+    .token-string { color: #fbbf24; }
+    .token-comment { color: #6a9955; font-style: italic; }
+    .token-func { color: #818cf8; }
 
     .ide-status {
-      height: 24px;
+      height: 26px;
       background: var(--c-primary);
-      color: var(--c-bg-deep);
+      color: #ffffff;
       display: flex;
       align-items: center;
       padding: 0 1rem;
-      font-size: 0.8rem;
+      font-size: var(--text-xs);
       justify-content: space-between;
       font-weight: 600;
+      font-family: var(--font-mono);
     }
   </style>
 </head>
 
 <body>
   <header class="header">
-    <div class="container nav">
-      <div class="logo">
-        <img src="Resources/upscalemedia-transformed.png" alt="Logo">
-        <span>☁️ Hyggshi OS <span style="opacity: 0.6; font-weight: 400;">| Code Mini</span></span>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+          <span>Hyggshi OS <span style="opacity: 0.5; font-weight: 400;">| Code Mini</span></span>
+        </div>
+        <nav class="nav">
+          <ul class="nav-menu">
+            <li><a href="index.html" class="nav-link">Home</a></li>
+            <li><a href="projects.html" class="nav-link">Projects</a></li>
+            <li><a href="HyggshiOSCodeMini.html" class="nav-link active">Code Mini</a></li>
+            <li><a href="#download" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: var(--text-sm);">Download</a></li>
+          </ul>
+        </nav>
+        <button class="theme-toggle" title="Toggle theme">
+          <span class="toggle-icon"></span>
+        </button>
       </div>
-      <ul class="nav-menu">
-        <li><a href="index.html" class="nav-link">Home</a></li>
-        <li><a href="projects.html" class="nav-link">Projects</a></li>
-        <li><a href="HyggshiOSCodeMini.html" class="nav-link active">Code Mini</a></li>
-        <li><a href="#download" class="btn btn-primary" style="padding: 0.5rem 1.2rem;">Download</a></li>
-      </ul>
-      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
     </div>
   </header>
 
   <main class="container">
     <!-- Hero -->
-    <section class="section-spacer" style="text-align: center;">
-      <div class="fade-in-up">
-        <span class="badge active cloud-float" style="margin-bottom: 1rem; font-size: 1rem;">☁️ Code Editor</span>
-        <h1 style="font-size: 3.5rem;">Code. <span class="text-gradient">Anywhere.</span></h1>
-        <p style="color: var(--c-text-muted); font-size: 1.25rem; max-width: 700px; margin: 1rem auto;">
-          Trình biên tập mã nguồn nhẹ nhất cho Hyggshi OS. Syntax Highlighting, Git Integration, chạy mượt mà.
-        </p>
+    <section class="section" style="text-align: center;">
+      <div class="hero-badge" style="margin: 0 auto var(--space-md) auto;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span>Code Editor</span>
       </div>
+      <h1 style="font-size: var(--text-5xl); font-weight: 800; letter-spacing: -0.03em;">
+        Code. <span class="title-accent">Anywhere.</span>
+      </h1>
+      <p style="color: var(--c-text-secondary); font-size: var(--text-lg); max-width: 680px; margin: var(--space-md) auto 0 auto; line-height: 1.7;">
+        Trình biên tập mã nguồn nhẹ nhất cho Hyggshi OS. Syntax Highlighting, Git Integration, và hiệu năng vượt trội.
+      </p>
 
       <!-- IDE Mockup -->
-      <div class="ide-mockup fade-in-up delay-1">
+      <div class="ide-mockup" style="margin-top: var(--space-2xl);">
         <div class="ide-sidebar">
-          <div class="ide-icon active">📄</div>
-          <div class="ide-icon">🔍</div>
-          <div class="ide-icon">☁️</div>
-          <div class="ide-icon">📦</div>
+          <!-- File icon active -->
+          <div class="ide-icon active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+          </div>
+          <!-- Search icon -->
+          <div class="ide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <!-- Git icon -->
+          <div class="ide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="18" r="3"></circle>
+              <circle cx="6" cy="6" r="3"></circle>
+              <path d="M6 21V9a9 9 0 0 0 9 9"></path>
+            </svg>
+          </div>
+          <!-- Package icon -->
+          <div class="ide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
         </div>
         <div class="ide-main">
           <div class="ide-tabs">
             <div class="ide-tab active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: var(--c-primary-light);">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
               <span>main.lua</span>
             </div>
             <div class="ide-tab">README.md</div>
           </div>
           <div class="ide-editor">
-            <div><span class="token-keyword">local</span> Hyggshi = <span
-                class="token-keyword">require</span>(game.ReplicatedStorage.Hyggshi)</div>
+            <div><span class="token-keyword">local</span> Hyggshi = <span class="token-keyword">require</span>(game.ReplicatedStorage.Hyggshi)</div>
             <br>
-            <div><span class="token-comment">-- Initialize Cloud System</span></div>
+            <div><span class="token-comment">-- Initialize System Modules</span></div>
             <div><span class="token-keyword">function</span> <span class="token-func">System.Start</span>()</div>
-            <div>&nbsp;&nbsp;<span class="token-keyword">print</span>(<span class="token-string">"☁️ Hyggshi OS Code
-                Mini started..."</span>)</div>
-            <div>&nbsp;&nbsp;Hyggshi:<span class="token-func">LoadModule</span>(<span
-                class="token-string">"CloudSync"</span>)</div>
+            <div>&nbsp;&nbsp;<span class="token-keyword">print</span>(<span class="token-string">"Hyggshi OS Code Mini initialized..."</span>)</div>
+            <div>&nbsp;&nbsp;Hyggshi:<span class="token-func">LoadModule</span>(<span class="token-string">"CoreSync"</span>)</div>
             <div><span class="token-keyword">end</span></div>
           </div>
           <div class="ide-status">
-            <span>main.lua • Ln 7, Col 12 • UTF-8</span>
-            <span>☁️ Hyggshi OS Code Mini</span>
+            <span>main.lua &bull; Ln 7, Col 12 &bull; UTF-8</span>
+            <span>Hyggshi OS Code Mini</span>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Features -->
-    <section class="section-spacer">
-      <h2 class="section-title fade-in-up">Tính năng</h2>
-      <div class="grid-3 fade-in-up delay-1">
-        <div class="card">
-          <div class="card-icon">⚡</div>
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Tính <span class="title-accent">năng</span></h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
           <h3>Siêu nhẹ</h3>
-          <p style="color: var(--c-text-muted);">Khởi động nhanh, tối ưu bộ nhớ cho mọi thiết bị.</p>
+          <p style="color: var(--c-text-secondary); font-size: var(--text-sm);">Khởi động nhanh, tối ưu bộ nhớ cho mọi thiết bị Roblox và native.</p>
         </div>
-        <div class="card">
-          <div class="card-icon">🎨</div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+          </div>
           <h3>Syntax Highlight</h3>
-          <p style="color: var(--c-text-muted);">Hỗ trợ Lua, Python, JS, HTML với tông màu Cloud.</p>
+          <p style="color: var(--c-text-secondary); font-size: var(--text-sm);">Hỗ trợ Lua, Python, JavaScript, HTML với bộ màu sắc nét và dễ đọc.</p>
         </div>
-        <div class="card">
-          <div class="card-icon">☁️</div>
-          <h3>Cloud Sync</h3>
-          <p style="color: var(--c-text-muted);">Đồng bộ code với GitHub trực tiếp.</p>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="18" r="3"></circle>
+              <circle cx="6" cy="6" r="3"></circle>
+              <path d="M6 21V9a9 9 0 0 0 9 9"></path>
+            </svg>
+          </div>
+          <h3>Git Sync</h3>
+          <p style="color: var(--c-text-secondary); font-size: var(--text-sm);">Đồng bộ code trực tiếp với GitHub repositories của bạn.</p>
         </div>
       </div>
     </section>
 
     <!-- CTA -->
-    <section id="download" class="section-spacer" style="text-align: center;">
-      <div class="card fade-in-up"
-        style="display: inline-block; padding: 3rem; max-width: 600px; background: linear-gradient(135deg, rgba(94, 208, 198, 0.15), rgba(123, 185, 255, 0.15));">
-        <h2 style="margin-bottom: 1rem;">☁️ Sẵn sàng Code?</h2>
-        <p style="color: var(--c-text-muted); margin-bottom: 2rem;">Tải xuống Hyggshi OS Code Mini ngay.</p>
-        <div class="flex-center" style="gap: 1rem; flex-wrap: wrap;">
+    <section id="download" class="section">
+      <div class="cta-card">
+        <div class="news-badge">v1.0</div>
+        <h2>Sẵn sàng Code?</h2>
+        <p>Tải xuống Hyggshi OS Code Mini và bắt đầu ngay hôm nay.</p>
+        <div class="hero-actions" style="justify-content: center;">
           <a href="https://github.com/Hyggshi-OS-project-center/Hyggshi-OS-Code-Mini/releases" target="_blank"
-            class="btn btn-primary">Download v1.0</a>
-          <a href="#" class="btn btn-secondary">Documentation</a>
+            class="btn btn-primary btn-large">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="15"></line>
+            </svg>
+            <span>Download v1.0</span>
+          </a>
+          <a href="#" class="btn btn-secondary btn-large">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+            </svg>
+            <span>Documentation</span>
+          </a>
         </div>
       </div>
     </section>
@@ -226,7 +294,7 @@
 
   <footer class="footer">
     <div class="container">
-      <p style="color: var(--c-text-muted);">© 2025 Hyggshi OS Project Center.</p>
+      <p class="footer-text">© 2025 Hyggshi OS Project Center.</p>
     </div>
   </footer>
   <script src="theme.js"></script>

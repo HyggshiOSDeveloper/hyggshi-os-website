@@ -35,7 +35,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(30, 35, 42, 0.8), rgba(42, 48, 56, 0.7));
+            background: linear-gradient(135deg, rgba(9, 13, 22, 0.85), rgba(15, 23, 42, 0.75));
             backdrop-filter: blur(2px);
             z-index: 0;
         }
@@ -50,22 +50,27 @@
 </head>
 
 <body>
-
     <!-- Nav on top of video -->
-    <header class="header" style="position: fixed; background: rgba(30, 35, 42, 0.5); backdrop-filter: blur(15px);">
-        <div class="container nav">
-            <div class="logo">
-                <img src="Resources/upscalemedia-transformed.png" alt="Logo">
-                <span>☁️ Hyggshi OS</span>
+    <header class="header" style="position: fixed; background: rgba(9, 13, 22, 0.6); backdrop-filter: blur(16px);">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="Resources/upscalemedia-transformed.png" alt="Logo">
+                    <span>Hyggshi OS</span>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-menu">
+                        <li><a href="index.html" class="nav-link">Home</a></li>
+                        <li><a href="About.html" class="nav-link">About</a></li>
+                        <li><a href="projects.html" class="nav-link">Projects</a></li>
+                        <li><a href="HyggshiOS1.3.html" class="nav-link active">OS 1.3</a></li>
+                        <li><a href="download.html" class="nav-link">Download</a></li>
+                    </ul>
+                </nav>
+                <button class="theme-toggle" title="Toggle theme">
+                    <span class="toggle-icon"></span>
+                </button>
             </div>
-            <ul class="nav-menu">
-                <li><a href="index.html" class="nav-link">Home</a></li>
-                <li><a href="About.html" class="nav-link">About</a></li>
-                <li><a href="projects.html" class="nav-link">Projects</a></li>
-                <li><a href="HyggshiOS1.3.html" class="nav-link active">OS 1.3</a></li>
-                <li><a href="download.html" class="nav-link">Download</a></li>
-            </ul>
-            <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
         </div>
     </header>
 
@@ -76,115 +81,166 @@
             <source src="Resources/HOS13R.mp4" type="video/mp4">
         </video>
 
-        <div class="video-content fade-in-up">
-            <img src="Resources/Hyggshi OS 1.3 Remastered.png" alt="Logo 1.3"
-                style="height: 100px; margin: 0 auto 1.5rem auto; filter: drop-shadow(0 0 30px rgba(94, 208, 198, 0.5));">
-            <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem;">Hyggshi OS <span class="text-gradient">1.3
-                    Remastered</span></h1>
-            <p style="font-size: 1.5rem; color: rgba(255,255,255,0.9); margin-bottom: 2.5rem; font-weight: 300;">
-                Phát triển thế giới Roblox của riêng bạn ☁️
+        <div class="video-content">
+            <img src="Resources/Hyggshi OS 1.3 Remastered.png" alt="Hyggshi OS 1.3 Remastered Logo"
+                style="height: 100px; margin: 0 auto 1.5rem auto; filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.4));">
+            <h1 style="font-size: 3.5rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.5rem;">
+                Hyggshi OS <span class="title-accent">1.3 Remastered</span>
+            </h1>
+            <p style="font-size: 1.4rem; color: rgba(255,255,255,0.8); margin-bottom: 2.5rem; font-weight: 300;">
+                Phát triển thế giới Roblox của riêng bạn
             </p>
-            <div class="flex-center" style="gap: 1.5rem; flex-wrap: wrap;">
-                <a href="#download" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;">☁️ Tải xuống
-                    miễn phí</a>
-                <a href="#features" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1.1rem;">Khám
-                    phá</a>
+            <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+                <a href="#download" class="btn btn-primary btn-large">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Tải xuống miễn phí</span>
+                </a>
+                <a href="#features" class="btn btn-secondary btn-large">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 8 12 12 14 14"></polyline>
+                    </svg>
+                    <span>Khám phá</span>
+                </a>
             </div>
         </div>
     </section>
 
     <main class="container">
         <!-- Features -->
-        <section id="features" class="section-spacer">
-            <h2 class="section-title fade-in-up">Tính năng <span>Nổi bật</span></h2>
-            <div class="grid-3 fade-in-up delay-1">
-                <div class="card">
-                    <div class="card-icon">☁️</div>
-                    <h3>Cloud Aesthetic</h3>
-                    <p style="color: var(--c-text-muted);">Giao diện nhẹ nhàng với tông màu Cyan và hiệu ứng mây.</p>
+        <section id="features" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Tính năng <span class="title-accent">Nổi bật</span></h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <!-- Modern layout SVG -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                    </div>
+                    <h3>Modern Interface</h3>
+                    <p style="color: var(--c-text-secondary); font-size: var(--text-sm);">Giao diện hiện đại, nhẹ nhàng với hệ thống Dark/Light theme linh hoạt.</p>
                 </div>
-                <div class="card">
-                    <div class="card-icon">⚡</div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <!-- Lightning SVG -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                    </div>
                     <h3>Tối ưu hiệu năng</h3>
-                    <p style="color: var(--c-text-muted);">Nhẹ hơn 30% so với phiên bản cũ, chạy mượt trên mọi thiết bị.
-                    </p>
+                    <p style="color: var(--c-text-secondary); font-size: var(--text-sm);">Nhẹ hơn 30% so với phiên bản cũ, chạy mượt trên mọi thiết bị Roblox.</p>
                 </div>
-                <div class="card">
-                    <div class="card-icon">🎨</div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <!-- Sliders / Theme SVG -->
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="4" y1="21" x2="4" y2="14"></line>
+                            <line x1="4" y1="10" x2="4" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12" y2="3"></line>
+                            <line x1="20" y1="21" x2="20" y2="16"></line>
+                            <line x1="20" y1="12" x2="20" y2="3"></line>
+                            <line x1="1" y1="14" x2="7" y2="14"></line>
+                            <line x1="9" y1="8" x2="15" y2="8"></line>
+                            <line x1="17" y1="16" x2="23" y2="16"></line>
+                        </svg>
+                    </div>
                     <h3>Theme System</h3>
-                    <p style="color: var(--c-text-muted);">Hỗ trợ Dark/Light mode và tùy biến theme theo ý thích.</p>
+                    <p style="color: var(--c-text-secondary); font-size: var(--text-sm);">Hỗ trợ Dark/Light mode và tùy biến theme theo ý thích người dùng.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Gallery -->
-        <section class="section-spacer">
-            <h2 class="section-title fade-in-up">Thư viện <span>Screenshots</span></h2>
-            <div class="grid-3 fade-in-up delay-1">
-                <div class="card" style="padding: 0; overflow: hidden;">
-                    <img src="Resources/Weather.png" alt="Weather" style="width: 100%; transition: transform 0.3s;"
-                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="padding: 1rem;">
-                        <h4 style="margin: 0;">☁️ Weather App</h4>
-                    </div>
-                </div>
-                <div class="card" style="padding: 0; overflow: hidden;">
-                    <img src="Resources/Music.png" alt="Music" style="width: 100%; transition: transform 0.3s;"
-                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="padding: 1rem;">
-                        <h4 style="margin: 0;">🎵 Music Player</h4>
-                    </div>
-                </div>
-                <div class="card" style="padding: 0; overflow: hidden;">
-                    <img src="Resources/1.3.png" alt="Desktop" style="width: 100%; transition: transform 0.3s;"
-                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="padding: 1rem;">
-                        <h4 style="margin: 0;">🖥️ Desktop</h4>
-                    </div>
-                </div>
+        <!-- Screenshot Gallery -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Thư viện <span class="title-accent">Screenshots</span></h2>
+            </div>
+            <div class="gallery-grid">
+                <figure class="gallery-item">
+                    <img src="Resources/Weather.png" alt="Weather App">
+                    <figcaption>Weather App</figcaption>
+                </figure>
+                <figure class="gallery-item">
+                    <img src="Resources/Music.png" alt="Music Player">
+                    <figcaption>Music Player</figcaption>
+                </figure>
+                <figure class="gallery-item">
+                    <img src="Resources/1.3.png" alt="Desktop Interface">
+                    <figcaption>Desktop Interface</figcaption>
+                </figure>
             </div>
         </section>
 
         <!-- Download -->
-        <section id="download" class="section-spacer">
-            <div class="card fade-in-up"
-                style="max-width: 800px; margin: 0 auto; text-align: center; padding: 3rem; background: linear-gradient(135deg, rgba(94, 208, 198, 0.15), rgba(123, 185, 255, 0.15));">
-                <span class="badge active cloud-float" style="margin-bottom: 1rem; font-size: 1rem;">v2.6.1</span>
-                <h2 class="text-gradient" style="font-size: 2.5rem; margin-bottom: 1rem;">Tải xuống ngay</h2>
-                <p style="color: var(--c-text-muted); font-size: 1.1rem; margin-bottom: 2rem;">
-                    Hỗ trợ Windows 10+, MacOS Monterey trở lên.
-                </p>
-                <div class="flex-center" style="gap: 1.5rem; flex-wrap: wrap;">
-                    <a href="https://github.com/HyggshiOSDev/HyggshiOSStudio/releases/latest" target="_blank"
-                        class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.2rem;">
-                        ☁️ Tải xuống
+        <section id="download" class="section">
+            <div class="cta-card">
+                <div class="news-badge" style="font-size: var(--text-sm);">v2.6.1</div>
+                <h2>Tải xuống ngay</h2>
+                <p>Tải Hyggshi OS 1.3 Remastered và trải nghiệm ngay hôm nay.</p>
+                <div class="hero-actions" style="justify-content: center;">
+                    <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases" target="_blank"
+                        class="btn btn-primary btn-large">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Tải xuống</span>
                     </a>
-                    <a href="https://github.com/HyggshiOSDev/HyggshiOSStudio/releases" target="_blank"
-                        class="btn btn-secondary">
-                        Xem Changelog
+                    <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/releases" target="_blank"
+                        class="btn btn-secondary btn-large">
+                        <span>Xem Changelog</span>
                     </a>
                 </div>
             </div>
         </section>
 
         <!-- Community -->
-        <section class="section-spacer fade-in-up">
-            <h2 class="section-title">Cộng đồng</h2>
-            <div class="flex-center" style="gap: 1.5rem; flex-wrap: wrap;">
-                <a href="https://discord.gg/VQCgsmcTuw" target="_blank" class="card"
-                    style="text-decoration: none; display: flex; align-items: center; gap: 1rem; padding: 1.2rem 2rem;">
-                    <span style="font-size: 1.5rem;">💬</span>
-                    <span style="font-weight: 600;">Discord</span>
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">Cộng <span class="title-accent">đồng</span></h2>
+            </div>
+            <div class="features-grid">
+                <a href="https://discord.gg/PZuDkFzJtc" target="_blank" class="feature-card"
+                    style="text-decoration: none; text-align: center;">
+                    <div class="feature-icon" style="margin: 0 auto var(--space-sm) auto;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                        </svg>
+                    </div>
+                    <h3>Discord</h3>
                 </a>
-                <a href="https://github.com/HyggshiOSDev/HyggshiOSStudio/wiki" target="_blank" class="card"
-                    style="text-decoration: none; display: flex; align-items: center; gap: 1rem; padding: 1.2rem 2rem;">
-                    <span style="font-size: 1.5rem;">📚</span>
-                    <span style="font-weight: 600;">Wiki</span>
+                <a href="https://github.com/HyggshiOSDeveloper/Hyggshi-OS-project-center/wiki" target="_blank"
+                    class="feature-card" style="text-decoration: none; text-align: center;">
+                    <div class="feature-icon" style="margin: 0 auto var(--space-sm) auto;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                    </div>
+                    <h3>Wiki / Docs</h3>
                 </a>
-                <a href="mailto:support@hyggshi.dev" class="card"
-                    style="text-decoration: none; display: flex; align-items: center; gap: 1rem; padding: 1.2rem 2rem;">
-                    <span style="font-size: 1.5rem;">✉️</span>
-                    <span style="font-weight: 600;">Email</span>
+                <a href="mailto:support@hyggshi.dev" class="feature-card"
+                    style="text-decoration: none; text-align: center;">
+                    <div class="feature-icon" style="margin: 0 auto var(--space-sm) auto;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Email Support</h3>
                 </a>
             </div>
         </section>
@@ -192,7 +248,7 @@
 
     <footer class="footer">
         <div class="container">
-            <p style="color: var(--c-text-muted);">© 2024 - 2026 Hyggshi OS Project Center.</p>
+            <p class="footer-text">© 2024 - 2026 Hyggshi OS Project Center.</p>
         </div>
     </footer>
     <script src="theme.js"></script>

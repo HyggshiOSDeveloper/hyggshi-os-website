@@ -21,13 +21,8 @@
     }
 
     @keyframes marq {
-      0% {
-        transform: translateX(0);
-      }
-
-      100% {
-        transform: translateX(-50%);
-      }
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
     }
 
     .partner-item {
@@ -40,66 +35,93 @@
     }
 
     .partner-item img {
-      height: 28px;
+      height: 24px;
       width: auto;
+      border-radius: 4px;
     }
   </style>
 </head>
 
 <body>
   <header class="header">
-    <div class="container nav">
-      <div class="logo">
-        <img src="Resources/upscalemedia-transformed.png" alt="Logo">
-        <span>Hyggshi OS <span style="opacity: 0.6; font-weight: 400;">| Research</span></span>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <img src="Resources/upscalemedia-transformed.png" alt="Hyggshi OS Logo">
+          <span>Hyggshi OS <span style="opacity: 0.5; font-weight: 400;">| Research</span></span>
+        </div>
+        <nav class="nav">
+          <ul class="nav-menu">
+            <li><a href="index.html" class="nav-link">Home</a></li>
+            <li><a href="About.html" class="nav-link">About</a></li>
+            <li><a href="projects.html" class="nav-link">Projects</a></li>
+            <li><a href="History.html" class="nav-link">History</a></li>
+            <li><a href="news.html" class="nav-link">News</a></li>
+            <li><a href="download.html" class="nav-link">Download</a></li>
+          </ul>
+        </nav>
+        <button class="theme-toggle" title="Toggle theme">
+          <span class="toggle-icon"></span>
+        </button>
       </div>
-      <nav class="nav">
-        <ul class="nav-menu">
-          <li><a href="index.html" class="nav-link active">Home</a></li>
-          <li><a href="About.html" class="nav-link">About</a></li>
-          <li><a href="projects.html" class="nav-link">Projects</a></li>
-          <li><a href="History.html" class="nav-link">History</a></li>
-          <li><a href="news.html" class="nav-link">News</a></li>
-          <li><a href="download.html" class="nav-link">Download</a></li>
-        </ul>
-      </nav>
-      <button class="theme-toggle" title="Chuyển đổi chủ đề">☀️</button>
     </div>
   </header>
 
   <main class="container">
     <!-- Hero -->
-    <section class="section-spacer">
-      <div class="grid-2" style="align-items: center; gap: 3rem;">
-        <div class="fade-in-up">
-          <span class="badge active cloud-float" style="margin-bottom: 1rem;">🔬 Research Division</span>
-          <h1 style="font-size: 3rem;">HOSRT</h1>
-          <p style="color: var(--c-text-muted); font-size: 1.2rem; margin-bottom: 2rem;">
-            Hyggshi OS Research Technology – Trung tâm nghiên cứu và phát triển công nghệ lõi.
-          </p>
-          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <a href="#tools" class="btn btn-primary">☁️ Xem Tools</a>
-            <a href="#" class="btn btn-secondary">📄 Documentation</a>
-          </div>
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="status-dot"></span>
+          <span>Research Division</span>
         </div>
+        <h1 class="hero-title"><span class="title-accent">HOSRT</span></h1>
+        <p class="hero-description">
+          Hyggshi OS Research Technology – Core research and technology development center for the Hyggshi OS ecosystem.
+        </p>
+        <div class="hero-actions">
+          <a href="#tools" class="btn btn-primary btn-large">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+            <span>Explore Tools</span>
+          </a>
+          <a href="#" class="btn btn-secondary btn-large">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            <span>Documentation</span>
+          </a>
+        </div>
+      </div>
 
-        <div class="card fade-in-up delay-1"
-          style="background: linear-gradient(135deg, rgba(94, 208, 198, 0.1), rgba(123, 185, 255, 0.1));">
-          <h3 style="margin-bottom: 1.5rem; color: var(--c-primary);">System Status</h3>
-          <div style="display: grid; gap: 1rem;">
-            <div
-              style="display: flex; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-              <span style="color: var(--c-text-muted);">Latest Build</span>
-              <span>v2.7.0 (Canary)</span>
+      <div class="hero-visual">
+        <div class="hero-visual-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 6px;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></span>
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></span>
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></span>
             </div>
-            <div
-              style="display: flex; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-              <span style="color: var(--c-text-muted);">Experiments</span>
-              <span style="color: var(--c-accent);">5 Active</span>
+            <div class="news-badge" style="font-size: 0.65rem;">
+              <span class="status-dot"></span>
+              <span>Operational</span>
             </div>
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--c-text-muted);">Status</span>
-              <span style="color: var(--c-success);">☁️ Operational</span>
+          </div>
+          <div>
+            <div style="font-size: var(--text-xl); font-weight: 700; color: var(--c-text); margin-bottom: 4px;">System Status</div>
+          </div>
+          <div class="hero-visual-grid">
+            <div class="hero-metric">
+              <div class="hero-metric-val">v2.7.0</div>
+              <div class="hero-metric-lbl">Latest Build</div>
+            </div>
+            <div class="hero-metric">
+              <div class="hero-metric-val" style="color: #10b981;">5 Active</div>
+              <div class="hero-metric-lbl">Experiments</div>
             </div>
           </div>
         </div>
@@ -107,43 +129,73 @@
     </section>
 
     <!-- Tools -->
-    <section id="tools" class="section-spacer">
-      <h2 class="section-title fade-in-up">Research <span>Tools</span></h2>
-      <div class="grid-3 fade-in-up delay-1">
-        <div class="card">
-          <div class="card-icon">🧪</div>
+    <section id="tools" class="section">
+      <div class="section-header">
+        <h2 class="section-title">Research <span class="title-accent">Tools</span></h2>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <!-- Simulation / Flask SVG -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 3h6l1 4H8L9 3z"></path>
+              <path d="M8 7l-4 11a1 1 0 0 0 .9 1.4h14.2a1 1 0 0 0 .9-1.4L16 7"></path>
+              <line x1="10" y1="12" x2="14" y2="12"></line>
+            </svg>
+          </div>
           <h3>Simulation Suite</h3>
-          <p style="color: var(--c-text-muted);">Môi trường giả lập để stress test hệ thống UI/UX.</p>
+          <p style="color: var(--c-text-secondary); font-size: var(--text-sm);">Stress-test environment for simulating UI/UX behavior under real-world load conditions.</p>
         </div>
-        <div class="card">
-          <div class="card-icon">📊</div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <!-- Chart / Visualization SVG -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+          </div>
           <h3>Visualization</h3>
-          <p style="color: var(--c-text-muted);">Biểu đồ hóa dữ liệu runtime và mức tiêu thụ tài nguyên.</p>
+          <p style="color: var(--c-text-secondary); font-size: var(--text-sm);">Real-time runtime data charting and resource usage analytics dashboard.</p>
         </div>
-        <div class="card">
-          <div class="card-icon">🧠</div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <!-- CPU / AI Playground SVG -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+              <rect x="9" y="9" width="6" height="6"></rect>
+              <line x1="9" y1="1" x2="9" y2="4"></line>
+              <line x1="15" y1="1" x2="15" y2="4"></line>
+              <line x1="9" y1="20" x2="9" y2="23"></line>
+              <line x1="15" y1="20" x2="15" y2="23"></line>
+              <line x1="20" y1="9" x2="23" y2="9"></line>
+              <line x1="20" y1="14" x2="23" y2="14"></line>
+              <line x1="1" y1="9" x2="4" y2="9"></line>
+              <line x1="1" y1="14" x2="4" y2="14"></line>
+            </svg>
+          </div>
           <h3>AI Playground</h3>
-          <p style="color: var(--c-text-muted);">Thử nghiệm các mô hình AI/NPC đơn giản.</p>
+          <p style="color: var(--c-text-secondary); font-size: var(--text-sm);">Experimental sandbox for prototyping AI models, NPC behavior, and intelligent automation.</p>
         </div>
       </div>
     </section>
 
     <!-- Partners Marquee -->
-    <section class="card fade-in-up" style="background: rgba(0,0,0,0.2); margin-bottom: 4rem;">
-      <p
-        style="text-align: center; color: var(--c-text-muted); margin-bottom: 2rem; font-weight: 600; letter-spacing: 2px;">
-        PARTNERS & INTEGRATIONS</p>
+    <section class="feature-card" style="background: rgba(0,0,0,0.2); margin-bottom: 4rem; padding: var(--space-xl);">
+      <p style="text-align: center; color: var(--c-text-muted); margin-bottom: 2rem; font-weight: 600; font-size: var(--text-xs); letter-spacing: 3px; text-transform: uppercase;">
+        Partners & Integrations
+      </p>
       <div class="marquee">
         <div class="marquee-track">
-          <div class="partner-item"><img src="https://roblox.com/favicon.ico"> Roblox</div>
-          <div class="partner-item"><img src="https://openrouter.ai/favicon.ico"> OpenRouter</div>
-          <div class="partner-item"><img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg">
-            ChatGPT</div>
-          <div class="partner-item"><img src="https://open-meteo.com/favicon.ico"> Open-Meteo</div>
-          <div class="partner-item"><img src="https://roblox.com/favicon.ico"> Roblox</div>
-          <div class="partner-item"><img src="https://openrouter.ai/favicon.ico"> OpenRouter</div>
-          <div class="partner-item"><img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg">
-            ChatGPT</div>
+          <div class="partner-item"><img src="https://roblox.com/favicon.ico" alt="Roblox"> Roblox</div>
+          <div class="partner-item"><img src="https://openrouter.ai/favicon.ico" alt="OpenRouter"> OpenRouter</div>
+          <div class="partner-item"><img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg" alt="ChatGPT"> ChatGPT</div>
+          <div class="partner-item"><img src="https://open-meteo.com/favicon.ico" alt="Open-Meteo"> Open-Meteo</div>
+          <!-- Duplicated for seamless loop -->
+          <div class="partner-item"><img src="https://roblox.com/favicon.ico" alt="Roblox"> Roblox</div>
+          <div class="partner-item"><img src="https://openrouter.ai/favicon.ico" alt="OpenRouter"> OpenRouter</div>
+          <div class="partner-item"><img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg" alt="ChatGPT"> ChatGPT</div>
+          <div class="partner-item"><img src="https://open-meteo.com/favicon.ico" alt="Open-Meteo"> Open-Meteo</div>
         </div>
       </div>
     </section>
@@ -151,7 +203,7 @@
 
   <footer class="footer">
     <div class="container">
-      <p style="color: var(--c-text-muted);">© 2025 Hyggshi OS Research Division.</p>
+      <p class="footer-text">© 2025 Hyggshi OS Research Division.</p>
     </div>
   </footer>
   <script src="theme.js"></script>
