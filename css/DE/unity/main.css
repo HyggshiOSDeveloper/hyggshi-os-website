@@ -1,0 +1,233 @@
+/* ============================================================
+   Unity Desktop Environment skin (Fixed Specificity)
+   ============================================================ */
+
+:root {
+    --unity-bar-height: 28px;
+    --unity-launcher-width: 58px;
+    --unity-bar-bg: rgba(25, 20, 32, 0.75);
+    --unity-launcher-bg: linear-gradient(180deg, rgba(35, 27, 45, 0.85), rgba(20, 15, 28, 0.9));
+    --unity-pill-bg: rgba(255, 255, 255, 0.12);
+}
+
+/* --- Top global menu bar --- */
+body[data-desktop-env="unity"]::before {
+    content: '' !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: var(--unity-bar-height) !important;
+    background: var(--unity-bar-bg) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    /* Phải luôn thấp hơn #lock-screen (z-index: 9000 trong base.css),
+       nếu không top bar sẽ xuyên qua màn hình khoá. */
+    z-index: 4000 !important;
+    pointer-events: none !important;
+}
+
+/* --- Left launcher: Trải dài từ mép trên cùng màn hình, giống Unity thật ---
+   Dash button (start-btn) nằm ngay góc trái-trên, "hợp nhất" với Top Bar
+   thay vì bị đẩy thụt xuống dưới nó. */
+body[data-desktop-env="unity"] #taskbar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    width: var(--unity-launcher-width) !important;
+    height: 100vh !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 6px 0 10px !important;
+    /* Nền + blur được chuyển sang ::before bên dưới, KHÔNG đặt trực tiếp
+       trên #taskbar nữa. Lý do: backdrop-filter/filter/transform trên
+       #taskbar sẽ biến nó thành "containing block" cho mọi phần tử con
+       dùng position:fixed (như #taskbar-clock, #system-tray) — khiến
+       chúng bị định vị theo khung 58px của launcher thay vì theo màn
+       hình thật, gây ra hiện tượng đồng hồ đè lên nút Dash. */
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-top: none !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.35) !important;
+    /* Cao hơn top bar (4000) để vẫn đè đúng vào góc trên-trái, nhưng
+       phải thấp hơn #lock-screen (z-index: 9000 trong base.css) để
+       không xuyên qua màn hình khoá. */
+    z-index: 4100 !important;
+}
+
+/* Nền mờ (blur) thật sự của launcher, tách khỏi #taskbar để không tạo
+   containing block cho các phần tử position:fixed bên trong nó. */
+body[data-desktop-env="unity"] #taskbar::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: var(--unity-launcher-bg) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+body[data-desktop-env="unity"] #start-btn {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    background: #e95420 !important;
+    color: #fff !important;
+    flex-shrink: 0 !important;
+    margin: 0 auto !important;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+body[data-desktop-env="unity"] #start-btn:hover,
+body[data-desktop-env="unity"] #start-btn.active {
+    background: #f1683e !important;
+}
+
+body[data-desktop-env="unity"] #taskbar-apps {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+}
+
+body[data-desktop-env="unity"] .taskbar-app {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Hide title text in launcher */
+body[data-desktop-env="unity"] .taskbar-app span:not(.material-icons-round) {
+    display: none !important;
+}
+
+body[data-desktop-env="unity"] .taskbar-app.active {
+    background: rgba(255, 255, 255, 0.18) !important;
+}
+
+body[data-desktop-env="unity"] .taskbar-app::after {
+    left: -6px !important;
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+    width: 3px !important;
+    height: 18px !important;
+}
+
+/* --- Tách Đồng Hồ khỏi thanh launcher và ghim lên Top Bar góc phải --- */
+body[data-desktop-env="unity"] #taskbar-clock {
+    position: fixed !important;
+    top: 0 !important;
+    right: 12px !important;
+    left: auto !important;
+    bottom: auto !important;
+    height: var(--unity-bar-height) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    border-radius: 4px !important;
+    /* Thấp hơn #lock-screen (9000) để không xuyên qua màn hình khoá,
+       nhưng cao hơn top bar/taskbar để luôn hiện trên chúng. */
+    z-index: 4999 !important;
+    pointer-events: auto !important;
+    color: #ffffff !important;
+}
+
+body[data-desktop-env="unity"] #taskbar-clock:hover {
+    background: var(--unity-pill-bg) !important;
+}
+
+body[data-desktop-env="unity"] .clock-time {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: normal !important;
+}
+
+body[data-desktop-env="unity"] .clock-date {
+    display: none !important;
+}
+
+/* --- Tách System Tray lên Top Bar (nằm cạnh đồng hồ) --- */
+body[data-desktop-env="unity"] #system-tray {
+    position: fixed !important;
+    top: 0 !important;
+    right: 75px !important;
+    left: auto !important;
+    bottom: auto !important;
+    height: var(--unity-bar-height) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    /* Thấp hơn #lock-screen (9000) để không xuyên qua màn hình khoá,
+       nhưng cao hơn top bar/taskbar để luôn hiện trên chúng. */
+    z-index: 4999 !important;
+    pointer-events: auto !important;
+}
+
+body[data-desktop-env="unity"] .tray-icon {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 11px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+body[data-desktop-env="unity"] .tray-icon:hover {
+    background: var(--unity-pill-bg) !important;
+}
+
+body[data-desktop-env="unity"] .tray-icon .material-icons-round {
+    font-size: 14px !important;
+}
+
+/* --- Hidden Desktop Icons & Widgets positioning --- */
+body[data-desktop-env="unity"] #desktop-icons {
+    display: none !important;
+}
+
+body[data-desktop-env="unity"] #desktop-widgets {
+    top: calc(var(--unity-bar-height) + 16px) !important;
+    right: 16px !important;
+}
+
+/* --- Popups & Windows --- */
+body[data-desktop-env="unity"] #start-menu,
+body[data-desktop-env="unity"] #calendar-popup,
+body[data-desktop-env="unity"] #notification-center {
+    top: calc(var(--unity-bar-height) + 4px) !important;
+    bottom: auto !important;
+}
+
+body[data-desktop-env="unity"] #start-menu {
+    left: calc(var(--unity-launcher-width) + 8px) !important;
+    max-height: calc(100vh - var(--unity-bar-height) - 40px) !important;
+}
+
+body[data-desktop-env="unity"] .window.maximized {
+    top: var(--unity-bar-height) !important;
+    left: var(--unity-launcher-width) !important;
+    width: calc(100% - var(--unity-launcher-width)) !important;
+    height: calc(100vh - var(--unity-bar-height)) !important;
+}

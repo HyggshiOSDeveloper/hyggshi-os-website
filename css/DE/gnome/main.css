@@ -1,4 +1,215 @@
-/* GNOME Desktop Environment - Main Stylesheet */
-@import url('src/DE.css');
-@import url('src/UI.css');
-@import url('src/animations.css');
+/* ============================================================
+   GNOME Desktop Environment skin
+   Activated when <body data-desktop-env="gnome">.
+   Layout: slim top bar (Activities left, clock centered, tray
+   right) + a floating centered dock at the bottom, built by
+   js/DE/gnome/main.js. Desktop icons are hidden entirely - GNOME
+   uses the dock + Activities overview instead of icons on the
+   desktop, which is the one deliberate difference from XFCE.
+   ============================================================ */
+
+:root {
+    --gnome-bar-height: 32px;
+    --gnome-bar-bg: rgba(20, 20, 28, 0.55);
+    --gnome-pill-bg: rgba(255, 255, 255, 0.1);
+    --gnome-pill-bg-hover: rgba(255, 255, 255, 0.16);
+}
+
+/* No desktop icons in GNOME - everything launches from the dock
+   or the Activities overview instead. */
+body[data-desktop-env="gnome"] #desktop-icons {
+    display: none;
+}
+
+/* --- Top bar: collapse the shared #taskbar container itself, its
+   three children are individually pinned with position:fixed so
+   they can live in three different spots (left / center / right)
+   even though they share one DOM parent. --- */
+body[data-desktop-env="gnome"] #taskbar {
+    height: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
+}
+
+body[data-desktop-env="gnome"]::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--gnome-bar-height);
+    background: var(--gnome-bar-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 5000;
+    pointer-events: none;
+}
+
+body[data-desktop-env="gnome"] #start-btn {
+    position: fixed;
+    top: 4px;
+    left: 10px;
+    width: auto;
+    height: 24px;
+    padding: 0 12px;
+    border-radius: 12px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    z-index: 5001;
+    pointer-events: auto;
+}
+
+body[data-desktop-env="gnome"] #start-btn:hover,
+body[data-desktop-env="gnome"] #start-btn.active {
+    background: var(--gnome-pill-bg);
+    color: #fff;
+}
+
+body[data-desktop-env="gnome"] .gnome-activities-label {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* No window list in the top bar - GNOME relies on the Activities
+   overview for switching windows, so hide it rather than fake it. */
+body[data-desktop-env="gnome"] #taskbar-apps {
+    display: none;
+}
+
+body[data-desktop-env="gnome"] #system-tray {
+    position: fixed;
+    top: 3px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: transparent;
+    z-index: 5001;
+    pointer-events: auto;
+}
+
+body[data-desktop-env="gnome"] .tray-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 13px;
+}
+
+body[data-desktop-env="gnome"] .tray-icon:hover {
+    background: var(--gnome-pill-bg);
+}
+
+body[data-desktop-env="gnome"] .tray-icon .material-icons-round {
+    font-size: 15px;
+}
+
+body[data-desktop-env="gnome"] #taskbar-clock {
+    position: fixed;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 3px 14px;
+    border-radius: 13px;
+    text-align: center;
+    z-index: 5001;
+    pointer-events: auto;
+}
+
+body[data-desktop-env="gnome"] #taskbar-clock:hover {
+    background: var(--gnome-pill-bg);
+}
+
+body[data-desktop-env="gnome"] .clock-time {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+body[data-desktop-env="gnome"] .clock-date {
+    display: none;
+}
+
+/* --- Floating bottom dock (built by js/DE/gnome/main.js) --- */
+#gnome-dock {
+    display: none;
+}
+
+body[data-desktop-env="gnome"] #gnome-dock {
+    position: fixed;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 8px;
+    background: rgba(30, 30, 40, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    z-index: 5001;
+    max-width: 92vw;
+    overflow-x: auto;
+}
+
+.gnome-dock-item {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: var(--radius, 10px);
+    transition: transform 0.15s ease;
+}
+
+.gnome-dock-item:hover {
+    transform: translateY(-6px);
+}
+
+.gnome-dock-item .icon-img {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-glass);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin: 0;
+}
+
+.gnome-dock-item .icon-img .material-icons-round {
+    font-size: 24px;
+    color: var(--accent);
+}
+
+/* --- Popups anchor below the top bar instead of above the bottom taskbar --- */
+body[data-desktop-env="gnome"] #start-menu,
+body[data-desktop-env="gnome"] #calendar-popup,
+body[data-desktop-env="gnome"] #notification-center {
+    top: calc(var(--gnome-bar-height) + 8px);
+    bottom: auto;
+}
+
+body[data-desktop-env="gnome"] #start-menu {
+    left: 10px;
+    max-height: calc(100vh - var(--gnome-bar-height) - 40px);
+}
+
+body[data-desktop-env="gnome"] #desktop-widgets {
+    top: calc(var(--gnome-bar-height) + 16px);
+}
+
+/* Windows respect the top bar and leave room for the floating dock */
+body[data-desktop-env="gnome"] .window.maximized {
+    top: var(--gnome-bar-height) !important;
+    height: calc(100% - var(--gnome-bar-height)) !important;
+}

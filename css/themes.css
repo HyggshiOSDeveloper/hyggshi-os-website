@@ -197,6 +197,63 @@ body.light-mode .set-input-text:focus {
     color: var(--accent);
 }
 
+/* ===== Desktop Environment Settings ===== */
+.set-desktop-env-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.set-desktop-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color var(--transition), transform var(--transition), background var(--transition);
+    width: 110px;
+    text-align: center;
+}
+
+.set-desktop-card:hover {
+    background: var(--bg-hover);
+    transform: translateY(-2px);
+}
+
+.set-desktop-card.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.set-desktop-card .material-icons-round {
+    font-size: 28px;
+    color: var(--accent);
+}
+
+.set-desktop-card.active .material-icons-round {
+    color: var(--accent);
+}
+
+.set-desktop-card span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.set-desktop-card.active span {
+    color: var(--accent);
+}
+
+.set-desktop-desc {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
 .style-preview {
     width: 80px;
     height: 54px;

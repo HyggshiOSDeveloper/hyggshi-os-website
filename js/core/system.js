@@ -16,6 +16,10 @@ function updateLockClock() {
         lockTime.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         lockDate.textContent = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
     }
+    const topbarClock = document.getElementById('lock-topbar-clock');
+    if (topbarClock) {
+        topbarClock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
 }
 
 /* ============ NOTIFICATIONS ============ */

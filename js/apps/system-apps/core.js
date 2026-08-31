@@ -423,7 +423,6 @@ let ideState = {
     runtimeLogs: []
 };
 let ideBackgroundState = null;
-let desktopWallpaperState = null;
 
 function initTextEditor(win) {
     const area = win.querySelector('.te-area');
@@ -543,10 +542,6 @@ function ideGetWindowEl() {
 }
 
 function ideLerp(start, end, alpha) {
-    return start + (end - start) * alpha;
-}
-
-function wallpaperLerp(start, end, alpha) {
     return start + (end - start) * alpha;
 }
 
@@ -1010,6 +1005,7 @@ function getOpSymbol(op) {
 /* ============ SETTINGS ============ */
 let currentUser = 'User';
 let users = JSON.parse(localStorage.getItem('webos-users')) || ['User'];
+let desktopEnv = localStorage.getItem('webos-desktop-env') || 'default';
 
 function initSettings(win) {
     const keyInput = win.querySelector('#gemini-api-key');
@@ -1027,7 +1023,7 @@ function initSettings(win) {
     if (lockBlur) lockBlur.checked = localStorage.getItem('webos-lock-blur') !== 'false';
 
     const lockStartup = win.querySelector('#set-lock-startup');
-    if (lockStartup) lockStartup.checked = localStorage.getItem('webos-lock-startup') === 'true';
+    if (lockStartup) lockStartup.checked = localStorage.getItem('webos-lock-startup') !== 'false';
 
     const lockTimer = win.querySelector('#set-lock-timer');
     if (lockTimer) lockTimer.value = localStorage.getItem('webos-lock-timer') || '0';
@@ -1046,22 +1042,28 @@ function initSettings(win) {
     const cursorEnabled = win.querySelector('#set-cursor-enabled');
     if (cursorEnabled) cursorEnabled.checked = localStorage.getItem('webos-cursor-enabled') === 'true';
     
-    const cursorStyle = cursorState.style || 'default';
-    win.querySelectorAll('#set-cursor-styles .set-cursor-style-card').forEach(card => {
-        const onclick = card.getAttribute('onclick') || '';
-        card.classList.toggle('active', onclick.includes(cursorStyle));
-    });
-    
-    const cursorSize = cursorState.size || 'medium';
-    win.querySelectorAll('#set-cursor-sizes .set-cursor-size-card').forEach(card => {
-        const onclick = card.getAttribute('onclick') || '';
-        card.classList.toggle('active', onclick.includes(cursorSize));
-    });
-    
-    // Update preview
-    updateCursorPreview(cursorStyle, cursorSize);
+    if (typeof cursorState !== 'undefined') {
+        const cursorStyle = cursorState.style || 'default';
+        win.querySelectorAll('#set-cursor-styles .set-cursor-style-card').forEach(card => {
+            const onclick = card.getAttribute('onclick') || '';
+            card.classList.toggle('active', onclick.includes(cursorStyle));
+        });
+        
+        const cursorSize = cursorState.size || 'medium';
+        win.querySelectorAll('#set-cursor-sizes .set-cursor-size-card').forEach(card => {
+            const onclick = card.getAttribute('onclick') || '';
+            card.classList.toggle('active', onclick.includes(cursorSize));
+        });
+        
+        if (typeof updateCursorPreview === 'function') updateCursorPreview(cursorStyle, cursorSize);
+    }
+
+    // Load Desktop Environment Settings
+    const savedEnv = localStorage.getItem('webos-desktop-env') || 'default';
+    setDesktopEnv(savedEnv, null, true);
 
     renderUsersList(win);
+    refreshLanguageSettingsUI();
 }
 
 async function saveLockPassword(pwd) {
@@ -1087,6 +1089,32 @@ function copyRecoveryKey() {
         navigator.clipboard.writeText(key);
         showNotification('System', 'Recovery key copied to clipboard.');
     }
+}
+
+function setLockStartup(checked) {
+    localStorage.setItem('webos-lock-startup', checked ? 'true' : 'false');
+    showNotification('Lock Screen', `Lock on Startup ${checked ? 'enabled (login required at startup)' : 'disabled'}.`);
+}
+
+function setDesktopEnv(env, el, silent) {
+    desktopEnv = env;
+    localStorage.setItem('webos-desktop-env', env);
+    document.body.dataset.desktopEnv = env;
+
+    // Update active state of the environment cards
+    if (el) {
+        el.closest('#set-desktop-env-options')?.querySelectorAll('.set-desktop-card').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    } else {
+        const options = document.getElementById('set-desktop-env-options');
+        if (options) {
+            options.querySelectorAll('.set-desktop-card').forEach(card => {
+                card.classList.toggle('active', card.getAttribute('data-env') === env);
+            });
+        }
+    }
+
+    if (!silent) showNotification('Desktop Environment', `Desktop environment set to ${env}.`);
 }
 
 /* --- Multi-User Management --- */
@@ -1161,9 +1189,224 @@ function setTab(tab) {
             w.el.querySelectorAll('.set-nav').forEach(n => {
                 if (n.getAttribute('onclick')?.includes(tab)) n.classList.add('active');
             });
+            if (tab === 'language') {
+                refreshLanguageSettingsUI();
+            }
             break;
         }
     }
+}
+
+/* --- Language & Translation System --- */
+const AVAILABLE_LANGUAGES = [
+    { code: 'en.js', name: 'English (US)', native: 'English', flag: '🇺🇸' },
+    { code: 'ko.js', name: 'Korean', native: '한국어', flag: '🇰🇷' },
+    { code: 'zh-CN.js', name: 'Chinese (Simplified)', native: '简体中文', flag: '🇨🇳' },
+    { code: 'zh-TW.js', name: 'Chinese (Traditional)', native: '繁體中文', flag: '🇹🇼' },
+    { code: 'ja.js', name: 'Japanese', native: '日本語', flag: '🇯🇵' },
+    { code: 'de.js', name: 'German', native: 'Deutsch', flag: '🇩🇪' },
+    { code: 'fr.js', name: 'French', native: 'Français', flag: '🇫🇷' },
+    { code: 'es.js', name: 'Spanish', native: 'Español', flag: '🇪🇸' },
+    { code: 'it.js', name: 'Italian', native: 'Italiano', flag: '🇮🇹' },
+    { code: 'nl.js', name: 'Dutch', native: 'Nederlands', flag: '🇳🇱' },
+    { code: 'pt-BR.js', name: 'Portuguese (Brazil)', native: 'Português (Brasil)', flag: '🇧🇷' },
+    { code: 'pt-PT.js', name: 'Portuguese (Portugal)', native: 'Português (Portugal)', flag: '🇵🇹' },
+    { code: 'ru.js', name: 'Russian', native: 'Русский', flag: '🇷🇺' },
+    { code: 'tr.js', name: 'Turkish', native: 'Türkçe', flag: '🇹🇷' },
+    { code: 'uk.js', name: 'Ukrainian', native: 'Українська', flag: '🇺🇦' },
+    { code: 'vi.js', name: 'Vietnamese', native: 'Tiếng Việt', flag: '🇻🇳' }
+];
+
+function getSelectedLanguage() {
+    return localStorage.getItem('webos-language') || 'en.js';
+}
+
+function getLanguageTranslations(langCode) {
+    const raw = localStorage.getItem('webos-translations-' + langCode);
+    if (raw) {
+        try { return JSON.parse(raw); } catch (e) { return {}; }
+    }
+    if (window.WebOSLanguages && window.WebOSLanguages[langCode]) {
+        return { ...window.WebOSLanguages[langCode] };
+    }
+    if (langCode === 'en.js') {
+        return {
+            'Settings': 'Settings',
+            'Appearance': 'Appearance',
+            'Display': 'Display',
+            'About': 'About',
+            'Lock Screen': 'Lock Screen',
+            'Users': 'Users',
+            'AI Settings': 'AI Settings',
+            'Cursor': 'Cursor',
+            'Language': 'Language'
+        };
+    }
+    return {};
+}
+
+function saveLanguageTranslations(langCode, trans) {
+    localStorage.setItem('webos-translations-' + langCode, JSON.stringify(trans));
+}
+
+function selectLanguage(langCode) {
+    localStorage.setItem('webos-language', langCode);
+    showNotification('Language', `System language switched to ${langCode}.`);
+    refreshLanguageSettingsUI();
+}
+
+function filterLanguageList(query) {
+    refreshLanguageSettingsUI(query);
+}
+
+function refreshLanguageSettingsUI(queryFilter = '') {
+    const win = document.querySelector('.app-settings');
+    if (!win) return;
+
+    const currentLang = getSelectedLanguage();
+    const searchInput = win.querySelector('#set-language-search');
+    const query = (queryFilter !== undefined && queryFilter !== null ? queryFilter : (searchInput ? searchInput.value : '')).toLowerCase().trim();
+
+    const filtered = AVAILABLE_LANGUAGES.filter(l =>
+        l.code.toLowerCase().includes(query) ||
+        l.name.toLowerCase().includes(query) ||
+        l.native.toLowerCase().includes(query)
+    );
+
+    const countEl = win.querySelector('#set-lang-count');
+    if (countEl) {
+        countEl.textContent = `Showing ${filtered.length} of ${AVAILABLE_LANGUAGES.length} languages`;
+    }
+
+    const grid = win.querySelector('#set-language-list');
+    if (grid) {
+        grid.innerHTML = '';
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1; padding:16px; text-align:center; color:var(--text-secondary); font-size:12px;">No matching languages found for "${escapeHtml(query)}"</div>`;
+        } else {
+            filtered.forEach(lang => {
+                const isActive = lang.code === currentLang;
+                const card = document.createElement('div');
+                card.className = 'set-lang-card' + (isActive ? ' active' : '');
+                card.onclick = () => selectLanguage(lang.code);
+                card.innerHTML = `
+                    <div class="set-lang-flag">${lang.flag}</div>
+                    <div class="set-lang-info">
+                        <div class="set-lang-name">${escapeHtml(lang.name)}</div>
+                        <div class="set-lang-code-row">
+                            <span class="set-lang-code-badge">${escapeHtml(lang.code)}</span>
+                            <span class="set-lang-native">${escapeHtml(lang.native)}</span>
+                        </div>
+                    </div>
+                    <span class="set-lang-status-badge">${isActive ? 'Active' : ''}</span>
+                `;
+                grid.appendChild(card);
+            });
+        }
+    }
+
+    const activeBadge = win.querySelector('#set-lang-active-title');
+    if (activeBadge) {
+        activeBadge.textContent = `Active: ${currentLang}`;
+    }
+
+    const noticeText = win.querySelector('#set-lang-notice-text');
+    if (noticeText) {
+        const trans = getLanguageTranslations(currentLang);
+        const transCount = Object.keys(trans).length;
+        if (transCount === 0) {
+            noticeText.innerHTML = `Notice: If you select <strong>${escapeHtml(currentLang)}</strong> (or an unpopulated language), the text translation will be lost, and you will have to manually create the text again below.`;
+        } else {
+            noticeText.innerHTML = `Language <strong>${escapeHtml(currentLang)}</strong> currently has ${transCount} text translation(s) configured.`;
+        }
+    }
+
+    renderTranslationTable(win, currentLang);
+}
+
+function renderTranslationTable(win, langCode) {
+    const tbody = win.querySelector('#set-trans-table-body');
+    if (!tbody) return;
+
+    const trans = getLanguageTranslations(langCode);
+    const keys = Object.keys(trans);
+
+    tbody.innerHTML = '';
+    if (keys.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:16px; color:var(--text-secondary);">No custom text translations created for ${escapeHtml(langCode)}. Add key-value entries above.</td></tr>`;
+        return;
+    }
+
+    keys.forEach(k => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${escapeHtml(k)}</strong></td>
+            <td>${escapeHtml(trans[k])}</td>
+            <td style="text-align:center;">
+                <button class="set-lang-delete-btn" onclick="deleteCustomTranslationUI('${escapeHtml(k)}')" title="Delete entry">
+                    <span class="material-icons-round" style="font-size:16px;">delete</span>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function addCustomTranslationFromUI() {
+    const win = document.querySelector('.app-settings');
+    if (!win) return;
+    const keyInput = win.querySelector('#set-trans-key');
+    const valInput = win.querySelector('#set-trans-val');
+    const key = (keyInput?.value || '').trim();
+    const val = (valInput?.value || '').trim();
+
+    if (!key || !val) {
+        showNotification('Translation Error', 'Please provide both original text and translation value.', 'error');
+        return;
+    }
+
+    const langCode = getSelectedLanguage();
+    const trans = getLanguageTranslations(langCode);
+    trans[key] = val;
+    saveLanguageTranslations(langCode, trans);
+
+    keyInput.value = '';
+    valInput.value = '';
+
+    showNotification('Translation', `Added translation for "${key}".`);
+    refreshLanguageSettingsUI();
+}
+
+function deleteCustomTranslationUI(key) {
+    const langCode = getSelectedLanguage();
+    const trans = getLanguageTranslations(langCode);
+    delete trans[key];
+    saveLanguageTranslations(langCode, trans);
+    showNotification('Translation', `Removed translation for "${key}".`);
+    refreshLanguageSettingsUI();
+}
+
+function clearCustomTranslationsUI() {
+    const langCode = getSelectedLanguage();
+    saveLanguageTranslations(langCode, {});
+    showNotification('Translation', `Reset all custom text translations for ${langCode}.`);
+    refreshLanguageSettingsUI();
+}
+
+function applySystemTranslationsUI() {
+    const langCode = getSelectedLanguage();
+    const trans = getLanguageTranslations(langCode);
+
+    let appliedCount = 0;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (trans[key]) {
+            el.textContent = trans[key];
+            appliedCount++;
+        }
+    });
+
+    showNotification('Language System', `Applied ${Object.keys(trans).length} text translations to system UI.`);
 }
 
 function setAccent(color, silent) {
@@ -1190,7 +1433,6 @@ function setWallpaper(wp, silent) {
         'gradient4': 'linear-gradient(135deg, #141e30, #243b55)',
     };
 
-    // ── Image URL (remote) ──────────────────────────────
     if (wallpaperValue.startsWith('image-url:')) {
         const imageUrl = wallpaperValue.slice(10); // strip "image-url:"
         const scalingMode = localStorage.getItem('webos-wallpaper-scaling') || 'cover';
@@ -1393,101 +1635,6 @@ function savePollinationsKey(key) {
 function saveHfToken(token) {
     localStorage.setItem('webos-hf-token', token);
     showNotification('AI Settings', 'Hugging Face Token saved.');
-}
-
-function initAnimatedWallpaper() {
-    const desktop = document.getElementById('desktop');
-    const wallpaper = document.getElementById('desktop-wallpaper');
-    if (!desktop || !wallpaper || wallpaper.dataset.bound === '1') return;
-    wallpaper.dataset.bound = '1';
-
-    const imageLayer = document.getElementById('desktop-wallpaper-image');
-    const blobs = Array.from(wallpaper.querySelectorAll('.desktop-wallpaper-blob'));
-    
-    // Performance optimization: Hardware acceleration
-    if (imageLayer) imageLayer.style.willChange = 'transform';
-    blobs.forEach(b => b.style.willChange = 'transform');
-
-    desktopWallpaperState = {
-        desktop,
-        wallpaper,
-        imageLayer,
-        mouseX: 0.5,
-        mouseY: 0.5,
-        rafId: 0,
-        blobs: blobs.map((el, index) => ({
-            el,
-            currentX: 50,
-            currentY: 50,
-            targetX: 50,
-            targetY: 50,
-            amplitudeX: 12 + index * 6,
-            amplitudeY: 10 + index * 7,
-            speed: 0.00018 + index * 0.00008
-        })),
-        imageOffsetX: 0,
-        imageOffsetY: 0
-    };
-
-    const onPointerMove = (event) => {
-        const rect = wallpaper.getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
-        desktopWallpaperState.mouseX = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-        desktopWallpaperState.mouseY = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
-    };
-
-    desktop.addEventListener('pointermove', onPointerMove);
-    desktop.addEventListener('pointerleave', () => {
-        if (!desktopWallpaperState) return;
-        desktopWallpaperState.mouseX = 0.5;
-        desktopWallpaperState.mouseY = 0.5;
-    });
-
-    const tick = (time) => {
-        if (!desktopWallpaperState || !desktopWallpaperState.wallpaper.isConnected) {
-            if (desktopWallpaperState?.rafId) cancelAnimationFrame(desktopWallpaperState.rafId);
-            desktopWallpaperState = null;
-            return;
-        }
-
-        // Optimization: Pause animation when not visible or lock screen is active
-        const lockScreen = document.getElementById('lock-screen');
-        const isLocked = lockScreen && !lockScreen.classList.contains('hidden');
-        const isHidden = document.hidden;
-        
-        // Check if a maximized window is covering the desktop
-        let isCovered = false;
-        if (typeof windows !== 'undefined') {
-            isCovered = Object.values(windows).some(w => w.maximized && !w.minimized);
-        }
-
-        if (isHidden || isLocked || isCovered) {
-            desktopWallpaperState.rafId = requestAnimationFrame(tick);
-            return;
-        }
-
-        desktopWallpaperState.blobs.forEach((blob, index) => {
-            const waveX = Math.sin(time * blob.speed + index * 1.7);
-            const waveY = Math.cos(time * blob.speed * 0.82 + index * 2.4);
-            blob.targetX = 50 + waveX * blob.amplitudeX + (desktopWallpaperState.mouseX - 0.5) * (10 + index * 4);
-            blob.targetY = 50 + waveY * blob.amplitudeY + (desktopWallpaperState.mouseY - 0.5) * (12 + index * 4);
-            blob.currentX = wallpaperLerp(blob.currentX, blob.targetX, 0.045);
-            blob.currentY = wallpaperLerp(blob.currentY, blob.targetY, 0.045);
-            blob.el.style.transform = `translate3d(${blob.currentX - 50}%, ${blob.currentY - 50}%, 0)`;
-        });
-
-        if (desktopWallpaperState.imageLayer) {
-            const targetOffsetX = (desktopWallpaperState.mouseX - 0.5) * 16;
-            const targetOffsetY = (desktopWallpaperState.mouseY - 0.5) * 12;
-            desktopWallpaperState.imageOffsetX = wallpaperLerp(desktopWallpaperState.imageOffsetX, targetOffsetX, 0.035);
-            desktopWallpaperState.imageOffsetY = wallpaperLerp(desktopWallpaperState.imageOffsetY, targetOffsetY, 0.035);
-            desktopWallpaperState.imageLayer.style.transform = `translate3d(${desktopWallpaperState.imageOffsetX}px, ${desktopWallpaperState.imageOffsetY}px, 0) scale(1.05)`;
-        }
-
-        desktopWallpaperState.rafId = requestAnimationFrame(tick);
-    };
-
-    desktopWallpaperState.rafId = requestAnimationFrame(tick);
 }
 
 function setThemeMode(mode, silent) {

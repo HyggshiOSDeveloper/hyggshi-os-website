@@ -118,6 +118,107 @@ body {
     max-width: 400px;
 }
 
+/* === Lock Screen Top Dock (clock + session picker) === */
+.lock-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 20px;
+    background: rgba(10, 10, 20, 0.35);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 10;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.lock-topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: rgba(255, 255, 255, 0.85);
+    flex: 1;
+}
+
+.lock-topbar-brand .material-icons-round {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+.lock-topbar-clock {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.3px;
+    text-align: center;
+    flex: 1;
+}
+
+.lock-topbar-session {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex: 1;
+}
+
+.lock-topbar-session>.material-icons-round {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.lock-session-select {
+    display: flex;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.lock-session-option {
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.lock-session-option:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.lock-session-option.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+@media (max-width: 640px) {
+    .lock-topbar-brand span:last-child {
+        display: none;
+    }
+
+    .lock-topbar {
+        padding: 0 12px;
+    }
+}
+
 .lock-time {
     font-size: 84px;
     font-weight: 200;

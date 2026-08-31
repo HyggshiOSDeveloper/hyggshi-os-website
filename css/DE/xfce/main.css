@@ -1,0 +1,134 @@
+/* ============================================================
+   XFCE Desktop Environment skin
+   Activated when <body data-desktop-env="xfce">, set either from
+   the login screen's top dock or Settings > Desktop Environment.
+   Everything here is additive/override-only on top of desktop.css
+   so the "Default" session (no attribute / data-desktop-env
+   != "xfce") is completely unaffected.
+   ============================================================ */
+
+:root {
+    --xfce-panel-height: 30px;
+    --xfce-panel-bg: linear-gradient(180deg, #3c4148 0%, #2f3338 100%);
+    --xfce-panel-border: #23262a;
+    --xfce-accent: #1f6fc4;
+}
+
+/* --- Top panel (reuses #taskbar, just relocated + reskinned) --- */
+body[data-desktop-env="xfce"] #taskbar {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    height: var(--xfce-panel-height);
+    background: var(--xfce-panel-bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-top: none;
+    border-bottom: 2px solid var(--xfce-panel-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    padding: 0 4px;
+}
+
+/* "Whisker menu" style Applications button */
+body[data-desktop-env="xfce"] #start-btn {
+    width: auto;
+    height: 24px;
+    padding: 0 10px;
+    gap: 6px;
+    border-radius: 3px;
+    background: var(--xfce-accent);
+    color: #fff;
+}
+
+body[data-desktop-env="xfce"] #start-btn:hover,
+body[data-desktop-env="xfce"] #start-btn.active {
+    background: #2c7fd6;
+    color: #fff;
+}
+
+body[data-desktop-env="xfce"] #start-btn .material-icons-round {
+    font-size: 16px;
+}
+
+body[data-desktop-env="xfce"] .xfce-whisker-label {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Window list styled like the classic Xfce taskbar plugin: square, left aligned */
+body[data-desktop-env="xfce"] #taskbar-apps {
+    gap: 2px;
+}
+
+body[data-desktop-env="xfce"] .taskbar-app {
+    height: 22px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 11px;
+}
+
+body[data-desktop-env="xfce"] .taskbar-app.active {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.24);
+}
+
+body[data-desktop-env="xfce"] .taskbar-app::after {
+    display: none;
+}
+
+/* Squared-off system tray to match classic Xfce plugins */
+body[data-desktop-env="xfce"] .tray-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 2px;
+}
+
+body[data-desktop-env="xfce"] .tray-icon .material-icons-round {
+    font-size: 15px;
+}
+
+body[data-desktop-env="xfce"] #taskbar-clock {
+    padding: 2px 8px;
+    text-align: center;
+}
+
+body[data-desktop-env="xfce"] .clock-time {
+    font-size: 11px;
+}
+
+body[data-desktop-env="xfce"] .clock-date {
+    display: none;
+}
+
+/* --- Popups anchor to the top panel instead of the bottom taskbar --- */
+body[data-desktop-env="xfce"] #start-menu,
+body[data-desktop-env="xfce"] #calendar-popup,
+body[data-desktop-env="xfce"] #notification-center {
+    top: calc(var(--xfce-panel-height) + 8px);
+    bottom: auto;
+    border-radius: 4px;
+}
+
+body[data-desktop-env="xfce"] #start-menu {
+    left: 4px;
+    max-height: calc(100vh - var(--xfce-panel-height) - 40px);
+}
+
+/* --- Desktop icons & widgets drop below the top panel --- */
+body[data-desktop-env="xfce"] #desktop-icons {
+    top: calc(var(--xfce-panel-height) + 16px);
+    max-height: calc(100vh - var(--xfce-panel-height) - 40px);
+}
+
+body[data-desktop-env="xfce"] #desktop-widgets {
+    top: calc(var(--xfce-panel-height) + 16px);
+}
+
+/* --- Windows respect the top panel instead of the bottom taskbar --- */
+body[data-desktop-env="xfce"] .window.maximized {
+    top: var(--xfce-panel-height) !important;
+    height: calc(100% - var(--xfce-panel-height)) !important;
+}

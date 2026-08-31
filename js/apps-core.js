@@ -1066,6 +1066,7 @@ function initSettings(win) {
     }
 
     renderUsersList(win);
+    refreshLanguageSettingsUI();
 }
 
 async function saveLockPassword(pwd) {
@@ -1165,6 +1166,9 @@ function setTab(tab) {
             w.el.querySelectorAll('.set-nav').forEach(n => {
                 if (n.getAttribute('onclick')?.includes(tab)) n.classList.add('active');
             });
+            if (tab === 'language') {
+                refreshLanguageSettingsUI();
+            }
             break;
         }
     }

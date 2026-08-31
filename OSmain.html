@@ -21,9 +21,13 @@
     <link rel="stylesheet" href="css/apps-cursor.css">
     <link rel="stylesheet" href="css/cursor.css">
     <link rel="stylesheet" href="css/apps-camera.css">
+    <!-- Desktop Environment skins (scoped to body[data-desktop-env]) -->
+    <link rel="stylesheet" href="css/DE/xfce/main.css">
+    <link rel="stylesheet" href="css/DE/gnome/main.css">
+    <link rel="stylesheet" href="css/DE/unity/main.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/c``ss2?family=Inter:wght@300;400;500;600;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 </head>
@@ -40,6 +44,27 @@
 
     <!-- ===== LOCK SCREEN ===== -->
     <div id="lock-screen" class="hidden">
+        <!-- Top dock: brand, live clock, and session (desktop environment) picker -->
+        <div class="lock-topbar" id="lock-topbar">
+            <div class="lock-topbar-brand">
+                <span class="material-icons-round">hub</span>
+                <span>Hyggshi OS</span>
+            </div>
+            <div class="lock-topbar-clock" id="lock-topbar-clock">12:00</div>
+            <div class="lock-topbar-session">
+                <span class="material-icons-round" title="Session">desktop_windows</span>
+                <div class="lock-session-select" id="lock-session-select">
+                    <button type="button" class="lock-session-option" data-session="default"
+                        onclick="selectLoginSession('default', this)">Default</button>
+                    <button type="button" class="lock-session-option" data-session="xfce"
+                        onclick="selectLoginSession('xfce', this)">XFCE</button>
+                    <button type="button" class="lock-session-option" data-session="gnome"
+                        onclick="selectLoginSession('gnome', this)">GNOME</button>
+                    <button type="button" class="lock-session-option" data-session="unity"
+                        onclick="selectLoginSession('unity', this)">Unity</button>
+                </div>
+            </div>
+        </div>
         <div class="lock-overlay-content">
             <div class="lock-time" id="lock-time">12:00</div>
             <div class="lock-date" id="lock-date">Friday, February 20</div>
@@ -91,9 +116,6 @@
                 allow="autoplay; encrypted-media" allowfullscreen>
             </iframe>
             <div class="desktop-wallpaper-image" id="desktop-wallpaper-image"></div>
-            <div class="desktop-wallpaper-blob blob-a"></div>
-            <div class="desktop-wallpaper-blob blob-b"></div>
-            <div class="desktop-wallpaper-blob blob-c"></div>
             <div class="desktop-wallpaper-grid"></div>
             <div class="desktop-wallpaper-vignette"></div>
         </div>
@@ -782,6 +804,9 @@
                 <div class="set-nav" onclick="setTab('desktop-env')"><span class="material-icons-round">desktop</span>
                     Desktop Environment
                 </div>
+                <div class="set-nav" onclick="setTab('language')"><span class="material-icons-round">language</span>
+                    Language
+                </div>
             </div>
             <div class="set-content" id="set-content">
                 <!-- Appearance (default) -->
@@ -863,8 +888,10 @@
                     <div class="set-group">
                         <label>Wallpaper</label>
                         <div class="set-wallpapers">
-                            <div class="set-wp active" style="background:url('Resources/background.png') center/cover"
+                            <div class="set-wp" style="background:url('Resources/background.png') center/cover"
                                 onclick="setWallpaper('Resources/background.png')"></div>
+                            <div class="set-wp active" style="background:url('Resources/Verdant-Valley.png') center/cover"
+                                onclick="setWallpaper('Resources/Verdant-Valley.png')"></div>
                             <div class="set-wp" style="background:linear-gradient(135deg,#0c0c1d,#1a1a3e,#2d1b69)"
                                 onclick="setWallpaper('gradient1')"></div>
                             <div class="set-wp" style="background:linear-gradient(135deg,#0f2027,#203a43,#2c5364)"
@@ -956,10 +983,11 @@
                         </div>
                         <div class="about-info">
                             <h4>Hyggshi OS Web Edition</h4>
-                            <p>Version 1.3.0 Beta 26 (Spring 2026 Update)</p>
+                            <p>Version: 1.4.0 Beta 56 (Spring 2026 Update)</p>
+                            <p>Codename: Verdant Valley</p>
                             <p>A premium browser-based desktop environment designed for visual excellence and modular
                                 performance.</p>
-                            <p>Featuring an advanced security kernel, multi-user support, and integrated AI assistant.
+                            <p>Featuring an advanced security kernel, multi-user support, and integrated AI assistant. 
                             </p>
                             <div class="about-copyright">
                                 &copy; 2024 - 2026 Hyggshi OS Web Edition Project
@@ -1011,7 +1039,42 @@
                     </div>
                 </div>
                 <div class="set-panel hidden" id="set-desktop-env">
-                    <!-- Populated dynamically by GNOME.System.initSettings() -->
+                    <h3>Desktop Environment</h3>
+                    <div class="set-group">
+                        <label>Available Sessions</label>
+                        <p class="set-hint">Choose the desktop environment used for your session. You can also switch it from the top dock on the login screen.</p>
+                        <div class="set-desktop-env-options" id="set-desktop-env-options">
+                            <div class="set-desktop-card active" data-env="default" onclick="setDesktopEnv('default', this)">
+                                <span class="material-icons-round">dashboard</span>
+                                <span>Default</span>
+                                <div class="set-desktop-desc">The standard Hyggshi OS session.</div>
+                            </div>
+                            <div class="set-desktop-card" data-env="xfce" onclick="setDesktopEnv('xfce', this)">
+                                <span class="material-icons-round">desktop_windows</span>
+                                <span>XFCE</span>
+                                <div class="set-desktop-desc">Classic top panel, lightweight and modular.</div>
+                            </div>
+                            <div class="set-desktop-card" data-env="gnome" onclick="setDesktopEnv('gnome', this)">
+                                <span class="material-icons-round">desktop_mac</span>
+                                <span>GNOME</span>
+                                <div class="set-desktop-desc">Minimal, productivity-focused.</div>
+                            </div>
+                            <div class="set-desktop-card" data-env="unity" onclick="setDesktopEnv('unity', this)">
+                                <span class="material-icons-round">view_sidebar</span>
+                                <span>Unity</span>
+                                <div class="set-desktop-desc">Left launcher and a global top menu bar.</div>
+                            </div>
+                            <div class="set-desktop-card" data-env="kde" onclick="setDesktopEnv('kde', this)">
+                                <span class="material-icons-round">space_dashboard</span>
+                                <span>KDE Plasma</span>
+                                <div class="set-desktop-desc">Highly customizable.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="set-group">
+                        <label>Default Session</label>
+                        <p class="set-hint">Applies immediately, and is remembered for your next login.</p>
+                    </div>
                 </div>
                 <div class="set-panel hidden" id="set-cursor">
                     <h3>Cursor Settings</h3>
@@ -1082,6 +1145,69 @@
                         <div class="set-cursor-preview" id="set-cursor-preview">
                             <div class="set-cursor-preview-ring"></div>
                             <div class="set-cursor-preview-dot"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="set-panel hidden" id="set-language">
+                    <h3>Language & Translation</h3>
+                    <div class="set-group">
+                        <label>Search Language File</label>
+                        <div class="set-lang-search-wrapper">
+                            <span class="material-icons-round set-lang-search-icon">search</span>
+                            <input type="text" id="set-language-search" class="set-input-text set-lang-search-input"
+                                placeholder="Search language (e.g. ko.js, Korean, English, zh)..."
+                                oninput="filterLanguageList(this.value)">
+                        </div>
+                        <div class="set-lang-count" id="set-lang-count">Showing 16 languages</div>
+                    </div>
+
+                    <div class="set-group">
+                        <label>Available Language Options</label>
+                        <div class="set-lang-grid" id="set-language-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="set-group set-lang-editor-box">
+                        <div class="set-lang-editor-header">
+                            <label>Custom Text Translation Editor</label>
+                            <span class="set-lang-active-badge" id="set-lang-active-title">Active: en.js</span>
+                        </div>
+                        <div class="set-lang-notice" id="set-lang-notice">
+                            <span class="material-icons-round">info</span>
+                            <span id="set-lang-notice-text">
+                                Notice: If you select <strong>ko.js</strong> (or an unpopulated language), the text translation will be lost, and you will have to manually create the text again below.
+                            </span>
+                        </div>
+
+                        <div class="set-lang-add-row">
+                            <input type="text" id="set-trans-key" class="set-input-text" placeholder="Original Text / Key (e.g. Settings)" />
+                            <input type="text" id="set-trans-val" class="set-input-text" placeholder="Translation Value (e.g. 설정)" />
+                            <button class="set-btn-primary" onclick="addCustomTranslationFromUI()">
+                                <span class="material-icons-round">add</span> Add Text
+                            </button>
+                        </div>
+
+                        <div class="set-lang-table-container">
+                            <table class="set-lang-table">
+                                <thead>
+                                    <tr>
+                                        <th>Original Text (Key)</th>
+                                        <th>Translation Value</th>
+                                        <th style="width:70px; text-align:center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="set-trans-table-body">
+                                    <!-- Translation key-value pairs populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="set-lang-actions">
+                            <button class="set-btn-small" onclick="clearCustomTranslationsUI()">Reset Translations</button>
+                            <button class="set-btn-primary" onclick="applySystemTranslationsUI()">
+                                <span class="material-icons-round">check_circle</span> Apply to System
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1242,9 +1368,9 @@
                                 onchange="mpSetFftSize(parseInt(this.value))">
                                 <option value="64">64</option>
                                 <option value="128">128</option>
-                                <option value="256" selected>256</option>
+                                <option value="256">256</option>
                                 <option value="512">512</option>
-                                <option value="1024">1024</option>
+                                <option value="1024" selected>1024</option>
                                 <option value="2048">2048</option>
                             </select>
                             <span class="material-icons-round mp-fft-select-icon">tune</span>
@@ -1311,7 +1437,8 @@
                 <span class="material-icons-round">desktop_windows</span>
             </div>
             <h2>Hyggshi OS Web Edition</h2>
-            <p class="about-version">Version 1.3.0 Beta 26</p>
+            <p class="about-version">Version 1.4.0 Beta 56</p>
+            <p class="about-codename">Codename: Verdant Valley</p>
             <div class="about-details">
                 <p>A modern, browser-based desktop operating system</p>
                 <p>Built with HTML5, CSS3 & JavaScript</p>
@@ -1980,6 +2107,22 @@
     <script src="js/core/vfs.js"></script>
     <script src="js/core/wm.js"></script>
     <script src="js/core/system.js"></script>
+    <script src="js/core/Language/en.js"></script>
+    <script src="js/core/Language/ko.js"></script>
+    <script src="js/core/Language/zh-CN.js"></script>
+    <script src="js/core/Language/zh-TW.js"></script>
+    <script src="js/core/Language/ja.js"></script>
+    <script src="js/core/Language/de.js"></script>
+    <script src="js/core/Language/fr.js"></script>
+    <script src="js/core/Language/es.js"></script>
+    <script src="js/core/Language/it.js"></script>
+    <script src="js/core/Language/nl.js"></script>
+    <script src="js/core/Language/pt-BR.js"></script>
+    <script src="js/core/Language/pt-PT.js"></script>
+    <script src="js/core/Language/ru.js"></script>
+    <script src="js/core/Language/tr.js"></script>
+    <script src="js/core/Language/uk.js"></script>
+    <script src="js/core/Language/vi.js"></script>
     <script src="js/apps/system-apps/core.js"></script>
     <script src="js/apps/media/media.js"></script>
     <script src="js/apps/chat/chat.js"></script>
@@ -1993,13 +2136,15 @@
     <script src="js/apps/camera/camera.js"></script>
     <script src="js/core/main.js"></script>
     <!-- Desktop Environment Modules -->
-
+    <script src="js/DE/xfce/main.js"></script>
+    <script src="js/DE/gnome/main.js"></script>
+    <script src="js/DE/unity/main.js"></script>
 
     <!-- Video Player -->
     <template id="tmpl-video-player">
         <div class="app-video-player">
             <div class="vp-container">
-                <video id="vp-video" src="" poster="Resources/background.png"></video>
+                <video id="vp-video" src="" poster="Resources/Verdant-Valley.png"></video>
                 <div class="vp-controls">
                     <div class="vp-progress">
                         <div class="vp-progress-bar" id="vp-progress-bar"></div>

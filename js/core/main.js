@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedAccent = localStorage.getItem('webos-accent') || '#3b82f6';
     setAccent(savedAccent, true);
 
-    initAnimatedWallpaper();
     const savedWallpaper = localStorage.getItem('webos-wallpaper') || sessionStorage.getItem('webos-wallpaper') || 'Resources/background.png';
     setWallpaper(savedWallpaper, true);
 
@@ -26,6 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedUIStyle = localStorage.getItem('webos-ui-style') || 'glassmorphism';
     setUIStyle(savedUIStyle, true);
     initDesktopWidgets();
+
+    // Apply the saved desktop environment (Default / XFCE) right away instead of
+    // waiting for the Settings app to be opened, and sync the login dock picker.
+    const savedDesktopEnv = localStorage.getItem('webos-desktop-env') || 'default';
+    if (typeof setDesktopEnv === 'function') setDesktopEnv(savedDesktopEnv, null, true);
+    initLockTopbar(savedDesktopEnv);
 
     // 3. Init Custom Cursor
     initCustomCursor();
@@ -63,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 boot.classList.add('hidden');
                 // respect "Lock on Startup" setting
-                const lockOnStartup = localStorage.getItem('webos-lock-startup') === 'true';
+                const lockOnStartup = localStorage.getItem('webos-lock-startup') !== 'false';
                 if (lockOnStartup) {
                     lockOS();
                 }
@@ -124,6 +129,24 @@ function resetIdleTimer() {
             if (lock && lock.classList.contains('hidden')) lockOS();
         }, minutes * 60 * 1000);
     }
+}
+
+/* --- Login top dock: session (desktop environment) picker --- */
+function initLockTopbar(env) {
+    const active = env || localStorage.getItem('webos-desktop-env') || 'default';
+    document.querySelectorAll('.lock-session-option').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.session === active);
+    });
+}
+
+function selectLoginSession(env, el) {
+    localStorage.setItem('webos-desktop-env', env);
+    document.querySelectorAll('.lock-session-option').forEach(btn => btn.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    // Apply immediately so the desktop is already in the right session by the
+    // time the person unlocks, instead of waiting for a reload.
+    if (typeof setDesktopEnv === 'function') setDesktopEnv(env, null, true);
 }
 
 /* Lock Screen Logic */
