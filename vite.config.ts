@@ -2,8 +2,6 @@ import { defineConfig, type Plugin } from 'vite';
 import { resolve } from 'path';
 import fs from 'fs';
 
-import { cloudflare } from "@cloudflare/vite-plugin";
-
 const rootDir = import.meta.dirname ?? process.cwd();
 
 // Scan all root HTML files to dynamically create multi-page inputs
@@ -74,7 +72,7 @@ function fallback404Plugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [fallback404Plugin(), cloudflare()],
+  plugins: [fallback404Plugin()],
   appType: 'mpa',
   build: {
     outDir: 'dist',
