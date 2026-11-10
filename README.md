@@ -39,17 +39,23 @@ HTML / CSS / JavaScript
 Pollinations AI API
 Cloudflare Pages (deployment)
 
-## Run locally
+## Run locally (Vite + TypeScript)
 
-Do not open `news.html` or `post.html` directly from the file system (`file://`). The news pages load Markdown with `fetch()` and use a JavaScript module, which browsers intentionally block for local files.
-
-From the project folder, start a small local HTTP server instead:
-
+1. Cài đặt các gói phụ thuộc:
 ```bash
-python3 -m http.server 8080
+npm install
 ```
 
-Then open [http://localhost:8080/news.html](http://localhost:8080/news.html). You can also use the **Live Server** extension in VS Code. Cloudflare Pages already serves the site over HTTP(S), so no production change is needed.
+2. Chạy môi trường phát triển (Dev server):
+```bash
+npm run dev
+```
+
+3. Build cho môi trường production:
+```bash
+npm run build
+```
+Thư mục xuất ra sẽ nằm ở `dist/`. Trên Cloudflare Pages, cấu hình Build command là `npm run build` và Build output directory là `dist`.
 📄 License
 
 Open-source project for educational and experimental use.

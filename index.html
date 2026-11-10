@@ -6,6 +6,9 @@
   <title>Hyggshi OS – Next-Generation Operating System Ecosystem</title>
   <meta name="description" content="Hyggshi OS - Open Source Operating System for Roblox & Linux. Modern interface, extreme modularity, and high performance.">
   <link rel="icon" href="Resources/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -42,6 +45,11 @@
   </header>
 
   <main class="container">
+    <div class="hero-ecosystem-stage">
+      <div id="ascii-fx" class="hero-ascii-stage" aria-hidden="true">
+        <canvas id="ascii-fx-cv"></canvas>
+      </div>
+      <div class="hero-ecosystem-content">
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
@@ -49,7 +57,7 @@
           <span class="status-dot"></span>
           <span>Next-Gen Operating System</span>
         </div>
-        <h1 class="hero-title">Open Source Ecosystem for <span class="title-accent">Roblox & Linux</span></h1>
+        <h1 class="hero-title"><span class="hero-title-lead">Open Source Ecosystem</span> <span class="hero-tech-text" data-tech-text="Roblox & Linux" role="img" aria-label="Roblox & Linux"></span></h1>
         <p class="hero-description">Experience an ultra-fast, highly modular interface engineered for gamers, developers, and creators. Open-source, freely customizable, and community-driven.</p>
         <div class="hero-actions">
           <a href="download.html" class="btn btn-primary btn-large">
@@ -68,36 +76,12 @@
           </a>
         </div>
       </div>
-      <div class="hero-visual">
-        <div class="hero-visual-card">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; gap: 6px;">
-              <span style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></span>
-              <span style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;"></span>
-              <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981;"></span>
-            </div>
-            <span class="badge" style="font-size: 0.7rem;">v3.0 Release</span>
-          </div>
-          <div>
-            <div style="font-size: var(--text-2xl); font-weight: 800; color: var(--c-text); margin-bottom: 4px;">Hyggshi OS Core</div>
-            <p style="color: var(--c-text-muted); font-size: var(--text-xs);">Dual-platform architectural runtime</p>
-          </div>
-          <div class="hero-visual-grid">
-            <div class="hero-metric">
-              <div class="hero-metric-val">2 Branches</div>
-              <div class="hero-metric-lbl">Roblox & Linux</div>
-            </div>
-            <div class="hero-metric">
-              <div class="hero-metric-val">&lt; 350MB</div>
-              <div class="hero-metric-lbl">Memory Footprint</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
+      </div>
+    </div>
 
     <!-- Platform Branches Section -->
-    <section class="section" style="padding-top: 0;">
+    <section class="section">
       <div class="section-header">
         <div class="hero-badge">Ecosystem</div>
         <h2 class="section-title">Choose Your <span class="title-accent">Platform Branch</span></h2>
@@ -344,6 +328,7 @@
             <li><a href="HyggshiOSLinux.html">Hyggshi OS Linux</a></li>
             <li><a href="download.html">Roblox Edition</a></li>
             <li><a href="HOSRT.html">HOSRT Runtime</a></li>
+            <li><a href="erorrcode.html">Error Codes Reference</a></li>
           </ul>
         </div>
 
@@ -397,6 +382,8 @@
       }
     })();
   </script>
-  <script src="theme.js"></script>
+  <script type="module" src="/src/theme.ts"></script>
+  <script type="module" src="/src/tech-text.ts"></script>
+  <script type="module" src="/src/ascii-fx.ts"></script>
 </body>
 </html>
