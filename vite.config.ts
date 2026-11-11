@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import { resolve } from 'path';
 import fs from 'fs';
+import { cpSync } from 'fs';
 
 const rootDir = import.meta.dirname ?? process.cwd();
 
@@ -15,6 +16,28 @@ const htmlEntries = fs.readdirSync(rootDir)
 
 // Set of known HTML pages (without extension) for fast lookup
 const knownPages = new Set(Object.keys(htmlEntries));
+
+/**
+ * Vite plugin: copy extra static directories into dist after build.
+ * Used to copy `posts/` and `Resources/` which are served at runtime
+ * via fetch() but not referenced directly in HTML.
+ */
+function copyStaticDirsPlugin(): Plugin {
+  return {
+    name: 'copy-static-dirs',
+    closeBundle() {
+      const dirs = ['posts', 'Resources'];
+      for (const dir of dirs) {
+        const src = resolve(rootDir, dir);
+        const dest = resolve(rootDir, 'dist', dir);
+        if (fs.existsSync(src)) {
+          cpSync(src, dest, { recursive: true });
+          console.log(`✓ Copied ${dir}/ → dist/${dir}/`);
+        }
+      }
+    },
+  };
+}
 
 /**
  * Vite plugin: serve 404.html for any unmatched route in dev server,
@@ -72,7 +95,7 @@ function fallback404Plugin(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [fallback404Plugin()],
+  plugins: [fallback404Plugin(), copyStaticDirsPlugin()],
   appType: 'mpa',
   build: {
     outDir: 'dist',
