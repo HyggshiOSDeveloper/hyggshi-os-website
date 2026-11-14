@@ -1,4 +1,5 @@
 import type { ThemeMode, HyggshiThemeManager } from './types';
+import './mega-menu';
 
 const THEME_KEY = 'hyggshi-theme';
 const DARK: ThemeMode = 'dark';
