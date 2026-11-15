@@ -26,7 +26,7 @@ function copyStaticDirsPlugin(): Plugin {
   return {
     name: 'copy-static-dirs',
     closeBundle() {
-      const dirs = ['posts', 'Resources'];
+      const dirs = ['posts', 'Resources', 'js'];
       for (const dir of dirs) {
         const src = resolve(rootDir, dir);
         const dest = resolve(rootDir, 'dist', dir);
@@ -34,6 +34,12 @@ function copyStaticDirsPlugin(): Plugin {
           cpSync(src, dest, { recursive: true });
           console.log(`✓ Copied ${dir}/ → dist/${dir}/`);
         }
+      }
+      // Cloudflare Pages đọc _headers từ thư mục output
+      const headers = resolve(rootDir, '_headers');
+      if (fs.existsSync(headers)) {
+        fs.copyFileSync(headers, resolve(rootDir, 'dist', '_headers'));
+        console.log('✓ Copied _headers → dist/_headers');
       }
     },
   };
